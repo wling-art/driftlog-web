@@ -1,0 +1,13 @@
+node_modules
+dist
+.output
+.vercel
+.nitro
+.tanstack
+.env
+.env.local
+*.tsbuildinfo
+test-results
+playwright-report
+.DS_Store
+*.tmp.ts

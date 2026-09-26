@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": { "correctness": "error" },
+  "plugins": ["react", "typescript"],
+  "ignorePatterns": ["dist", ".output", "**/routeTree.gen.ts", "core"],
+  "overrides": [
+    {
+      "files": ["**/components/ui/**", "**/components/boring/task-button.tsx", "**/hooks/use-mobile.ts"],
+      "rules": { "react/set-state-in-effect": "off", "react/purity": "off" }
+    }
+  ]
+}

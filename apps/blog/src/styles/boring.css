@@ -1,0 +1,226 @@
+/*
+ * Boring UI × shadcn/ui
+ * 设计变量和桌面外壳直接引用上两级的 tokens.css、desktop.css（静态 HTML 路线用的也是这两份），这里不复制。
+ * 这里只做三件事：
+ *   1. 把 Tailwind / shadcn 的颜色、圆角、字体工具类直接指到我们的 token 上（不再定义 shadcn 自己的一套颜色）
+ *   2. 把 shadcn 的焦点环、弹出动画换成我们的焦点描边和四条曲线
+ *   3. 暗色变体跟着我们的规则走：跟随系统，data-theme 可以强制
+ * shadcn 的名字和我们的有冲突（它的 --accent 是悬停底色，我们的 --accent 是桌面青），
+ * 所以组件里一律用工具类（bg-primary、border-input…），不要直接写 var(--accent)。
+ */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@vp-tw/cjk-web-fonts-fusion-pixel-font/dist/12px/proportional/zh_hans/Fusion-Pixel-12px-Proportional-Simplified-Chinese.css";
+@import "./tokens.css";
+@import "./desktop.css";
+
+/* 暗色：没选主题时跟系统；data-theme 强制 */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+@theme inline {
+  /* shadcn 语义色 → Boring UI token */
+  --color-background: var(--bg); /* 第 1 层：桌面 */
+  --color-foreground: var(--text);
+  --color-card: var(--surface); /* 卡片是第 3 层 */
+  --color-card-foreground: var(--text);
+  --color-popover: var(--window); /* 弹出层是小窗口：第 2 层 */
+  --color-popover-foreground: var(--text);
+  --color-primary: var(--accent); /* 桌面青：只给主操作和链接 */
+  --color-primary-foreground: var(--on-accent);
+  --color-secondary: var(--surface);
+  --color-secondary-foreground: var(--text);
+  --color-muted: var(--window-bar);
+  --color-muted-foreground: var(--text-muted);
+  --color-accent: var(--surface-hover); /* shadcn 的 accent = 悬停底色，不是我们的桌面青 */
+  --color-accent-foreground: var(--text);
+  --color-destructive: var(--danger);
+  --color-border: var(--border-frame); /* 容器的线 */
+  --color-input: var(--border); /* 控件的线（≥ 3:1） */
+  --color-ring: var(--accent);
+  --color-chart-1: var(--accent);
+  --color-chart-2: var(--text-muted);
+  --color-chart-3: var(--success);
+  --color-chart-4: var(--warning);
+  --color-chart-5: var(--danger);
+
+  /* Boring UI 自己的层，给自定义组件用：bg-window、bg-window-bar、text-success… */
+  --color-window: var(--window);
+  --color-window-bar: var(--window-bar);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-border-soft: var(--border-soft);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+
+  /* 圆角：窗口、卡片、控件都是 4px 左右 */
+  --radius-sm: 2px;
+  --radius-md: var(--radius-control);
+  --radius-lg: var(--radius-control);
+  --radius-xl: var(--radius-window);
+  --radius-2xl: var(--radius-window);
+
+  /* 投影：三档，只往下落 */
+  --shadow-xs: var(--shadow-1);
+  --shadow-sm: var(--shadow-1);
+  --shadow-md: var(--shadow-2);
+  --shadow-lg: var(--shadow-3);
+  --shadow-xl: var(--shadow-3);
+
+  /* 字体：font-sans 是正文；像素字用下面的 pixel-1…4（字体 + 字号一起，只有这四档） */
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-pixel);
+  --font-pixel: var(--font-pixel);
+  --font-mono: var(--font-mono);
+
+  /* 曲线：ease-move / ease-enter / ease-exit / ease-pop 工具类 */
+  --ease-move: var(--ease-move);
+  --ease-enter: var(--ease-enter);
+  --ease-exit: var(--ease-exit);
+  --ease-pop: var(--ease-pop);
+}
+
+/* shadcn 模板里的 --radius 只有少数组件直接用 */
+:root {
+  --radius: var(--radius-control);
+}
+
+/* body、[hidden]、焦点描边、滚动留白、光标都在 desktop.css 里 */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-pixel);
+    font-weight: 400;
+    text-wrap: balance;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+/* 焦点描边在 desktop.css；这里只关掉 shadcn 半透明的焦点环（它是 box-shadow，会和投影叠在一起） */
+:focus-visible {
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+}
+
+/* 弹出层（对话框、菜单、下拉、提示）：出现用轻回弹，离开用「出现」的倒放，更短 */
+:is(
+  [data-slot="dialog-content"],
+  [data-slot="alert-dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="dropdown-menu-sub-content"],
+  [data-slot="select-content"],
+  [data-slot="tooltip-content"],
+  [data-slot="popover-content"],
+  [data-slot="hover-card-content"],
+  [data-slot="context-menu-content"],
+  [data-slot="menubar-content"],
+  [data-slot="sheet-content"],
+  [data-slot="drawer-content"]
+) {
+  --tw-ease: var(--ease-pop);
+  --tw-duration: var(--duration-pop);
+}
+:is(
+  [data-slot="dialog-overlay"],
+  [data-slot="alert-dialog-overlay"],
+  [data-slot="sheet-overlay"],
+  [data-slot="drawer-overlay"]
+) {
+  --tw-ease: var(--ease-enter);
+  --tw-duration: var(--duration-enter);
+}
+:is(
+  :is(
+    [data-slot="dialog-content"],
+    [data-slot="alert-dialog-content"],
+    [data-slot="dropdown-menu-content"],
+    [data-slot="dropdown-menu-sub-content"],
+    [data-slot="select-content"],
+    [data-slot="tooltip-content"],
+    [data-slot="popover-content"],
+    [data-slot="hover-card-content"],
+    [data-slot="context-menu-content"],
+    [data-slot="menubar-content"],
+    [data-slot="sheet-content"],
+    [data-slot="drawer-content"]
+  ),
+  :is(
+    [data-slot="dialog-overlay"],
+    [data-slot="alert-dialog-overlay"],
+    [data-slot="sheet-overlay"],
+    [data-slot="drawer-overlay"]
+  )
+):is([data-state="closed"], [data-closed]:not([data-closed="false"])) {
+  --tw-ease: var(--ease-exit);
+  --tw-duration: var(--duration-exit);
+}
+
+/* 像素字：只用 12 / 24 / 36 / 48px（原生 12px 的整数倍），不加粗。
+ * 做成独立工具类而不是 text-px-*：cn（tailwind-merge）会把 text-px-* 当成颜色，和 text-foreground 一起时把它吞掉 */
+@utility pixel-1 {
+  font-family: var(--font-pixel);
+  font-size: 12px;
+  font-weight: 400;
+  font-synthesis: none;
+}
+@utility pixel-2 {
+  font-family: var(--font-pixel);
+  font-size: 24px;
+  font-weight: 400;
+  font-synthesis: none;
+}
+@utility pixel-3 {
+  font-family: var(--font-pixel);
+  font-size: 36px;
+  font-weight: 400;
+  font-synthesis: none;
+}
+@utility pixel-4 {
+  font-family: var(--font-pixel);
+  font-size: 48px;
+  font-weight: 400;
+  font-synthesis: none;
+}
+
+/* 弹出层容器本身拿到焦点时不画描边（菜单项自己会高亮）；只列弹出层，别误伤 tabs-content、card-content */
+:is(
+  [data-slot="dialog-content"],
+  [data-slot="alert-dialog-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="dropdown-menu-sub-content"],
+  [data-slot="select-content"],
+  [data-slot="tooltip-content"],
+  [data-slot="popover-content"],
+  [data-slot="hover-card-content"],
+  [data-slot="context-menu-content"],
+  [data-slot="menubar-content"],
+  [data-slot="sheet-content"],
+  [data-slot="drawer-content"]
+):focus-visible {
+  outline: none !important;
+}
+
+/* 轻提示（sonner）也用我们的曲线 */
+[data-sonner-toast] {
+  transition-timing-function: var(--ease-pop) !important;
+}
+[data-sonner-toast][data-removed="true"] {
+  transition-timing-function: var(--ease-exit) !important;
+}

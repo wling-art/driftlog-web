@@ -1,0 +1,84 @@
+import { expect, test } from "@playwright/test"
+
+const BLOG = "http://localhost:5173"
+const ADMIN = "http://localhost:5174"
+const email = process.env.E2E_EMAIL
+const password = process.env.E2E_PASSWORD
+const slug = `e2e-${Date.now()}`
+
+test.describe.configure({ mode: "serial" })
+
+test("后台：登录、写一篇、实时预览、发布", async ({ page }) => {
+  test.skip(!email || !password, "设置 E2E_EMAIL / E2E_PASSWORD（站长账号）才跑后台")
+  await page.goto(ADMIN)
+  await expect(page).toHaveURL(/\/login/)
+  await page.fill("#email", email!)
+  await page.fill("#password", password!)
+  await page.click("button[type=submit]")
+  await expect(page.getByRole("heading", { name: "概览" })).toBeVisible()
+
+  await page.goto(`${ADMIN}/entries/new?type=post`)
+  await page.getByLabel("标题").fill("端到端测试")
+  await page.locator(".cm-content").click()
+  await page.keyboard.type("## 小标题\n\n这是==重点==。")
+  await expect(page.locator(".md-preview mark").first()).toHaveText("重点")
+  await page.getByPlaceholder("hello-world").fill(slug)
+  await page.getByRole("switch", { name: "发布" }).click()
+  await page.getByRole("button", { name: /保存/ }).click()
+  await expect(page.getByText("已保存并发布")).toBeVisible()
+  await expect(page).toHaveURL(/\/entries\/\d+$/)
+})
+
+test("博客：首页、文章、目录、评论", async ({ page }) => {
+  await page.goto(BLOG)
+  await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible()
+  await expect(page.locator(".win").first()).toBeVisible()
+
+  const target = email ? `/posts/${slug}` : "/posts"
+  await page.goto(BLOG + target)
+  if (!email) return
+  await expect(page.getByRole("heading", { level: 2, name: "端到端测试" })).toBeVisible()
+  await expect(page.locator('a.folder[href="#小标题"]')).toBeVisible()
+  await expect(page.getByRole("link", { name: "文章" })).toHaveAttribute("aria-current", "page")
+
+  await page.getByLabel("名字").fill("测试员")
+  await page.getByLabel("邮箱（不公开）").fill("bad")
+  await page.getByRole("textbox", { name: "评论" }).fill("好")
+  await page.getByRole("button", { name: "发表评论" }).click()
+  await expect(page.getByText("✕ 邮箱格式不对")).toBeVisible()
+  await page.getByLabel("邮箱（不公开）").fill("tester@example.com")
+  await page.getByRole("button", { name: "发表评论" }).click()
+  await expect(page.getByText(/评论发出去了|审核完就会出现/)).toBeVisible()
+})
+
+test("博客：⌘K 搜索", async ({ page }) => {
+  await page.goto(BLOG)
+  await expect(page.locator("time.clock")).toBeVisible() // 时钟挂载后才出现 = 已水合
+  await page.keyboard.press("ControlOrMeta+k")
+  const dialog = page.getByRole("dialog")
+  await expect(dialog).toBeVisible()
+  await dialog.getByRole("combobox").fill("Driftlog")
+  await expect(dialog.getByRole("option").first()).toBeVisible()
+  await page.keyboard.press("Escape")
+  await expect(dialog).toBeHidden()
+})
+
+test("博客：404 有出路", async ({ page }) => {
+  const res = await page.goto(`${BLOG}/posts/does-not-exist-${Date.now()}`)
+  expect(res?.status()).toBe(404)
+  await expect(page.getByRole("heading", { name: "这页走丢了" })).toBeVisible()
+  await expect(page.getByRole("link", { name: "回首页" })).toBeVisible()
+})
+
+test("SEO：订阅源、站点地图、OG 图", async ({ request }) => {
+  for (const [path, type] of [
+    ["/feed.xml", "rss"],
+    ["/atom.xml", "atom"],
+    ["/sitemap.xml", "xml"],
+    ["/og/post/hello", "image/png"],
+  ] as const) {
+    const r = await request.get(BLOG + path)
+    expect(r.ok(), path).toBe(true)
+    expect(r.headers()["content-type"]).toContain(type)
+  }
+})

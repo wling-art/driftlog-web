@@ -1,0 +1,320 @@
+/*
+ * Boring UI · 桌面外壳（静态 HTML 和 React 共用这一份）
+ * 全屏桌面、文件夹、窗口、任务栏、加载圆点。依赖 tokens.css。
+ * 结构：.screen > .desktop-area > (.folders > .folder…) + (.wins > .win > .win-bar + .win-body)，后面跟 .taskbar
+ * 规则见 references/visual.md「窗口与任务栏」。
+ */
+
+[hidden] {
+  display: none !important;
+} /* 组件自己的 display 不能盖过 hidden */
+html {
+  scroll-padding-top: 16px;
+  scroll-padding-bottom: 72px;
+} /* 吸底任务栏不能挡住焦点和锚点 */
+html {
+  cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='24' viewBox='0 0 16 24' shape-rendering='crispEdges'%3E%3Cpath d='M1 1v18l4-4 3 7 3-1-3-7h6z' fill='%23fff' stroke='%23141414' stroke-width='1.4'/%3E%3C/svg%3E")
+      1 1,
+    auto;
+} /* 像素箭头光标；能点的地方仍然是手形 */
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+/* 图标：只在这里画一次（细线，1.3px），用 mask 染成当前文字色。标记里只写 data-icon */
+:root {
+  --icon-folder: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 34%27 fill=%27none%27 stroke=%27black%27 stroke-width=%271.3%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M2 5 H14 L17.5 8.5 H38 V32 H2 Z%27/%3E%3Cpath d=%27M2 12 H38%27/%3E%3C/svg%3E");
+  --icon-doc: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 34%27 fill=%27none%27 stroke=%27black%27 stroke-width=%271.3%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M11 1.5 H25 L30 6.5 V32.5 H11 Z M25 1.5 V6.5 H30%27/%3E%3Cpath d=%27M15 13 H26 M15 18 H26 M15 23 H23%27/%3E%3C/svg%3E");
+  --icon-close: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 13 13%27 fill=%27none%27 stroke=%27black%27 stroke-width=%271.3%27 stroke-linecap=%27round%27%3E%3Cpath d=%27M2 2 L11 11 M11 2 L2 11%27/%3E%3C/svg%3E");
+}
+.folder::before,
+.win-ctl::before {
+  content: "";
+  display: block;
+  background: currentColor;
+  mask: var(--icon-folder) center / contain no-repeat;
+}
+.folder::before {
+  width: 40px;
+  height: 34px;
+}
+.folder[data-icon="doc"]::before {
+  mask-image: var(--icon-doc);
+}
+.win-ctl::before {
+  width: 13px;
+  height: 13px;
+  mask-image: var(--icon-close);
+}
+
+/* ── 全屏桌面：整页就是屏幕，不画显示器外壳 ── */
+.screen {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 20px 20px 0;
+}
+.screen::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--grain);
+  opacity: var(--grain-opacity);
+}
+@media (max-width: 640px) {
+  .screen {
+    padding: 12px 12px 0;
+  }
+}
+
+/* ── 桌面：左边一列文件夹，点了就把对应的窗口叫到前面 ── */
+.desktop-area {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+.folders {
+  position: sticky;
+  top: 20px;
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  padding-top: 4px;
+}
+.folder {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 72px;
+  padding: 4px 2px;
+  border-radius: 3px;
+  color: var(--text);
+  text-decoration: none;
+  font: 400 var(--px-1)/1.3 var(--font-pixel);
+  text-align: center;
+}
+.folder:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+/* 窗口一列最宽 1000px，在桌面上居中；左边缘取整到整像素，像素字才不糊 */
+.wins {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+@supports (margin-left: round(down, 1.5px, 1px)) {
+  .wins {
+    margin-left: max(0px, round(down, (100% - 1000px) / 2, 1px));
+    margin-right: 0;
+  }
+}
+@media (max-width: 760px) {
+  .desktop-area {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .folders {
+    display: none;
+  }
+}
+
+/* ── 窗口 ── */
+.win {
+  background: var(--window);
+  box-shadow: var(--shadow-2);
+  border: var(--line) solid var(--border-frame);
+  border-radius: var(--radius-window);
+  overflow: clip;
+  margin: 0 0 var(--space-6);
+  min-width: 0;
+}
+.win-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 30px;
+  padding: 0 6px 0 10px;
+  background: var(--window-bar);
+  border-bottom: var(--line) solid var(--border-frame);
+}
+.win-bar .name {
+  font: 400 var(--px-1)/1.5 var(--font-pixel);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.win-ctl {
+  /* 细线 ×：关窗口（关掉能撤销） */
+  display: inline-grid;
+  place-items: center;
+  width: max(24px, var(--hit-min));
+  height: max(24px, var(--hit-min));
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.win-ctl:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+/* 叫到前面：位置和大小用轻回弹，透明度用「出现」曲线，两条分开走 */
+.win.is-front {
+  animation:
+    pop var(--duration-pop) var(--ease-pop),
+    fade-in var(--duration-enter) var(--ease-enter);
+  box-shadow: var(--shadow-3);
+}
+@keyframes pop {
+  from {
+    transform: translateY(10px) scale(0.98);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+.win-body {
+  padding: var(--space-5);
+}
+.win-body > h2 {
+  font: 400 var(--px-3)/1.3 var(--font-pixel);
+  margin-bottom: var(--space-1);
+}
+.rule {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-bottom: var(--space-5);
+} /* 整句话用无衬线 */
+
+/* ── 任务栏：左边导航是贴着底边的标签，指上去升起来；右边是主题和带秒的时钟 ── */
+.taskbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  margin: var(--space-4) -20px 0;
+  padding: 6px 6px 0;
+  background: var(--window-bar);
+  box-shadow: 0 -8px 20px -14px rgb(0 0 0 / 0.35);
+  border-top: var(--line) solid var(--border-frame);
+}
+.taskbar .tb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  margin-bottom: 6px;
+  min-height: max(28px, var(--hit-min));
+  padding: 0 10px;
+  border: var(--line) solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font: 400 var(--px-1)/1 var(--font-pixel);
+}
+.taskbar .tb-btn:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+.taskbar nav {
+  display: flex;
+  gap: 4px;
+}
+.taskbar nav a {
+  display: inline-flex;
+  align-items: center;
+  min-width: 96px;
+  min-height: max(30px, var(--hit-min));
+  padding: 0 12px;
+  border: var(--line) solid var(--border);
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: var(--window);
+  color: var(--text);
+  text-decoration: none;
+  font: 400 var(--px-1)/1 var(--font-pixel);
+  transform: translateY(5px);
+  transition: transform var(--duration-move) var(--ease-move); /* 升起、落下都是「移动」：慢进慢出 */
+}
+.taskbar nav a:hover,
+.taskbar nav a[aria-current="page"] {
+  transform: translateY(0);
+  background: var(--surface);
+} /* 你在这里：标签升起来 */
+.taskbar .spacer {
+  flex: 1;
+}
+.clock {
+  align-self: center;
+  margin-bottom: 6px;
+  font: 400 var(--px-1)/1 var(--font-pixel);
+  padding: 0 6px;
+  color: var(--text);
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .taskbar {
+    margin: var(--space-4) -12px 0;
+    gap: 3px;
+    padding: 4px 4px 0;
+  }
+  .taskbar nav {
+    gap: 2px;
+  }
+  .taskbar nav a {
+    min-width: 0;
+    padding: 0 7px;
+  }
+  .clock {
+    display: none;
+  }
+  .taskbar .tb-btn {
+    padding: 0 7px;
+    margin-bottom: 4px;
+  }
+}
+
+/* 加载：一个圆点闪烁，不转圈。放在 position: relative 的按钮里；颜色默认跟文字走，按钮文字隐藏时用 --spin 指定 */
+.spinner {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--spin, currentColor);
+  animation: blink 0.5s steps(2) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
