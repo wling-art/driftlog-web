@@ -47,10 +47,8 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   if (!email) return
   await expect(page.getByRole("heading", { level: 2, name: "端到端测试" })).toBeVisible()
   await expect(page.locator('a.folder[href="#小标题"]')).toBeVisible()
-  // 任务栏上是当前打开的这一篇
-  await expect(page.getByRole("navigation", { name: "打开的窗口" }).getByRole("link")).toContainText(
-    "端到端测试",
-  )
+  // 任务栏上的路径：盘符 / 文章 / …… / 这一篇
+  await expect(page.getByRole("navigation", { name: "你在这里" })).toContainText("端到端测试")
 
   // 评论平时最小化在任务栏：页面上没有评论，点任务栏的「评论」才升起来
   await expect(page.getByRole("textbox", { name: "写评论" })).toHaveCount(0)
