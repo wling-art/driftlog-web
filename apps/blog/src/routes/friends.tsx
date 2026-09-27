@@ -13,7 +13,8 @@ import { api, linksQuery, useSite } from "@/lib/api"
 import { site, siteOf } from "@/lib/site"
 
 export const Route = createFileRoute("/friends")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(linksQuery()),
+  // 每次进来都重新取：服务端每次给的顺序都是随机的
+  loader: ({ context }) => context.queryClient.fetchQuery({ ...linksQuery(), staleTime: 0 }),
   head: ({ matches }) => ({ meta: [{ title: `友链 · ${siteOf(matches).title}` }] }),
   component: Friends,
 })
