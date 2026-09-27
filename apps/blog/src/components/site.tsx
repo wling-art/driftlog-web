@@ -20,7 +20,7 @@ import { StartMenu } from "@/components/start-menu"
 import { ChevronLeft } from "lucide-react"
 import { markDirection, takeDirection, useArrowNav } from "@/lib/keys"
 import { entryPath, formatDate } from "@/lib/site"
-import { useSite, type EntryCard } from "@/lib/api"
+import type { EntryCard } from "@/lib/api"
 
 // 栏目的中文名（任务栏上「当前打开的窗口」用）
 const sectionName: Record<string, string> = {
@@ -35,7 +35,7 @@ const sectionName: Record<string, string> = {
 /** 没有页面给路径时，按地址猜：/notes → 手记，/posts/x → 文章 / x */
 function guessCrumbs(pathname: string): Crumb[] {
   const [, first, second] = pathname.split("/")
-  if (!first) return []
+  if (!first) return [{ label: "首页" }]
   const section = sectionName[first]
   if (!section) return [{ label: decodeURIComponent(first) }]
   return second
@@ -44,38 +44,25 @@ function guessCrumbs(pathname: string): Crumb[] {
 }
 
 /**
- * 任务栏上的路径（像文件管理器的地址栏）：wling: / 手记 / 随想 / 走个面儿
- * 盘符是站长的名字，点了回首页；中间每一段都能点回那一级；最后一段是当前页，像升起的标签。
- * 换页时各段依次从下面升起来；窄屏只留盘符和最后一段，中间收成「…」
+ * 任务栏上的地址栏（像文件管理器）：[⌂ › 手记 › 随想 › 走个面儿]
+ * 一个往里凹的框，房子图标回首页，中间每一段都能点回那一级，最后一段是当前页（字深一点、不能点）。
+ * 太长时从中间省略：窄屏只留房子和当前页
  */
 function PathBar() {
   const pathname = useLocation({ select: (l) => l.pathname })
-  const { owner } = useSite()
   const given = useUI((s) => s.crumbs)
   const crumbs = given ?? guessCrumbs(pathname)
   const last = crumbs.length - 1
   return (
-    <nav aria-label="你在这里" className="pathbar" key={pathname}>
+    <nav aria-label="你在这里" className="pathbar">
       <ol>
-        <li style={{ "--i": 0 } as React.CSSProperties}>
-          {crumbs.length ? (
-            <Link to="/" className="pathbar-seg pathbar-root">
-              {owner.name}:
-            </Link>
-          ) : (
-            <span className="pathbar-seg pathbar-root" aria-current="page">
-              {owner.name}:
-            </span>
-          )}
+        <li>
+          <Link to="/" className="pathbar-seg pathbar-home" aria-label="首页" title="首页" />
         </li>
         {crumbs.map((c, i) => (
-          <li
-            key={i}
-            style={{ "--i": i + 1 } as React.CSSProperties}
-            className={i < last ? "pathbar-mid" : undefined}
-          >
+          <li key={i} className={i < last ? "pathbar-mid" : "pathbar-last"}>
             <span className="pathbar-sep" aria-hidden="true">
-              /
+              ›
             </span>
             {i < last && c.to ? (
               <Link
