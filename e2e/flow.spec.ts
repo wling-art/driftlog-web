@@ -33,7 +33,8 @@ test("后台：登录、写一篇、实时预览、发布", async ({ page }) => 
 test("博客：首页、文章、目录、评论", async ({ page }) => {
   await page.goto(BLOG)
   await expect(page.locator(".win").first()).toBeVisible()
-  // 开始菜单：点「开始」弹出，栏目能点进去，Esc 收起
+  // 开始菜单：点「开始」弹出，栏目能点进去，Esc 收起（时钟只在浏览器里渲染：它出来了说明已经水合）
+  await expect(page.locator("time.clock")).toBeVisible()
   await page.getByRole("button", { name: "开始菜单" }).click()
   await expect(page.locator(".start-menu").getByRole("link", { name: /手记/ })).toBeVisible()
   await page.keyboard.press("Escape")
