@@ -379,8 +379,11 @@ export function Taskbar({
       {children}
       {/* 窄屏只留「亮色 / 暗色」两个字，任务栏放得下 */}
       <TaskbarButton onClick={toggle} aria-label={theme === "dark" ? "切到亮色" : "切到暗色"}>
-        <span className="tb-long">切到</span>
-        {theme === "dark" ? "亮色" : "暗色"}
+        {/* 包在一个 span 里：按钮是 inline-flex 带间距，分开写会在「切到」和「暗色」之间空出一块 */}
+        <span>
+          <span className="tb-long">切到</span>
+          {theme === "dark" ? "亮色" : "暗色"}
+        </span>
       </TaskbarButton>
       <Clock />
     </footer>
