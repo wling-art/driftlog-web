@@ -126,7 +126,14 @@ export function EntryList({ items }: { items: EntryCard[] }) {
   )
 }
 
-type ArchiveItem = { slug: string; title: string; publishedAt: string | Date | null }
+type ArchiveItem = {
+  slug: string
+  title: string
+  publishedAt: string | Date | null
+  mood?: string | null
+  weather?: string | null
+  topic?: string | null
+}
 
 /**
  * 归档：不分页，按年份分组，一行一篇（日期 + 标题）。
@@ -139,7 +146,8 @@ export function Archive({ items, type }: { items: ArchiveItem[]; type: "post" | 
     years.set(y, [...(years.get(y) ?? []), it])
   }
   return (
-    <div className="archive">
+    // 手记是时间线（竖线 + 圆点，标题下一行小字：专栏 · 心情 · 天气）；文章是普通年表
+    <div className="archive" data-timeline={type === "note" || undefined}>
       {[...years].map(([year, list]) => (
         <section key={year} aria-labelledby={`y-${year}`}>
           <h3 id={`y-${year}`} className="archive-year">
@@ -152,6 +160,9 @@ export function Archive({ items, type }: { items: ArchiveItem[]; type: "post" | 
                 <Link to={entryPath(type, it.slug)} className="archive-row">
                   <time dateTime={String(it.publishedAt)}>{formatDate(it.publishedAt).slice(5)}</time>
                   <span className="t">{it.title}</span>
+                  {type === "note" && (it.topic || it.mood || it.weather) && (
+                    <span className="m">{[it.topic, it.mood, it.weather].filter(Boolean).join(" · ")}</span>
+                  )}
                 </Link>
               </li>
             ))}

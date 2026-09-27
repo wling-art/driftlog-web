@@ -205,6 +205,7 @@ export function Window({
   title,
   rule,
   closable = true,
+  lead,
   controls,
   className,
   children,
@@ -215,6 +216,8 @@ export function Window({
   title?: React.ReactNode
   rule?: React.ReactNode
   closable?: boolean
+  /** 标题栏最左边、名字前面的控件（比如「‹ 返回」） */
+  lead?: React.ReactNode
   /** 标题栏右边、× 左边的小控件（比如上一篇 / 下一篇） */
   controls?: React.ReactNode
 }) {
@@ -250,7 +253,14 @@ export function Window({
         onPointerDown={drag.onPointerDown}
         onDoubleClick={drag.reset}
       >
-        <span className="name">{name}</span>
+        {lead ? (
+          <span className="win-lead">
+            {lead}
+            <span className="name">{name}</span>
+          </span>
+        ) : (
+          <span className="name">{name}</span>
+        )}
         {controls && <span className="win-controls">{controls}</span>}
         {closable && ctx && (
           <button

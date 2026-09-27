@@ -26,6 +26,7 @@ function Notes() {
 
   return (
     <SiteShell
+      scene="read"
       folders={
         // 专栏就是文件夹（和文章页的分类一样）
         <>
@@ -56,7 +57,8 @@ function Notes() {
       >
         {current?.description && <p className="topic-desc">{current.description}</p>}
         {data.length ? (
-          <Archive items={data} type="note" />
+          // 在某个专栏里就不用每篇再写一遍专栏名
+          <Archive items={current ? data.map((d) => ({ ...d, topic: null })) : data} type="note" />
         ) : (
           <Empty>这里还很无聊，今天也没什么想说的。</Empty>
         )}

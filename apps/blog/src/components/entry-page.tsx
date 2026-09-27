@@ -3,10 +3,11 @@ import { Link, notFound, redirect } from "@tanstack/react-router"
 import type { QueryClient } from "@tanstack/react-query"
 import { unwrap } from "@driftlog/client"
 import { useQuery } from "@tanstack/react-query"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, Heart, MessageSquare } from "lucide-react"
 import { Window } from "@/components/boring"
 import { Article } from "@/components/article"
 import { SiteShell } from "@/components/site"
+import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { api, commentsQuery, entryQuery, isNotFound, useSite, type Entry } from "@/lib/api"
 import { markDirection, useArrowNav } from "@/lib/keys"
@@ -50,6 +51,20 @@ export function entryHead(e: Entry | undefined, info: { title: string; owner: { 
 
 /** 阅读场景：一个最大化的文档窗口 + 评论 + 上一篇 / 下一篇。左边文件夹列是目录 */
 const typeLabel = { post: "文章", note: "手记", page: "页面" } as const
+/** 上一级：文章 / 手记回到列表，页面回首页 */
+const upOf = {
+  post: { to: "/posts", label: "文章" },
+  note: { to: "/notes", label: "手记" },
+  page: { to: "/", label: "首页" },
+}
+// 语言代码 → 中文名（ja → 日语）；不认识的原样显示
+const langName = (l: string) => {
+  try {
+    return new Intl.DisplayNames(["zh-CN"], { type: "language" }).of(l) ?? l
+  } catch {
+    return l
+  }
+}
 
 /**
  * 阅读场景：整页只有一个文章窗口，左边文件夹列是目录。
@@ -80,7 +95,8 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
   const paged = e.type !== "page"
   const prev = paged && e.prev ? { to: entryPath(type, e.prev.slug), title: e.prev.title } : null
   const next = paged && e.next ? { to: entryPath(type, e.next.slug), title: e.next.title } : null
-  useArrowNav(prev, next)
+  const up = upOf[type]
+  useArrowNav(prev, next, up)
 
   return (
     <SiteShell
@@ -97,6 +113,18 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
         title={e.title}
         rule={e.type === "page" && e.subtitle ? `// ${e.subtitle}` : `// ${meta.join(" · ")}`}
         closable={false}
+        lead={
+          <Link
+            to={up.to}
+            onClick={() => markDirection("back")}
+            className="win-back"
+            aria-label={`回到${up.label}（Esc）`}
+            title="回到上一级（Esc）"
+          >
+            <ChevronLeft aria-hidden="true" />
+            {up.label}
+          </Link>
+        }
         controls={
           paged && (
             <>
@@ -113,19 +141,26 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
           </aside>
         )}
         {e.languages.length > 0 && (
-          <p className="mb-(--space-4) flex gap-(--space-3) text-(length:--text-sm)">
-            <span className="muted">其他语言：</span>
-            {e.lang && (
-              <Link to="." search={{}} className="text-primary underline">
-                原文
-              </Link>
-            )}
-            {e.languages.map((l) => (
-              <Link key={l} to="." search={{ lang: l }} className="text-primary underline">
-                {l}
-              </Link>
-            ))}
-          </p>
+          // 语言：一排按钮，正在看的那个反白（像分段控件），不用猜哪个是当前的
+          <nav className="lang-switch" aria-label="换一种语言读">
+            {[null, ...e.languages].map((l) => {
+              const on = (e.lang ?? null) === l
+              return (
+                <Button key={l ?? "orig"} size="sm" asChild>
+                  <Link
+                    to="."
+                    search={l ? { lang: l } : {}}
+                    replace
+                    data-on={on || undefined}
+                    aria-current={on ? "true" : undefined}
+                    lang={l ?? undefined}
+                  >
+                    {l ? langName(l) : "原文"}
+                  </Link>
+                </Button>
+              )
+            })}
+          </nav>
         )}
         <Article html={e.html} />
         {e.tags.length > 0 && (
@@ -147,21 +182,27 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
           <p className="article-copyright">版权归 {info.owner.name} 所有，转载请注明出处。</p>
         )}
 
-        {/* 正文末尾一行：接着读，或者看看别人说了什么 */}
+        {/* 正文末尾：先是两个按钮（喜欢 / 评论），再一行去哪：接着读下一篇，或者回列表 */}
         <footer id="article-end" className="article-end">
-          {next ? (
-            <Link to={next.to} onClick={() => markDirection("forward")} className="article-end-next">
-              下一篇：{next.title} →
-            </Link>
-          ) : (
-            paged && <span className="muted">这是最新的一篇</span>
-          )}
-          <span className="article-end-actions">
+          <div className="article-end-actions">
             <LikeButton id={e.id} likes={e.likes} />
-            <button type="button" className="article-end-comments" onClick={() => setCommentsOpen(true)}>
-              {comments?.length ? `${comments.length} 条评论 · 打开` : "写评论"}
-            </button>
-          </span>
+            <Button onClick={() => setCommentsOpen(true)}>
+              <MessageSquare aria-hidden="true" />
+              {comments?.length ? `评论 ${comments.length}` : "写评论"}
+            </Button>
+          </div>
+          <div className="article-end-nav">
+            <Link to={up.to} onClick={() => markDirection("back")} className="article-end-link">
+              ← {type === "page" ? "回首页" : `全部${up.label}`}
+            </Link>
+            {next ? (
+              <Link to={next.to} onClick={() => markDirection("forward")} className="article-end-link">
+                下一篇：{next.title} →
+              </Link>
+            ) : (
+              paged && <span className="muted">这是最新的一篇</span>
+            )}
+          </div>
         </footer>
       </Window>
     </SiteShell>
@@ -219,16 +260,17 @@ function LikeButton({ id, likes }: { id: number; likes: number }) {
       setState((s) => ({ ...s, liked: true }))
     }
   }
+  // 点过不禁用（禁用会变淡，像坏了），只是再点不发请求
   return (
-    <button
-      type="button"
-      className="article-end-like"
+    <Button
       aria-pressed={state.liked}
-      disabled={state.liked}
-      onClick={like}
+      data-on={state.liked || undefined}
+      onClick={() => !state.liked && void like()}
     >
-      {state.liked ? "已喜欢" : "喜欢"} {state.n > 0 && state.n}
-    </button>
+      <Heart aria-hidden="true" />
+      {state.liked ? "已喜欢" : "喜欢"}
+      {state.n > 0 && ` ${state.n}`}
+    </Button>
   )
 }
 
