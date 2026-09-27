@@ -387,10 +387,12 @@
 .c-item.is-small {
   --av: 22px;
 }
+/* 头像 · 名字 · 回复谁 · 时间 · 回复按钮：窄了就折行，名字不被截成「w…」 */
 .c-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  gap: 2px var(--space-2);
   min-width: 0;
 }
 .c-avatar {
@@ -404,6 +406,12 @@
   border-radius: 4px;
   font: 400 12px/1 var(--font-pixel);
   color: var(--text);
+  overflow: hidden;
+}
+.c-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .c-name {
   font-weight: 600;
@@ -443,6 +451,7 @@
 }
 /* 正文和名字左对齐 */
 .c-item .comment-body {
+  overflow-wrap: anywhere; /* 长链接折行，别把卡片撑出窗口 */
   margin-top: 6px;
   padding-left: calc(var(--av) + var(--space-2));
 }
@@ -1095,6 +1104,8 @@ a.win-btn:hover {
 
 /* ── 评论窗口：从任务栏升起来，浮在桌面右下角，自己滚 ── */
 .comments-float {
+  --win-pad-x: var(--space-5); /* 窄的浮动窗口：内边距用小号 */
+  --win-pad-y: var(--space-5);
   position: fixed;
   z-index: 20;
   right: 20px;

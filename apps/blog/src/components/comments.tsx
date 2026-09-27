@@ -50,14 +50,28 @@ function toThreads(list: Comment[]): Thread[] {
     threads.set(root.id, t)
     if (c.id !== root.id) {
       const parent = byId.get(c.parentId!)!
-      // 直接回楼主不用写；回的是楼里别人才写「回复 某某」
-      t.replies.push({ ...c, to: parent.id === root.id ? null : parent.author })
+      // 每条回复都写明回的是谁（回楼主也写：缩进不一定看得出来）
+      t.replies.push({ ...c, to: parent.author })
     }
   }
   return [...threads.values()]
 }
 
 const initial = (name: string) => [...name.trim()][0]?.toUpperCase() ?? "?"
+
+/** 头像：有图（账号头像 / Gravatar）用图，加载失败（没设 Gravatar 会 404）退回首字母 */
+function Avatar({ name, src }: { name: string; src: string | null }) {
+  const [broken, setBroken] = useState(false)
+  return (
+    <span className="c-avatar" aria-hidden="true">
+      {src && !broken ? (
+        <img src={src} alt="" width={40} height={40} loading="lazy" onError={() => setBroken(true)} />
+      ) : (
+        initial(name)
+      )}
+    </span>
+  )
+}
 
 // 记住的身份：localStorage 当外部存储订阅，SSR 时是 null（不会水合不一致）
 const REMEMBER = "driftlog-commenter"
@@ -171,9 +185,7 @@ function CommentItem({
   return (
     <div id={`comment-${c.id}`} className={small ? "c-item is-small" : "c-item"}>
       <div className="c-head">
-        <span className="c-avatar" aria-hidden="true">
-          {initial(c.author)}
-        </span>
+        <Avatar name={c.author} src={c.avatar} />
         {c.url ? (
           <a href={c.url} rel="nofollow noopener ugc" target="_blank" className="c-name is-link">
             {c.author}
