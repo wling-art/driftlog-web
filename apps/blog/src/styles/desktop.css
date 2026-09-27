@@ -499,3 +499,31 @@ body {
     max-height: min(72vh, calc(100dvh - 88px));
   }
 }
+
+/* ── Driftlog 的改动：换页时窗口列入场 ──
+ * 不用浏览器的 View Transitions（新旧两页各拍一张截图叠着淡入淡出，窗口内滚、固定桌面时截图对不上、会重影）。
+ * 桌面、任务栏、文件夹不动；窗口那一列按地址换 key，重新挂载时用「出现」曲线升上来一次。
+ * 旧页面直接换掉，不做离开动画：离开的东西别占注意力，两页叠在一起就是重影。
+ * 有方向的翻页（上一篇 / 下一篇、← →）从对应一侧进来，位移用「移动」曲线。 */
+.wins {
+  --enter-from: 0 8px;
+  animation:
+    page-in-move var(--duration-move) var(--ease-move) both,
+    page-in-fade var(--duration-enter) var(--ease-enter) both;
+}
+.wins[data-enter="forward"] {
+  --enter-from: 24px 0;
+}
+.wins[data-enter="back"] {
+  --enter-from: -24px 0;
+}
+@keyframes page-in-move {
+  from {
+    translate: var(--enter-from);
+  }
+}
+@keyframes page-in-fade {
+  from {
+    opacity: 0;
+  }
+}

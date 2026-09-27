@@ -1,9 +1,10 @@
-import type { ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { Link, useLocation, useRouter } from "@tanstack/react-router"
 import { Desktop, DesktopArea, Folders, Taskbar, TaskbarButton, Window, Windows } from "@/components/boring"
 import { Button } from "@/components/ui/button"
 import { useUI } from "@/lib/store"
 import { CommentsFloat, CommentsTaskItem } from "@/components/comments-dock"
+import { takeDirection } from "@/lib/keys"
 import { entryPath, formatDate, site } from "@/lib/site"
 import type { EntryCard } from "@/lib/api"
 
@@ -36,17 +37,10 @@ export function SiteShell({
     <Desktop scene={scene}>
       <DesktopArea>
         <Folders>{folders}</Folders>
-        <Windows className={aside ? "has-aside" : undefined}>
-          {/* 按地址换 key：换页时窗口重新挂载，里面的滚动位置回到顶部（同一个窗口换了内容也一样） */}
-          <main key={pathname} className="wins-main">
-            {children}
-          </main>
-          {aside && (
-            <aside className="wins-aside" aria-label="相关">
-              {aside}
-            </aside>
-          )}
-        </Windows>
+        {/* 按地址换 key：换页时窗口列重新挂载，播一次入场动画，窗口里的滚动位置也回到顶部 */}
+        <PageWindows key={pathname} aside={aside}>
+          {children}
+        </PageWindows>
       </DesktopArea>
       <CommentsFloat />
       <Taskbar items={nav}>
@@ -61,6 +55,24 @@ export function SiteShell({
         </TaskbarButton>
       </Taskbar>
     </Desktop>
+  )
+}
+
+/**
+ * 窗口那一列：挂载时播一次入场动画（desktop.css 的 page-in）。
+ * 方向在挂载时读一次：上一篇 / 下一篇、← → 标过方向就从侧面滑进来，否则从下面升上来
+ */
+function PageWindows({ aside, children }: { aside?: ReactNode; children: ReactNode }) {
+  const [dir] = useState(takeDirection)
+  return (
+    <Windows className={aside ? "has-aside" : undefined} data-enter={dir ?? undefined}>
+      <main className="wins-main">{children}</main>
+      {aside && (
+        <aside className="wins-aside" aria-label="相关">
+          {aside}
+        </aside>
+      )}
+    </Windows>
   )
 }
 

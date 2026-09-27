@@ -7,7 +7,7 @@ import { Article } from "@/components/article"
 import { SiteShell } from "@/components/site"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { commentsQuery, type Entry } from "@/lib/api"
-import { back, forward, useArrowNav } from "@/lib/keys"
+import { markDirection, useArrowNav } from "@/lib/keys"
 import { useUI } from "@/lib/store"
 import { entryPath, formatDate, readingMinutes, site } from "@/lib/site"
 
@@ -141,7 +141,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
         {/* 正文末尾一行：接着读，或者看看别人说了什么 */}
         <footer id="article-end" className="article-end">
           {next ? (
-            <Link to={next.to} viewTransition={forward} className="article-end-next">
+            <Link to={next.to} onClick={() => markDirection("forward")} className="article-end-next">
               下一篇：{next.title} →
             </Link>
           ) : (
@@ -180,7 +180,7 @@ function BarNav({
         <Link
           to={target.to}
           rel={dir}
-          viewTransition={dir === "prev" ? back : forward}
+          onClick={() => markDirection(dir === "prev" ? "back" : "forward")}
           className="win-btn"
           aria-label={`${name}：${target.title}`}
         >
