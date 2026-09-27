@@ -173,6 +173,7 @@ export function Window({
   const closeRef = React.useRef<HTMLButtonElement>(null)
   const titleId = `${id}-title`
   const plainTitle = typeof title === "string" ? title : name
+  const drag = useWindowDrag(ref)
 
   React.useEffect(
     () => ctx?.register(id, { el: ref.current, close: closeRef.current, title: plainTitle }),
@@ -188,9 +189,17 @@ export function Window({
       aria-label={title ? undefined : name}
       hidden={ctx?.hidden.has(id)}
       className={cn("win", className)}
+      onPointerDownCapture={drag.raise}
+      onKeyDown={drag.onKeyDown}
       {...props}
     >
-      <div data-slot="window-bar" className="win-bar">
+      <div
+        data-slot="window-bar"
+        className="win-bar"
+        title="拖动标题栏移动窗口，双击复位；键盘：Alt + 方向键"
+        onPointerDown={drag.onPointerDown}
+        onDoubleClick={drag.reset}
+      >
         <span className="name">{name}</span>
         {closable && ctx && (
           <button
@@ -209,6 +218,96 @@ export function Window({
       </div>
     </section>
   )
+}
+
+/*
+ * 拖动窗口：按住标题栏拖。偏移写在独立的 translate 属性上，不占 transform，
+ * 这样「叫到前面」的回弹动画（animation 里的 transform）和拖动互不覆盖。
+ * - 点到哪个窗口，哪个就到最上层
+ * - 标题栏至少留 64px 在桌面里，拖不丢
+ * - 双击标题栏复位；键盘用户：焦点在窗口里时 Alt + 方向键移动（WCAG 2.5.7：拖拽要有不用拖的办法）
+ * - 窄屏（≤ 760px，窗口一列排下来）不能拖
+ */
+let topZ = 1
+const canDrag = () => window.matchMedia("(min-width: 761px)").matches
+
+function useWindowDrag(ref: React.RefObject<HTMLElement | null>) {
+  const offset = React.useRef({ x: 0, y: 0 })
+
+  const apply = (x: number, y: number) => {
+    const el = ref.current
+    if (!el) return
+    // 整像素：像素字落在半像素上会糊
+    offset.current = { x: Math.round(x), y: Math.round(y) }
+    el.style.translate =
+      offset.current.x || offset.current.y ? `${offset.current.x}px ${offset.current.y}px` : ""
+  }
+
+  /** 把 (x, y) 限制在桌面里：标题栏至少露出 64px 宽、整条高 */
+  const clamp = (x: number, y: number) => {
+    const el = ref.current
+    const area = el?.closest(".desktop-area")
+    if (!el || !area) return { x, y }
+    const a = area.getBoundingClientRect()
+    const r = el.getBoundingClientRect()
+    const baseLeft = r.left - offset.current.x
+    const baseTop = r.top - offset.current.y
+    const keep = 64
+    return {
+      x: Math.min(Math.max(x, a.left + keep - (baseLeft + r.width)), a.right - keep - baseLeft),
+      y: Math.min(Math.max(y, a.top - baseTop), a.bottom - 30 - baseTop),
+    }
+  }
+
+  const raise = () => {
+    if (ref.current && canDrag()) ref.current.style.zIndex = String(++topZ)
+  }
+
+  const onPointerDown = (e: React.PointerEvent<HTMLElement>) => {
+    if (e.button !== 0 || !canDrag() || (e.target as HTMLElement).closest("button, a")) return
+    const el = ref.current
+    if (!el) return
+    e.preventDefault()
+    const bar = e.currentTarget
+    bar.setPointerCapture(e.pointerId)
+    const start = { px: e.clientX, py: e.clientY, ...offset.current }
+    el.classList.add("is-dragging")
+    const move = (ev: PointerEvent) => {
+      const next = clamp(start.x + ev.clientX - start.px, start.y + ev.clientY - start.py)
+      apply(next.x, next.y)
+    }
+    const up = () => {
+      el.classList.remove("is-dragging")
+      bar.removeEventListener("pointermove", move)
+      bar.removeEventListener("pointerup", up)
+      bar.removeEventListener("pointercancel", up)
+    }
+    bar.addEventListener("pointermove", move)
+    bar.addEventListener("pointerup", up)
+    bar.addEventListener("pointercancel", up)
+  }
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    const d = { ArrowLeft: [-16, 0], ArrowRight: [16, 0], ArrowUp: [0, -16], ArrowDown: [0, 16] }[e.key]
+    if (!e.altKey || !d || !canDrag()) return
+    e.preventDefault()
+    raise()
+    const next = clamp(offset.current.x + d[0]!, offset.current.y + d[1]!)
+    apply(next.x, next.y)
+  }
+
+  const reset = () => apply(0, 0)
+
+  // 缩到窄屏时回到原位，免得窗口挂在屏幕外
+  React.useEffect(() => {
+    const mq = window.matchMedia("(min-width: 761px)")
+    const onChange = () => !mq.matches && apply(0, 0)
+    mq.addEventListener("change", onChange)
+    return () => mq.removeEventListener("change", onChange)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return { raise, onPointerDown, onKeyDown, reset }
 }
 
 // 每秒跳一次的「时间源」。SSR 时是 null：服务器的时间和时区和浏览器不一样，会水合不一致

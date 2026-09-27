@@ -318,3 +318,47 @@ body {
     animation: none;
   }
 }
+
+/* ── Driftlog 的改动：桌面固定在屏幕上 + 窗口能拖（宽屏）──
+ * 整页不滚：.screen 正好一屏高，任务栏钉在底部；只有桌面区域（窗口那一列）自己滚，文件夹列跟着 sticky。
+ * 窄屏（≤ 760px）保持普通的整页滚动：手机上内嵌滚动会和地址栏收起、回弹打架。 */
+.win {
+  position: relative;
+}
+@media (min-width: 761px) {
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+  .screen {
+    height: 100dvh;
+    min-height: 0;
+  }
+  .desktop-area {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* 滚动条贴着屏幕边，滚轮在桌面任何地方都能用 */
+    margin: -20px -20px 0;
+    padding: 20px 20px 0;
+    scroll-padding: 16px 0 16px;
+  }
+  .taskbar {
+    position: relative;
+  }
+  .win-bar {
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
+  .win-bar :is(button, a) {
+    cursor: pointer;
+  }
+  .win.is-dragging {
+    box-shadow: var(--shadow-3);
+  }
+  .win.is-dragging .win-bar {
+    cursor: grabbing;
+  }
+}

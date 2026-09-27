@@ -10,6 +10,8 @@ export function getRouter() {
     routeTree,
     context: { queryClient },
     scrollRestoration: true,
+    // 宽屏下整页不滚，滚的是桌面区域：换页时把它滚回顶部
+    scrollToTopSelectors: [".desktop-area"],
     defaultPreload: "intent",
     defaultViewTransition: true, // 路由切换用 View Transitions，曲线在 app.css
     defaultNotFoundComponent: NotFound,
