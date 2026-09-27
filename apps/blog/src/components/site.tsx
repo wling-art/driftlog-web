@@ -1,6 +1,15 @@
 import { useState, type ReactNode } from "react"
 import { Link, useLocation, useRouter } from "@tanstack/react-router"
-import { Desktop, DesktopArea, Folders, Taskbar, TaskbarButton, Window, Windows } from "@/components/boring"
+import {
+  DesktopArea,
+  DesktopProvider,
+  Folders,
+  Taskbar,
+  TaskbarButton,
+  Window,
+  Windows,
+  useScrollKeys,
+} from "@/components/boring"
 import { Button } from "@/components/ui/button"
 import { useUI } from "@/lib/store"
 import { CommentsFloat, CommentsTaskItem } from "@/components/comments-dock"
@@ -16,8 +25,37 @@ const nav = [
 ]
 
 /**
- * 每一页的外壳：全屏桌面 + 左边一列文件夹（本页目录）+ 窗口 + 吸底任务栏。
+ * 整个站点的外壳：全屏桌面 + 浮动的评论窗口 + 吸底任务栏。放在根布局里，只渲染一次：
+ * 换页时任务栏还是同一批元素，只有「当前页」在变，标签升起、落下的过渡才都看得见。
+ * 每一页自己的部分（图标和窗口）是 children，见 SiteShell。
+ */
+export function AppShell({ children }: { children: ReactNode }) {
+  useScrollKeys()
+  const online = useUI((s) => s.online)
+  const setSearchOpen = useUI((s) => s.setSearchOpen)
+  return (
+    <div data-slot="desktop" className="screen">
+      {children}
+      <CommentsFloat />
+      <Taskbar items={nav}>
+        <CommentsTaskItem />
+        {online > 0 && (
+          <span className="clock" title="现在在看这个站的人">
+            {online} 人在看
+          </span>
+        )}
+        <TaskbarButton onClick={() => setSearchOpen(true)} aria-keyshortcuts="Meta+K Control+K">
+          搜索 <kbd className="only-fine font-mono">⌘K</kbd>
+        </TaskbarButton>
+      </Taskbar>
+    </div>
+  )
+}
+
+/**
+ * 每一页自己的桌面：左边一列图标（本页目录 / 栏目快捷方式 / 分类）+ 窗口。
  * children 是主内容；aside 是附属窗口，宽屏时排到右边一栏，窄屏时排在主内容后面。
+ * 按地址换 key：换页时这一块重新挂载——窗口列播一次入场动画、滚动位置回到顶部、关掉的窗口也不会带到下一页。
  */
 export function SiteShell({
   folders,
@@ -31,35 +69,18 @@ export function SiteShell({
   children: ReactNode
 }) {
   const pathname = useLocation({ select: (l) => l.pathname })
-  const online = useUI((s) => s.online)
-  const setSearchOpen = useUI((s) => s.setSearchOpen)
   return (
-    <Desktop scene={scene}>
-      <DesktopArea>
+    <DesktopProvider key={pathname}>
+      <DesktopArea data-scene={scene}>
         <Folders>{folders}</Folders>
-        {/* 按地址换 key：换页时窗口列重新挂载，播一次入场动画，窗口里的滚动位置也回到顶部 */}
-        <PageWindows key={pathname} aside={aside}>
-          {children}
-        </PageWindows>
+        <PageWindows aside={aside}>{children}</PageWindows>
       </DesktopArea>
-      <CommentsFloat />
-      <Taskbar items={nav}>
-        <CommentsTaskItem />
-        {online > 0 && (
-          <span className="clock" title="现在在看这个站的人">
-            {online} 人在看
-          </span>
-        )}
-        <TaskbarButton onClick={() => setSearchOpen(true)} aria-keyshortcuts="Meta+K Control+K">
-          搜索 <kbd className="only-fine font-mono">⌘K</kbd>
-        </TaskbarButton>
-      </Taskbar>
-    </Desktop>
+    </DesktopProvider>
   )
 }
 
 /**
- * 窗口那一列：挂载时播一次入场动画（desktop.css 的 page-in）。
+ * 窗口那一列：挂载时播一次入场动画（desktop.css 的 page-in；SiteShell 按地址换 key，所以每次换页都会重新挂载）。
  * 方向在挂载时读一次：上一篇 / 下一篇、← → 标过方向就从侧面滑进来，否则从下面升上来
  */
 function PageWindows({ aside, children }: { aside?: ReactNode; children: ReactNode }) {

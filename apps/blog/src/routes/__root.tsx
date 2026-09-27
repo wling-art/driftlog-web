@@ -4,7 +4,7 @@ import type { QueryClient } from "@tanstack/react-query"
 import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { SearchPanel } from "@/components/search"
-import { ErrorWindow, NotFound } from "@/components/site"
+import { AppShell, ErrorWindow, NotFound } from "@/components/site"
 import { MotionConfig } from "motion/react"
 import { useRealtime } from "@/lib/realtime"
 import { site } from "@/lib/site"
@@ -34,13 +34,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   }),
   component: () => (
     <Document>
-      <Outlet />
+      <AppShell>
+        <Outlet />
+      </AppShell>
     </Document>
   ),
   notFoundComponent: NotFound,
   errorComponent: ({ error, reset }) => (
     <Document>
-      <ErrorWindow error={error as Error} reset={reset} />
+      <AppShell>
+        <ErrorWindow error={error as Error} reset={reset} />
+      </AppShell>
     </Document>
   ),
 })

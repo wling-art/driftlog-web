@@ -18,6 +18,7 @@ E2E_EMAIL=… E2E_PASSWORD=… bun run test   # Playwright; admin cases skip wit
 ## Blog layout model (don't regress these)
 
 - **Wide screens (≥ 761px)**: the page never scrolls (`html, body { overflow: clip }`, not `hidden`, because anchor jumps still scroll `hidden`). `.desktop-area` is a size container; each window is capped to it and scrolls *inside* `.win-body`. The taskbar and desktop icons never move.
+- **The taskbar lives in the root layout** (`AppShell` in `__root.tsx`), rendered once. Routes render only `SiteShell` (their desktop area: icons + windows), keyed by pathname. If a route renders its own taskbar again, it remounts on every navigation and the tab rise/drop transitions stop playing.
 - **Page transitions**: no browser View Transitions. `SiteShell` keys the window column by pathname so it remounts and plays the CSS `page-in` animation. For prev/next, call `markDirection("forward" | "back")` before navigating (`lib/keys.ts`).
 - **Secondary things live in the shell**: comments are minimized to the taskbar and open as a floating window (`comments-dock.tsx`); prev/next are title-bar `‹ ›` controls; lists are a year-grouped archive with no pagination.
 - Reading width is `--measure: 40em` (≈ 40 CJK characters, the WCAG 1.4.8 limit), and the reading window hugs it. Don't put a `max-width: var(--measure)` on smaller-font children: `em` follows their own font size.

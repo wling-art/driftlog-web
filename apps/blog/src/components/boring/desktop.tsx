@@ -42,12 +42,12 @@ function focusToastAction(tries = 20) {
   else if (tries > 0) requestAnimationFrame(() => focusToastAction(tries - 1))
 }
 
-export function Desktop({
-  scene,
-  className,
-  children,
-  ...props
-}: React.ComponentProps<"div"> & { scene?: Scene }) {
+/**
+ * 窗口的开 / 关状态（× 关掉、撤销、文件夹重新打开）。
+ * 一般用 <Desktop>；任务栏要跨页面常驻时（比如前端路由的根布局里放任务栏），
+ * 每一页单独包一层 <DesktopProvider>，外面自己写 .screen。
+ */
+export function DesktopProvider({ children }: { children: React.ReactNode }) {
   const [hidden, setHidden] = React.useState<Set<string>>(() => new Set())
   const wins = React.useRef(new Map<string, WinEntry>())
 
@@ -93,9 +93,14 @@ export function Desktop({
   )
 
   const value = React.useMemo(() => ({ hidden, register, open, close }), [hidden, register, open, close])
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>
+}
 
-  // 宽屏下整页不滚、窗口自己滚。焦点不在任何东西上时（刚打开页面、点了桌面空白处），
-  // 空格、PageUp / PageDown、Home / End、↑ ↓ 交给主窗口的内容区，键盘用户照样能读
+/**
+ * 宽屏下整页不滚、窗口自己滚。焦点不在任何东西上时（刚打开页面、点了桌面空白处），
+ * 空格、PageUp / PageDown、Home / End、↑ ↓ 交给主窗口的内容区，键盘用户照样能读
+ */
+export function useScrollKeys() {
   React.useEffect(() => {
     const keys: Record<string, (el: HTMLElement, shift: boolean) => ScrollToOptions> = {
       " ": (el, shift) => ({ top: (shift ? -1 : 1) * el.clientHeight * 0.85 }),
@@ -127,13 +132,21 @@ export function Desktop({
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
   }, [])
+}
 
+export function Desktop({
+  scene,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"div"> & { scene?: Scene }) {
+  useScrollKeys()
   return (
-    <Ctx.Provider value={value}>
+    <DesktopProvider>
       <div data-slot="desktop" data-scene={scene} className={cn("screen", className)} {...props}>
         {children}
       </div>
-    </Ctx.Provider>
+    </DesktopProvider>
   )
 }
 
