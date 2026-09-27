@@ -427,8 +427,11 @@ body {
   --icon-gap: 6px;
   --icon-edge: 8px;
 }
-.desktop-area {
-  grid-template-columns: var(--icon-cell-w) minmax(0, 1fr);
+/* 只在有图标列的宽屏上改列宽：窄屏图标列收起、窗口要占满整行（写在外面会盖掉窄屏那条「收成一列」） */
+@media (min-width: 761px) {
+  .desktop-area {
+    grid-template-columns: var(--icon-cell-w) minmax(0, 1fr);
+  }
 }
 .folders {
   /* 粘性定位的 top 从桌面区域的内边距（20px）里面算起，所以也要减掉这 20px */
@@ -525,5 +528,26 @@ body {
 @keyframes page-in-fade {
   from {
     opacity: 0;
+  }
+}
+
+/* ── Driftlog 的改动：一栏最多一屏高 ──
+ * 两栏时主栏、右栏各自是一列，最多一屏高：窗口按内容定高，放不下时后面的窗口压缩、在自己里面滚，
+ * 桌面本身不再因为窗口叠得太高而滚动（不会出现「窗口在滚、桌面也在滚」的两层滚动）。
+ * 不想被压缩的窗口（比如首页头部）加 .win-fixed。 */
+/* 只在真有两栏时生效：一栏（右栏掉到下面）时窗口按内容定高、桌面照常滚，不然窗口会被压到很小 */
+@media (min-width: 1280px) {
+  .wins-main,
+  .wins-aside {
+    display: flex;
+    flex-direction: column;
+    max-height: 100cqh;
+  }
+  :is(.wins-main, .wins-aside) > .win {
+    flex: 0 1 auto;
+    min-height: 160px;
+  }
+  :is(.wins-main, .wins-aside) > .win.win-fixed {
+    flex-shrink: 0;
   }
 }

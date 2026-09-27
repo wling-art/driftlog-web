@@ -2,19 +2,11 @@ import { useState } from "react"
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Window } from "@/components/boring"
+import { Hero } from "@/components/hero"
 import { Button } from "@/components/ui/button"
 import { Empty, EntryList, SiteShell } from "@/components/site"
 import { entriesQuery, saysQuery, siteQuery, useSite } from "@/lib/api"
 import { site, siteOf } from "@/lib/site"
-
-// 社交账号 → 链接。只列站长填了的
-const socialLinks: Record<string, { label: string; href: (v: string) => string }> = {
-  github: { label: "GitHub", href: (v) => `https://github.com/${v}` },
-  twitter: { label: "X", href: (v) => `https://x.com/${v}` },
-  telegram: { label: "Telegram", href: (v) => `https://t.me/${v}` },
-  bilibili: { label: "哔哩哔哩", href: (v) => `https://space.bilibili.com/${v}` },
-  email: { label: "邮件", href: (v) => `mailto:${v}` },
-}
 
 export const Route = createFileRoute("/")({
   loader: ({ context }) =>
@@ -53,7 +45,6 @@ function Home() {
   // 一言：按日期挑一条，一天换一句（服务器和浏览器挑的一样，不会水合不一致）
   const [day] = useState(() => Math.floor(Date.now() / 86_400_000))
   const say = says.length ? says[day % says.length] : null
-  const socials = Object.entries(info.owner.socials).filter(([k, v]) => v && socialLinks[k])
 
   return (
     <SiteShell
@@ -101,46 +92,7 @@ function Home() {
         </>
       }
     >
-      <Window
-        id="readme"
-        name="readme.txt"
-        title={info.title}
-        rule={info.description ? `// ${info.description}` : undefined}
-      >
-        {info.owner.introduce && <p className="max-w-(--measure)">{info.owner.introduce}</p>}
-        {socials.length > 0 && (
-          <p className="home-socials">
-            {socials.map(([k, v]) => (
-              <a
-                key={k}
-                href={socialLinks[k]!.href(v)}
-                target={k === "email" ? undefined : "_blank"}
-                rel="noopener me"
-              >
-                {socialLinks[k]!.label}
-              </a>
-            ))}
-          </p>
-        )}
-        {say && (
-          <figure className="home-say">
-            <blockquote>{say.text}</blockquote>
-            {(say.author || say.source) && (
-              <figcaption>
-                —— {say.author}
-                {say.source && (
-                  <>
-                    {" "}
-                    <a href={say.source} target="_blank" rel="noopener">
-                      出处
-                    </a>
-                  </>
-                )}
-              </figcaption>
-            )}
-          </figure>
-        )}
-      </Window>
+      <Hero info={info} say={say ?? null} />
 
       <Window id="latest-posts" name="posts/" title="最近的文章" rule={`// 共 ${posts.total} 篇`}>
         {posts.items.length ? (

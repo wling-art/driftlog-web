@@ -19,7 +19,7 @@ function Says() {
         {data.length ? (
           <ul className="says">
             {data.map((s) => (
-              <li key={s.id} className="home-say">
+              <li key={s.id} className="say">
                 <blockquote>{s.text}</blockquote>
                 {(s.author || s.source) && (
                   <figcaption>
