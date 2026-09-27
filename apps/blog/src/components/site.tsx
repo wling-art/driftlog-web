@@ -3,6 +3,7 @@ import { Link, useRouter } from "@tanstack/react-router"
 import { Desktop, DesktopArea, Folders, Taskbar, TaskbarButton, Window, Windows } from "@/components/boring"
 import { Button } from "@/components/ui/button"
 import { useUI } from "@/lib/store"
+import { back, forward, useArrowNav } from "@/lib/keys"
 import { entryPath, formatDate, site } from "@/lib/site"
 import type { EntryCard } from "@/lib/api"
 
@@ -83,28 +84,86 @@ export function EntryList({ items }: { items: EntryCard[] }) {
   )
 }
 
-export function Pager({ page, total, size, to }: { page: number; total: number; size: number; to: string }) {
+/** 要显示哪些页码：首页、末页、当前页前后各一页，中间断开的用 … */
+function pageList(page: number, pages: number): (number | "gap")[] {
+  const keep = new Set([1, pages, page - 1, page, page + 1].filter((p) => p >= 1 && p <= pages))
+  const out: (number | "gap")[] = []
+  let last = 0
+  for (const p of [...keep].sort((a, b) => a - b)) {
+    if (p - last > 1) out.push("gap")
+    out.push(p)
+    last = p
+  }
+  return out
+}
+
+/**
+ * 翻页：两头是「← 上一页」「下一页 →」按钮，中间一排页码做成文件夹标签，
+ * 当前页的标签升起来（和任务栏的标签同一个动作）。
+ * 按钮位置固定：第一页时「上一页」置灰但还在，翻页时手不用重新找按钮。
+ * 翻页时内容往对应方向滑（下一页从右边进来），← → 键也能翻。
+ * search 用函数合并：在分类、标签里翻页不会把筛选丢掉。
+ */
+export function Pager({
+  page,
+  total,
+  size,
+  to,
+}: {
+  page: number
+  total: number
+  size: number
+  to: "/posts" | "/notes"
+}) {
   const pages = Math.ceil(total / size)
+  const go = (p: number) => ({ to, search: (prev: object) => ({ ...prev, page: p }) })
+  useArrowNav(page > 1 ? go(page - 1) : null, page < pages ? go(page + 1) : null)
   if (pages <= 1) return null
   return (
-    <nav aria-label="翻页" className="mt-(--space-5) flex items-center gap-(--space-3)">
+    <nav aria-label="翻页" className="pager">
       {page > 1 ? (
         <Button asChild>
-          <Link to={to} search={{ page: page - 1 }}>
-            上一页
+          <Link {...go(page - 1)} rel="prev" viewTransition={back}>
+            ← 上一页
           </Link>
         </Button>
-      ) : null}
-      <span className="pixel-1 muted">
-        第 {page} 页，共 {pages} 页
-      </span>
+      ) : (
+        <Button disabled title="已经是第一页了">
+          ← 上一页
+        </Button>
+      )}
+      <ol className="page-tabs">
+        {pageList(page, pages).map((p, i) =>
+          p === "gap" ? (
+            <li key={`gap-${i}`} className="page-gap" aria-hidden="true">
+              …
+            </li>
+          ) : (
+            <li key={p}>
+              <Link
+                {...go(p)}
+                viewTransition={p > page ? forward : back}
+                aria-label={`第 ${p} 页`}
+                aria-current={p === page ? "page" : undefined}
+                className="page-tab"
+              >
+                {p}
+              </Link>
+            </li>
+          ),
+        )}
+      </ol>
       {page < pages ? (
         <Button asChild>
-          <Link to={to} search={{ page: page + 1 }}>
-            下一页
+          <Link {...go(page + 1)} rel="next" viewTransition={forward}>
+            下一页 →
           </Link>
         </Button>
-      ) : null}
+      ) : (
+        <Button disabled title="已经是最后一页了">
+          下一页 →
+        </Button>
+      )}
     </nav>
   )
 }

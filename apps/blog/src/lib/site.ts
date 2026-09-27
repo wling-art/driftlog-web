@@ -18,3 +18,28 @@ export const formatDate = (d: string | Date | null | undefined) =>
         .toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" })
         .replaceAll("/", "-")
     : ""
+
+/** 一眼能懂的时间：刚刚 / 5 分钟前 / 3 小时前 / 昨天 14:20 / 9月27日 / 2025年9月27日 */
+export function timeAgo(d: string | Date, now = Date.now()) {
+  const t = new Date(d)
+  const diff = (now - t.getTime()) / 1000
+  const hm = t.toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false })
+  if (diff < 60) return "刚刚"
+  if (diff < 3600) return `${Math.floor(diff / 60)} 分钟前`
+  const today = new Date(now)
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
+  if (t.getTime() >= startOfToday) return `${Math.floor(diff / 3600)} 小时前`
+  if (t.getTime() >= startOfToday - 86400_000) return `昨天 ${hm}`
+  if (t.getFullYear() === today.getFullYear()) return `${t.getMonth() + 1}月${t.getDate()}日`
+  return `${t.getFullYear()}年${t.getMonth() + 1}月${t.getDate()}日`
+}
+/** 悬停时看的完整时间 */
+export const fullTime = (d: string | Date) =>
+  new Date(d).toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })

@@ -8,118 +8,126 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root"
-import { Route as AppRouteImport } from "./routes/_app"
-import { Route as LoginRouteImport } from "./routes/login"
-import { Route as AppIndexRouteImport } from "./routes/_app/index"
-import { Route as AppCategoriesRouteImport } from "./routes/_app/categories"
-import { Route as AppCommentsRouteImport } from "./routes/_app/comments"
-import { Route as AppFilesRouteImport } from "./routes/_app/files"
-import { Route as AppSettingsRouteImport } from "./routes/_app/settings"
-import { Route as AppEntriesIndexRouteImport } from "./routes/_app/entries/index"
-import { Route as AppEntriesIdRouteImport } from "./routes/_app/entries/$id"
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppCategoriesRouteImport } from './routes/_app/categories'
+import { Route as AppCommentsRouteImport } from './routes/_app/comments'
+import { Route as AppFilesRouteImport } from './routes/_app/files'
+import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppEntriesIndexRouteImport } from './routes/_app/entries/index'
+import { Route as AppEntriesIdRouteImport } from './routes/_app/entries/$id'
 
 const AppRoute = AppRouteImport.update({
-  id: "/_app",
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
-  id: "/login",
-  path: "/login",
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCategoriesRoute = AppCategoriesRouteImport.update({
-  id: "/categories",
-  path: "/categories",
+  id: '/categories',
+  path: '/categories',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCommentsRoute = AppCommentsRouteImport.update({
-  id: "/comments",
-  path: "/comments",
+  id: '/comments',
+  path: '/comments',
   getParentRoute: () => AppRoute,
 } as any)
 const AppFilesRoute = AppFilesRouteImport.update({
-  id: "/files",
-  path: "/files",
+  id: '/files',
+  path: '/files',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
-  id: "/settings",
-  path: "/settings",
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
 const AppEntriesIndexRoute = AppEntriesIndexRouteImport.update({
-  id: "/entries/",
-  path: "/entries/",
+  id: '/entries/',
+  path: '/entries/',
   getParentRoute: () => AppRoute,
 } as any)
 const AppEntriesIdRoute = AppEntriesIdRouteImport.update({
-  id: "/entries/$id",
-  path: "/entries/$id",
+  id: '/entries/$id',
+  path: '/entries/$id',
   getParentRoute: () => AppRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof AppIndexRoute
-  "/login": typeof LoginRoute
-  "/categories": typeof AppCategoriesRoute
-  "/comments": typeof AppCommentsRoute
-  "/files": typeof AppFilesRoute
-  "/settings": typeof AppSettingsRoute
-  "/entries/$id": typeof AppEntriesIdRoute
-  "/entries/": typeof AppEntriesIndexRoute
+  '/': typeof AppIndexRoute
+  '/login': typeof LoginRoute
+  '/categories': typeof AppCategoriesRoute
+  '/comments': typeof AppCommentsRoute
+  '/files': typeof AppFilesRoute
+  '/settings': typeof AppSettingsRoute
+  '/entries/$id': typeof AppEntriesIdRoute
+  '/entries/': typeof AppEntriesIndexRoute
 }
 export interface FileRoutesByTo {
-  "/login": typeof LoginRoute
-  "/categories": typeof AppCategoriesRoute
-  "/comments": typeof AppCommentsRoute
-  "/files": typeof AppFilesRoute
-  "/settings": typeof AppSettingsRoute
-  "/": typeof AppIndexRoute
-  "/entries/$id": typeof AppEntriesIdRoute
-  "/entries": typeof AppEntriesIndexRoute
+  '/login': typeof LoginRoute
+  '/categories': typeof AppCategoriesRoute
+  '/comments': typeof AppCommentsRoute
+  '/files': typeof AppFilesRoute
+  '/settings': typeof AppSettingsRoute
+  '/': typeof AppIndexRoute
+  '/entries/$id': typeof AppEntriesIdRoute
+  '/entries': typeof AppEntriesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  "/_app": typeof AppRouteWithChildren
-  "/login": typeof LoginRoute
-  "/_app/categories": typeof AppCategoriesRoute
-  "/_app/comments": typeof AppCommentsRoute
-  "/_app/files": typeof AppFilesRoute
-  "/_app/settings": typeof AppSettingsRoute
-  "/_app/": typeof AppIndexRoute
-  "/_app/entries/$id": typeof AppEntriesIdRoute
-  "/_app/entries/": typeof AppEntriesIndexRoute
+  '/_app': typeof AppRouteWithChildren
+  '/login': typeof LoginRoute
+  '/_app/categories': typeof AppCategoriesRoute
+  '/_app/comments': typeof AppCommentsRoute
+  '/_app/files': typeof AppFilesRoute
+  '/_app/settings': typeof AppSettingsRoute
+  '/_app/': typeof AppIndexRoute
+  '/_app/entries/$id': typeof AppEntriesIdRoute
+  '/_app/entries/': typeof AppEntriesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/login"
-    | "/categories"
-    | "/comments"
-    | "/files"
-    | "/settings"
-    | "/entries/$id"
-    | "/entries/"
+    | '/'
+    | '/login'
+    | '/categories'
+    | '/comments'
+    | '/files'
+    | '/settings'
+    | '/entries/$id'
+    | '/entries/'
   fileRoutesByTo: FileRoutesByTo
-  to: "/login" | "/categories" | "/comments" | "/files" | "/settings" | "/" | "/entries/$id" | "/entries"
+  to:
+    | '/login'
+    | '/categories'
+    | '/comments'
+    | '/files'
+    | '/settings'
+    | '/'
+    | '/entries/$id'
+    | '/entries'
   id:
-    | "__root__"
-    | "/_app"
-    | "/login"
-    | "/_app/categories"
-    | "/_app/comments"
-    | "/_app/files"
-    | "/_app/settings"
-    | "/_app/"
-    | "/_app/entries/$id"
-    | "/_app/entries/"
+    | '__root__'
+    | '/_app'
+    | '/login'
+    | '/_app/categories'
+    | '/_app/comments'
+    | '/_app/files'
+    | '/_app/settings'
+    | '/_app/'
+    | '/_app/entries/$id'
+    | '/_app/entries/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -127,68 +135,68 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/_app": {
-      id: "/_app"
-      path: ""
-      fullPath: "/"
+    '/_app': {
+      id: '/_app'
+      path: ''
+      fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/login": {
-      id: "/login"
-      path: "/login"
-      fullPath: "/login"
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/_app/": {
-      id: "/_app/"
-      path: "/"
-      fullPath: "/"
+    '/_app/': {
+      id: '/_app/'
+      path: '/'
+      fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    "/_app/categories": {
-      id: "/_app/categories"
-      path: "/categories"
-      fullPath: "/categories"
+    '/_app/categories': {
+      id: '/_app/categories'
+      path: '/categories'
+      fullPath: '/categories'
       preLoaderRoute: typeof AppCategoriesRouteImport
       parentRoute: typeof AppRoute
     }
-    "/_app/comments": {
-      id: "/_app/comments"
-      path: "/comments"
-      fullPath: "/comments"
+    '/_app/comments': {
+      id: '/_app/comments'
+      path: '/comments'
+      fullPath: '/comments'
       preLoaderRoute: typeof AppCommentsRouteImport
       parentRoute: typeof AppRoute
     }
-    "/_app/files": {
-      id: "/_app/files"
-      path: "/files"
-      fullPath: "/files"
+    '/_app/files': {
+      id: '/_app/files'
+      path: '/files'
+      fullPath: '/files'
       preLoaderRoute: typeof AppFilesRouteImport
       parentRoute: typeof AppRoute
     }
-    "/_app/settings": {
-      id: "/_app/settings"
-      path: "/settings"
-      fullPath: "/settings"
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
-    "/_app/entries/": {
-      id: "/_app/entries/"
-      path: "/entries"
-      fullPath: "/entries/"
+    '/_app/entries/': {
+      id: '/_app/entries/'
+      path: '/entries'
+      fullPath: '/entries/'
       preLoaderRoute: typeof AppEntriesIndexRouteImport
       parentRoute: typeof AppRoute
     }
-    "/_app/entries/$id": {
-      id: "/_app/entries/$id"
-      path: "/entries/$id"
-      fullPath: "/entries/$id"
+    '/_app/entries/$id': {
+      id: '/_app/entries/$id'
+      path: '/entries/$id'
+      fullPath: '/entries/$id'
       preLoaderRoute: typeof AppEntriesIdRouteImport
       parentRoute: typeof AppRoute
     }
@@ -221,4 +229,6 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
 }
-export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>()
+export const routeTree = rootRouteImport
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()

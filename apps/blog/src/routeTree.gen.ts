@@ -8,155 +8,155 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from "./routes/__root"
-import { Route as IndexRouteImport } from "./routes/index"
-import { Route as SlugRouteImport } from "./routes/$slug"
-import { Route as AtomDotxmlRouteImport } from "./routes/atom[.]xml"
-import { Route as FeedDotxmlRouteImport } from "./routes/feed[.]xml"
-import { Route as RobotsDottxtRouteImport } from "./routes/robots[.]txt"
-import { Route as SitemapDotxmlRouteImport } from "./routes/sitemap[.]xml"
-import { Route as NotesIndexRouteImport } from "./routes/notes/index"
-import { Route as NotesSlugRouteImport } from "./routes/notes/$slug"
-import { Route as PostsIndexRouteImport } from "./routes/posts/index"
-import { Route as PostsSlugRouteImport } from "./routes/posts/$slug"
-import { Route as OgTypeSlugRouteImport } from "./routes/og/$type.$slug"
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as SlugRouteImport } from './routes/$slug'
+import { Route as AtomDotxmlRouteImport } from './routes/atom[.]xml'
+import { Route as FeedDotxmlRouteImport } from './routes/feed[.]xml'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as NotesIndexRouteImport } from './routes/notes/index'
+import { Route as NotesSlugRouteImport } from './routes/notes/$slug'
+import { Route as PostsIndexRouteImport } from './routes/posts/index'
+import { Route as PostsSlugRouteImport } from './routes/posts/$slug'
+import { Route as OgTypeSlugRouteImport } from './routes/og/$type.$slug'
 
 const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SlugRoute = SlugRouteImport.update({
-  id: "/$slug",
-  path: "/$slug",
+  id: '/$slug',
+  path: '/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AtomDotxmlRoute = AtomDotxmlRouteImport.update({
-  id: "/atom.xml",
-  path: "/atom.xml",
+  id: '/atom.xml',
+  path: '/atom.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FeedDotxmlRoute = FeedDotxmlRouteImport.update({
-  id: "/feed.xml",
-  path: "/feed.xml",
+  id: '/feed.xml',
+  path: '/feed.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
-  id: "/robots.txt",
-  path: "/robots.txt",
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: "/sitemap.xml",
-  path: "/sitemap.xml",
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotesIndexRoute = NotesIndexRouteImport.update({
-  id: "/notes/",
-  path: "/notes/",
+  id: '/notes/',
+  path: '/notes/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotesSlugRoute = NotesSlugRouteImport.update({
-  id: "/notes/$slug",
-  path: "/notes/$slug",
+  id: '/notes/$slug',
+  path: '/notes/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PostsIndexRoute = PostsIndexRouteImport.update({
-  id: "/posts/",
-  path: "/posts/",
+  id: '/posts/',
+  path: '/posts/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PostsSlugRoute = PostsSlugRouteImport.update({
-  id: "/posts/$slug",
-  path: "/posts/$slug",
+  id: '/posts/$slug',
+  path: '/posts/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OgTypeSlugRoute = OgTypeSlugRouteImport.update({
-  id: "/og/$type/$slug",
-  path: "/og/$type/$slug",
+  id: '/og/$type/$slug',
+  path: '/og/$type/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  "/": typeof IndexRoute
-  "/$slug": typeof SlugRoute
-  "/atom.xml": typeof AtomDotxmlRoute
-  "/feed.xml": typeof FeedDotxmlRoute
-  "/robots.txt": typeof RobotsDottxtRoute
-  "/sitemap.xml": typeof SitemapDotxmlRoute
-  "/notes/$slug": typeof NotesSlugRoute
-  "/posts/$slug": typeof PostsSlugRoute
-  "/notes/": typeof NotesIndexRoute
-  "/posts/": typeof PostsIndexRoute
-  "/og/$type/$slug": typeof OgTypeSlugRoute
+  '/': typeof IndexRoute
+  '/$slug': typeof SlugRoute
+  '/atom.xml': typeof AtomDotxmlRoute
+  '/feed.xml': typeof FeedDotxmlRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/notes/$slug': typeof NotesSlugRoute
+  '/posts/$slug': typeof PostsSlugRoute
+  '/notes/': typeof NotesIndexRoute
+  '/posts/': typeof PostsIndexRoute
+  '/og/$type/$slug': typeof OgTypeSlugRoute
 }
 export interface FileRoutesByTo {
-  "/": typeof IndexRoute
-  "/$slug": typeof SlugRoute
-  "/atom.xml": typeof AtomDotxmlRoute
-  "/feed.xml": typeof FeedDotxmlRoute
-  "/robots.txt": typeof RobotsDottxtRoute
-  "/sitemap.xml": typeof SitemapDotxmlRoute
-  "/notes/$slug": typeof NotesSlugRoute
-  "/posts/$slug": typeof PostsSlugRoute
-  "/notes": typeof NotesIndexRoute
-  "/posts": typeof PostsIndexRoute
-  "/og/$type/$slug": typeof OgTypeSlugRoute
+  '/': typeof IndexRoute
+  '/$slug': typeof SlugRoute
+  '/atom.xml': typeof AtomDotxmlRoute
+  '/feed.xml': typeof FeedDotxmlRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/notes/$slug': typeof NotesSlugRoute
+  '/posts/$slug': typeof PostsSlugRoute
+  '/notes': typeof NotesIndexRoute
+  '/posts': typeof PostsIndexRoute
+  '/og/$type/$slug': typeof OgTypeSlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  "/": typeof IndexRoute
-  "/$slug": typeof SlugRoute
-  "/atom.xml": typeof AtomDotxmlRoute
-  "/feed.xml": typeof FeedDotxmlRoute
-  "/robots.txt": typeof RobotsDottxtRoute
-  "/sitemap.xml": typeof SitemapDotxmlRoute
-  "/notes/$slug": typeof NotesSlugRoute
-  "/posts/$slug": typeof PostsSlugRoute
-  "/notes/": typeof NotesIndexRoute
-  "/posts/": typeof PostsIndexRoute
-  "/og/$type/$slug": typeof OgTypeSlugRoute
+  '/': typeof IndexRoute
+  '/$slug': typeof SlugRoute
+  '/atom.xml': typeof AtomDotxmlRoute
+  '/feed.xml': typeof FeedDotxmlRoute
+  '/robots.txt': typeof RobotsDottxtRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/notes/$slug': typeof NotesSlugRoute
+  '/posts/$slug': typeof PostsSlugRoute
+  '/notes/': typeof NotesIndexRoute
+  '/posts/': typeof PostsIndexRoute
+  '/og/$type/$slug': typeof OgTypeSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | "/"
-    | "/$slug"
-    | "/atom.xml"
-    | "/feed.xml"
-    | "/robots.txt"
-    | "/sitemap.xml"
-    | "/notes/$slug"
-    | "/posts/$slug"
-    | "/notes/"
-    | "/posts/"
-    | "/og/$type/$slug"
+    | '/'
+    | '/$slug'
+    | '/atom.xml'
+    | '/feed.xml'
+    | '/robots.txt'
+    | '/sitemap.xml'
+    | '/notes/$slug'
+    | '/posts/$slug'
+    | '/notes/'
+    | '/posts/'
+    | '/og/$type/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | "/"
-    | "/$slug"
-    | "/atom.xml"
-    | "/feed.xml"
-    | "/robots.txt"
-    | "/sitemap.xml"
-    | "/notes/$slug"
-    | "/posts/$slug"
-    | "/notes"
-    | "/posts"
-    | "/og/$type/$slug"
+    | '/'
+    | '/$slug'
+    | '/atom.xml'
+    | '/feed.xml'
+    | '/robots.txt'
+    | '/sitemap.xml'
+    | '/notes/$slug'
+    | '/posts/$slug'
+    | '/notes'
+    | '/posts'
+    | '/og/$type/$slug'
   id:
-    | "__root__"
-    | "/"
-    | "/$slug"
-    | "/atom.xml"
-    | "/feed.xml"
-    | "/robots.txt"
-    | "/sitemap.xml"
-    | "/notes/$slug"
-    | "/posts/$slug"
-    | "/notes/"
-    | "/posts/"
-    | "/og/$type/$slug"
+    | '__root__'
+    | '/'
+    | '/$slug'
+    | '/atom.xml'
+    | '/feed.xml'
+    | '/robots.txt'
+    | '/sitemap.xml'
+    | '/notes/$slug'
+    | '/posts/$slug'
+    | '/notes/'
+    | '/posts/'
+    | '/og/$type/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -173,82 +173,82 @@ export interface RootRouteChildren {
   OgTypeSlugRoute: typeof OgTypeSlugRoute
 }
 
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    "/": {
-      id: "/"
-      path: "/"
-      fullPath: "/"
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/$slug": {
-      id: "/$slug"
-      path: "/$slug"
-      fullPath: "/$slug"
+    '/$slug': {
+      id: '/$slug'
+      path: '/$slug'
+      fullPath: '/$slug'
       preLoaderRoute: typeof SlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/atom.xml": {
-      id: "/atom.xml"
-      path: "/atom.xml"
-      fullPath: "/atom.xml"
+    '/atom.xml': {
+      id: '/atom.xml'
+      path: '/atom.xml'
+      fullPath: '/atom.xml'
       preLoaderRoute: typeof AtomDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/feed.xml": {
-      id: "/feed.xml"
-      path: "/feed.xml"
-      fullPath: "/feed.xml"
+    '/feed.xml': {
+      id: '/feed.xml'
+      path: '/feed.xml'
+      fullPath: '/feed.xml'
       preLoaderRoute: typeof FeedDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/robots.txt": {
-      id: "/robots.txt"
-      path: "/robots.txt"
-      fullPath: "/robots.txt"
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
       preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/sitemap.xml": {
-      id: "/sitemap.xml"
-      path: "/sitemap.xml"
-      fullPath: "/sitemap.xml"
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/notes/": {
-      id: "/notes/"
-      path: "/notes"
-      fullPath: "/notes/"
+    '/notes/': {
+      id: '/notes/'
+      path: '/notes'
+      fullPath: '/notes/'
       preLoaderRoute: typeof NotesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/notes/$slug": {
-      id: "/notes/$slug"
-      path: "/notes/$slug"
-      fullPath: "/notes/$slug"
+    '/notes/$slug': {
+      id: '/notes/$slug'
+      path: '/notes/$slug'
+      fullPath: '/notes/$slug'
       preLoaderRoute: typeof NotesSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/posts/": {
-      id: "/posts/"
-      path: "/posts"
-      fullPath: "/posts/"
+    '/posts/': {
+      id: '/posts/'
+      path: '/posts'
+      fullPath: '/posts/'
       preLoaderRoute: typeof PostsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/posts/$slug": {
-      id: "/posts/$slug"
-      path: "/posts/$slug"
-      fullPath: "/posts/$slug"
+    '/posts/$slug': {
+      id: '/posts/$slug'
+      path: '/posts/$slug'
+      fullPath: '/posts/$slug'
       preLoaderRoute: typeof PostsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/og/$type/$slug": {
-      id: "/og/$type/$slug"
-      path: "/og/$type/$slug"
-      fullPath: "/og/$type/$slug"
+    '/og/$type/$slug': {
+      id: '/og/$type/$slug'
+      path: '/og/$type/$slug'
+      fullPath: '/og/$type/$slug'
       preLoaderRoute: typeof OgTypeSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -268,11 +268,13 @@ const rootRouteChildren: RootRouteChildren = {
   PostsIndexRoute: PostsIndexRoute,
   OgTypeSlugRoute: OgTypeSlugRoute,
 }
-export const routeTree = rootRouteImport._addFileChildren(rootRouteChildren)._addFileTypes<FileRouteTypes>()
+export const routeTree = rootRouteImport
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
 
-import type { getRouter } from "./router.tsx"
-import type { createStart } from "@tanstack/react-start"
-declare module "@tanstack/react-start" {
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
   interface Register {
     ssr: true
     router: Awaited<ReturnType<typeof getRouter>>

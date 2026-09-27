@@ -7,11 +7,13 @@ import { commentInput, unwrap } from "@driftlog/client"
 import { Window } from "@/components/boring"
 import { Button } from "@/components/ui/button"
 import { api, commentsQuery, type Comment } from "@/lib/api"
+import { fullTime, timeAgo } from "@/lib/site"
 
 /*
- * 评论就是一份 comments.log：
- * - 每条评论是日志里的一段：行号 · 像素字母头像 · 名字 @ 时间；回复用 └─ 连到上一条
- * - 底下不是表单，是一行命令提示符：打字、回车就发。第一次发的时候像登录一样问「你叫什么」「邮箱」，之后记住你
+ * 评论（comments.log）：
+ * - 一条评论 = 像素字母头像 + 名字 + 一眼能懂的时间（3 小时前 / 昨天 14:20，悬停看完整时间）+ 正文 + 「回复」
+ * - 回复缩进一层，并写明「回复 某某」，不用猜是回谁
+ * - 写评论只有一个输入框：打字、回车就发。第一次发时再一步步问名字和邮箱，之后记住你
  * - 回车发送，Shift + 回车换行；输入法选字时的回车不算
  * 没有 Gravatar：不往第三方发评论者的邮箱哈希，头像用名字的第一个字
  */
@@ -21,34 +23,29 @@ const easeEnter = [0.37, 0.42, 0.12, 0.85] as const
 const easeExit = [0.88, 0.15, 0.63, 0.58] as const
 const REMEMBER = "driftlog-commenter"
 
-type Node = Comment & { children: Node[]; line: number }
-type Line = Node & { depth: number }
+type Node = Comment & { children: Node[] }
+type Line = Comment & { depth: number; parentAuthor: string | null }
 type Identity = { author: string; email: string }
 
-function buildTree(list: Comment[]) {
-  const map = new Map<number, Node>(list.map((c) => [c.id, { ...c, children: [], line: 0 }]))
+/** 树 → 按显示顺序（深度优先）排好的一列，每条带上缩进层级和它回复的是谁 */
+function buildLines(list: Comment[]) {
+  const map = new Map<number, Node>(list.map((c) => [c.id, { ...c, children: [] }]))
   const roots: Node[] = []
   for (const n of map.values()) {
     const parent = n.parentId ? map.get(n.parentId) : undefined
     if (parent) parent.children.push(n)
     else roots.push(n)
   }
-  // 行号按显示顺序（深度优先）编
-  let line = 0
-  const number = (ns: Node[]) => ns.forEach((n) => ((n.line = ++line), number(n.children)))
-  number(roots)
   const lines: Line[] = []
-  const flat = (ns: Node[], depth: number) =>
-    ns.forEach((n) => (lines.push({ ...n, depth }), flat(n.children, depth + 1)))
-  flat(roots, 0)
+  const flat = (ns: Node[], depth: number, parentAuthor: string | null) =>
+    ns.forEach(({ children, ...n }) => {
+      lines.push({ ...n, depth, parentAuthor })
+      flat(children, depth + 1, n.author)
+    })
+  flat(roots, 0, null)
   return lines
 }
 
-const stamp = (d: string | Date) => {
-  const t = new Date(d)
-  const p = (n: number) => String(n).padStart(2, "0")
-  return `${p(t.getMonth() + 1)}-${p(t.getDate())} ${p(t.getHours())}:${p(t.getMinutes())}`
-}
 const initial = (name: string) => [...name.trim()][0]?.toUpperCase() ?? "?"
 
 // 记住的身份：localStorage 当外部存储订阅，SSR 时是 null（不会水合不一致）
@@ -85,7 +82,7 @@ function useIdentity(): Identity | null {
 
 export function Comments({ entryId }: { entryId: number }) {
   const { data, isPending, isError, refetch } = useQuery(commentsQuery(entryId))
-  const lines = useMemo(() => buildTree(data ?? []), [data])
+  const lines = useMemo(() => buildLines(data ?? []), [data])
   const [replyTo, setReplyTo] = useState<Comment | null>(null)
   const promptRef = useRef<HTMLTextAreaElement>(null)
 
@@ -96,22 +93,22 @@ export function Comments({ entryId }: { entryId: number }) {
 
   return (
     <Window id="comments" name="comments.log" aria-label="评论" closable={false} className="comments">
-      <p className="log-head">
+      <p className="c-head">
         {isPending
-          ? "# 在翻日志…"
+          ? "在翻评论…"
           : isError
-            ? "# ✕ 日志没读出来"
+            ? "✕ 评论没加载出来"
             : data?.length
-              ? `# ${data.length} 条评论 · 最后一条 ${stamp(data.at(-1)!.createdAt)}`
-              : "# 这份日志还是空的。敲下第一行吧"}
+              ? `${data.length} 条评论`
+              : "还没人说话"}
         {isError && (
-          <button type="button" className="log-link" onClick={() => refetch()}>
+          <button type="button" className="c-link" onClick={() => refetch()}>
             重试
           </button>
         )}
       </p>
       {lines.length > 0 && (
-        <ol className="log">
+        <ol className="c-list">
           {lines.map((n) => (
             <LogEntry key={n.id} line={n} onReply={reply} />
           ))}
@@ -131,41 +128,34 @@ function LogEntry({ line: n, onReply }: { line: Line; onReply: (c: Comment) => v
   return (
     <motion.li
       id={`comment-${n.id}`}
-      className="log-entry"
-      style={{ "--depth": Math.min(n.depth, 3) } as React.CSSProperties}
+      className="c-entry"
+      style={{ "--depth": Math.min(n.depth, 2) } as React.CSSProperties}
       data-reply={n.depth > 0 || undefined}
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.24, ease: easeEnter }}
     >
-      <span className="log-no" aria-hidden="true">
-        {n.line}
+      <span className="c-avatar" aria-hidden="true">
+        {initial(n.author)}
       </span>
-      <div className="log-row">
-        <span className="log-avatar" aria-hidden="true">
-          {initial(n.author)}
-        </span>
-        <div className="min-w-0">
-          <p className="log-meta">
-            {n.url ? (
-              <a href={n.url} rel="nofollow noopener ugc" target="_blank" className="log-author is-link">
-                {n.author}
-              </a>
-            ) : (
-              <span className="log-author">{n.author}</span>
-            )}
-            <time dateTime={String(n.createdAt)}>@ {stamp(n.createdAt)}</time>
-            <button
-              type="button"
-              className="log-link"
-              onClick={() => onReply(n)}
-              aria-label={`回复 ${n.author}`}
-            >
-              回复
-            </button>
-          </p>
-          <div className="comment-body" dangerouslySetInnerHTML={{ __html: n.html }} />
-        </div>
+      <div className="min-w-0">
+        <p className="c-meta">
+          {n.url ? (
+            <a href={n.url} rel="nofollow noopener ugc" target="_blank" className="c-author is-link">
+              {n.author}
+            </a>
+          ) : (
+            <span className="c-author">{n.author}</span>
+          )}
+          {n.parentAuthor && <span className="c-muted">回复 {n.parentAuthor}</span>}
+          <time className="c-muted" dateTime={String(n.createdAt)} title={fullTime(n.createdAt)}>
+            {timeAgo(n.createdAt)}
+          </time>
+        </p>
+        <div className="comment-body" dangerouslySetInnerHTML={{ __html: n.html }} />
+        <button type="button" className="c-link" onClick={() => onReply(n)} aria-label={`回复 ${n.author}`}>
+          回复
+        </button>
       </div>
     </motion.li>
   )
@@ -247,8 +237,6 @@ function Prompt({
     if (!busy) void advance()
   }
 
-  const who = identity?.author ?? "访客"
-
   return (
     <form
       noValidate
@@ -268,8 +256,8 @@ function Prompt({
             animate={{ opacity: 1, height: "auto", transition: { duration: 0.24, ease: easeEnter } }}
             exit={{ opacity: 0, height: 0, transition: { duration: 0.16, ease: easeExit } }}
           >
-            ↳ 回复 #{replyTo.author}
-            <button type="button" className="log-link" onClick={onCancelReply}>
+            正在回复 {replyTo.author}
+            <button type="button" className="c-link" onClick={onCancelReply}>
               不回了（Esc）
             </button>
           </motion.p>
@@ -279,8 +267,8 @@ function Prompt({
       <form.Field name="body" validators={{ onDynamic: shape.body }}>
         {(f) => (
           <div className="prompt-line">
-            <label htmlFor="comment-body" className="prompt-ps1">
-              {who}@driftlog:~$
+            <label htmlFor="comment-body" className="prompt-label">
+              写评论{identity && <span className="c-muted">（以 {identity.author} 的身份）</span>}
             </label>
             <textarea
               ref={inputRef}
@@ -292,7 +280,7 @@ function Prompt({
               readOnly={step !== "body"}
               aria-invalid={!f.state.meta.isValid}
               aria-describedby="comment-hint"
-              placeholder={replyTo ? `回 ${replyTo.author} 点什么` : "说点什么，回车发送"}
+              placeholder={replyTo ? `回复 ${replyTo.author}…` : "说点什么…"}
               className="prompt-input"
             />
             <PromptError errors={f.state.meta.errors} />
@@ -324,8 +312,8 @@ function Prompt({
                 >
                   {(f) => (
                     <div className="prompt-line">
-                      <label htmlFor={`comment-${name}`} className="prompt-ps1">
-                        {name === "author" ? "? 你叫什么：" : "? 邮箱（不公开，有人回你时通知）："}
+                      <label htmlFor={`comment-${name}`} className="prompt-label">
+                        {name === "author" ? "你的名字" : "你的邮箱（不公开，有人回复你时通知你）"}
                       </label>
                       <input
                         ref={step === name ? stepRef : undefined}
@@ -358,7 +346,7 @@ function Prompt({
             <>
               回车发送 · Shift + 回车换行 · 支持 Markdown
               {identity && (
-                <button type="button" className="log-link" onClick={() => saveIdentity(null)}>
+                <button type="button" className="c-link" onClick={() => saveIdentity(null)}>
                   不是 {identity.author}？
                 </button>
               )}

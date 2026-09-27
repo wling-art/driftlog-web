@@ -349,104 +349,83 @@
   color: var(--text-muted);
 }
 
-/* ── 评论：一份 comments.log ──
- * 行号一栏对齐，回复按深度缩进、用 └─ 连到上一条；元信息用等宽字，正文用无衬线小一号。 */
-.comments .win-body {
-  padding-block: var(--space-4);
-}
-.log-head {
+/* ── 评论：一条一段，留足空隙；时间写人话；回复缩进一层 ── */
+.c-head {
   display: flex;
-  flex-wrap: wrap;
   gap: var(--space-2);
   align-items: baseline;
-  font: 400 var(--text-sm)/1.7 var(--font-mono);
+  font: 400 12px/1.5 var(--font-pixel);
   color: var(--text-muted);
 }
-.log {
+.c-list {
   display: grid;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
+  gap: var(--space-5);
+  margin-top: var(--space-4);
 }
-.log-entry {
+.c-entry {
   display: grid;
-  grid-template-columns: 3ch minmax(0, 1fr);
-  column-gap: var(--space-2);
+  grid-template-columns: 32px minmax(0, 1fr);
+  column-gap: var(--space-3);
+  margin-left: calc(var(--depth, 0) * 44px);
 }
-.log-no {
-  font: 400 12px/24px var(--font-mono);
-  color: var(--text-muted);
-  text-align: right;
-  opacity: 0.7;
-  user-select: none;
+.c-entry[data-reply] {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--border-soft);
 }
-.log-row {
-  position: relative;
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
-  column-gap: var(--space-2);
-  padding-left: calc(var(--depth, 0) * 3ch);
-}
-.log-entry[data-reply] .log-row::before {
-  content: "└─";
-  position: absolute;
-  left: calc((var(--depth) - 1) * 3ch + 0.5ch);
-  font: 400 var(--text-sm)/24px var(--font-mono);
-  color: var(--border-frame);
-}
-.log-avatar {
+.c-avatar {
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   background: var(--window-bar);
   border: var(--line) solid var(--border-frame);
-  border-radius: 3px;
+  border-radius: 4px;
   font: 400 12px/1 var(--font-pixel);
   color: var(--text);
 }
-.log-meta {
+.c-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0 var(--space-2);
-  font: 400 var(--text-sm)/24px var(--font-mono);
+  gap: 2px var(--space-2);
+  line-height: 1.5;
 }
-.log-meta time {
-  color: var(--text-muted);
-}
-.log-author {
+.c-author {
   font-weight: 600;
 }
-.log-author.is-link {
+.c-author.is-link {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.log-link {
-  padding: 2px 3px;
+.c-muted {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.c-link {
+  margin-top: 4px;
+  padding: 0;
   border: 0;
-  border-radius: 2px;
   background: none;
   cursor: pointer;
-  font: 400 12px/1 var(--font-pixel);
+  font-size: var(--text-sm);
   color: var(--accent);
   text-decoration: underline;
-  text-underline-offset: 2px;
+  text-underline-offset: 3px;
 }
-.log-link:hover {
+.c-link:hover {
   background: var(--text);
   color: var(--bg);
   text-decoration: none;
 }
 .comment-body {
-  margin-top: 2px;
+  margin-top: 4px;
   max-width: var(--measure);
-  font-size: var(--text-sm);
-  line-height: 1.7;
+  line-height: 1.75;
   overflow-wrap: anywhere;
 }
 .comment-body > * + * {
-  margin-top: 0.5em;
+  margin-top: 0.6em;
 }
 .comment-body a {
   color: var(--accent);
@@ -467,45 +446,44 @@
   background: color-mix(in oklch, var(--warning) 22%, transparent);
   color: inherit;
 }
+@container (max-width: 420px) {
+  .c-entry {
+    margin-left: calc(var(--depth, 0) * 16px);
+  }
+}
 
-/* 命令提示符：没有输入框的外框，一行 PS1 + 光标；聚焦时整行底下一条青线（焦点必须看得见） */
+/* 写评论：标签在上方；输入框只留一条底线，聚焦时变青（焦点必须看得见） */
 .prompt {
   display: grid;
-  gap: 6px;
-  margin-top: var(--space-4);
-  padding-top: var(--space-3);
-  border-top: 1px dashed var(--border-soft);
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: var(--line) solid var(--border-soft);
 }
 .prompt-line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 1ch;
-  padding-bottom: 2px;
-  box-shadow: inset 0 -1px 0 var(--border-soft);
+  display: grid;
+  gap: 4px;
 }
-.prompt-line:focus-within {
-  box-shadow: inset 0 -2px 0 var(--accent);
-}
-.prompt-ps1 {
-  font: 400 var(--text-sm)/1.8 var(--font-mono);
-  color: var(--text-muted);
-  white-space: nowrap;
+.prompt-label {
+  font-weight: 600;
+  font-size: var(--text-sm);
 }
 .prompt-input {
-  flex: 1;
-  min-width: 12ch;
+  width: 100%;
   max-height: 40vh;
-  padding: 0;
+  padding: 6px 0;
   border: 0;
   outline: none;
   resize: none;
   background: transparent;
-  font: 400 16px/1.8 var(--font-mono);
+  box-shadow: inset 0 -1px 0 var(--border);
+  font: 400 16px/1.7 var(--font-sans);
   color: var(--text); /* ≥ 16px：iOS 不自动放大 */
   caret-color: var(--accent);
-  caret-shape: block;
   field-sizing: content;
+}
+.prompt-input:focus {
+  box-shadow: inset 0 -2px 0 var(--accent);
 }
 .prompt-input::placeholder {
   color: var(--text-muted);
@@ -520,11 +498,10 @@
   gap: var(--space-2);
   align-items: baseline;
   overflow: hidden;
-  font: 400 var(--text-sm)/1.7 var(--font-mono);
+  font-size: var(--text-sm);
   color: var(--text-muted);
 }
 .prompt-error {
-  flex-basis: 100%;
   font-size: var(--text-sm);
   color: var(--danger);
 }
@@ -534,7 +511,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2) var(--space-3);
-  margin-top: 4px;
+  margin-top: var(--space-2);
 }
 .prompt-hint {
   display: flex;
@@ -607,59 +584,6 @@
   } /* 叠起来时都靠左，眼睛不用左右跳 */
 }
 
-/* ── 翻页磁带：每篇一根刻度，这篇的升起来（和任务栏标签同一个动作、同一条「移动」曲线） ── */
-.tape-wrap {
-  margin-bottom: var(--space-4);
-}
-.tape-readout {
-  min-height: 1.7em;
-  margin-bottom: 6px;
-  font-size: var(--text-sm);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.tape {
-  display: flex;
-  align-items: stretch;
-  gap: 2px;
-  height: 28px;
-  padding: 0 2px;
-  border-bottom: var(--line) solid var(--border);
-}
-.tape li {
-  display: flex;
-  flex: 1 1 0;
-  min-width: 3px;
-  max-width: 14px;
-}
-/* 整根都能点（28px 高），看得见的只是底下那条 */
-.tick {
-  position: relative;
-  display: block;
-  width: 100%;
-}
-.tick::before {
-  content: "";
-  position: absolute;
-  inset: auto 0 0;
-  height: 10px;
-  background: var(--border-frame);
-  border-radius: 1px 1px 0 0;
-  transition:
-    height var(--duration-move) var(--ease-move),
-    background-color var(--duration) var(--ease-enter);
-}
-.tick:hover::before,
-.tick:focus-visible::before {
-  height: 18px;
-  background: var(--text);
-}
-.tick[aria-current="page"]::before {
-  height: 26px;
-  background: var(--text);
-}
-
 /* 按输入方式给提示：有悬停和键盘的给「指一下 / ← →」，触屏给「点一下」 */
 .only-touch {
   display: none;
@@ -677,6 +601,102 @@
 .nearby-card.is-suggested {
   border-color: var(--accent);
   box-shadow: var(--shadow-2);
+}
+
+/* ── 翻页：两头按钮，中间页码是文件夹标签，当前页升起来 ── */
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+.page-tabs {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  min-height: 36px;
+  padding: 0 4px;
+  border-bottom: var(--line) solid var(--border);
+  /* 和任务栏一样：没选中的标签往下沉，沉下去的部分被底线裁掉 */
+  overflow: hidden;
+  /* 焦点描边在标签外面 2px，被裁掉就看不见了：键盘聚焦时让它升起来，描边改画在里面 */
+}
+.page-tab:focus-visible {
+  translate: 0 0;
+  outline-offset: -3px;
+}
+.page-tab {
+  display: grid;
+  place-items: center;
+  min-width: 36px;
+  height: 30px;
+  padding: 0 8px;
+  border: var(--line) solid var(--border);
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: var(--window-bar);
+  color: var(--text);
+  text-decoration: none;
+  font: 400 12px/1 var(--font-pixel);
+  translate: 0 5px;
+  transition:
+    translate var(--duration-move) var(--ease-move),
+    background-color var(--duration) var(--ease-enter);
+}
+.page-tab:hover {
+  translate: 0 0;
+  background: var(--surface);
+}
+.page-tab[aria-current="page"] {
+  translate: 0 0;
+  height: 34px;
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+}
+.page-gap {
+  align-self: center;
+  padding: 0 2px;
+  color: var(--text-muted);
+}
+
+/* 翻页方向：下一页从右边滑进来、上一页从左边；位移用「移动」曲线 */
+html:active-view-transition-type(page-forward)::view-transition-old(wins) {
+  animation: var(--duration-exit) var(--ease-exit) both vt-out-left;
+}
+html:active-view-transition-type(page-forward)::view-transition-new(wins) {
+  animation: var(--duration-move) var(--ease-move) both vt-in-right;
+}
+html:active-view-transition-type(page-back)::view-transition-old(wins) {
+  animation: var(--duration-exit) var(--ease-exit) both vt-out-right;
+}
+html:active-view-transition-type(page-back)::view-transition-new(wins) {
+  animation: var(--duration-move) var(--ease-move) both vt-in-left;
+}
+@keyframes vt-out-left {
+  to {
+    opacity: 0;
+    translate: -24px 0;
+  }
+}
+@keyframes vt-out-right {
+  to {
+    opacity: 0;
+    translate: 24px 0;
+  }
+}
+@keyframes vt-in-right {
+  from {
+    opacity: 0;
+    translate: 32px 0;
+  }
+}
+@keyframes vt-in-left {
+  from {
+    opacity: 0;
+    translate: -32px 0;
+  }
 }
 
 /* ── 路由切换：View Transitions ──

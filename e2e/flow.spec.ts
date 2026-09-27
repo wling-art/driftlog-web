@@ -41,12 +41,12 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   await expect(page.locator('a.folder[href="#小标题"]')).toBeVisible()
   await expect(page.getByRole("link", { name: "文章" })).toHaveAttribute("aria-current", "page")
 
-  // 评论是一行命令提示符：打字、回车；第一次会一步步问名字和邮箱
-  const prompt = page.getByRole("textbox", { name: "访客@driftlog:~$" })
+  // 评论只有一个输入框：打字、回车；第一次会一步步问名字和邮箱
+  const prompt = page.getByRole("textbox", { name: "写评论" })
   await prompt.fill("好")
   await prompt.press("Enter")
-  await page.getByRole("textbox", { name: "? 你叫什么：" }).fill("测试员")
-  await page.getByRole("textbox", { name: "? 你叫什么：" }).press("Enter")
+  await page.getByRole("textbox", { name: "你的名字" }).fill("测试员")
+  await page.getByRole("textbox", { name: "你的名字" }).press("Enter")
   const emailBox = page.getByRole("textbox", { name: /邮箱/ })
   await emailBox.fill("bad")
   await emailBox.press("Enter")
@@ -55,8 +55,8 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   await expect(page.getByText("✕ 邮箱格式不对")).toBeHidden() // 改对就消失
   await emailBox.press("Enter")
   await expect(page.getByText(/写进日志了|审核完就会出现/)).toBeVisible()
-  // 记住了身份：提示符换成名字，下次一行就发
-  await expect(page.getByRole("textbox", { name: "测试员@driftlog:~$" })).toBeVisible()
+  // 记住了身份：下次直接写
+  await expect(page.getByRole("textbox", { name: "写评论（以 测试员 的身份）" })).toBeVisible()
 })
 
 test("博客：⌘K 搜索", async ({ page }) => {
@@ -69,6 +69,21 @@ test("博客：⌘K 搜索", async ({ page }) => {
   await expect(dialog.getByRole("option").first()).toBeVisible()
   await page.keyboard.press("Escape")
   await expect(dialog).toBeHidden()
+})
+
+test("博客：翻页按钮、方向键、分类里翻页不丢筛选", async ({ page }) => {
+  await page.goto(`${BLOG}/posts`)
+  await expect(page.locator("time.clock")).toBeVisible()
+  const pager = page.getByRole("navigation", { name: "翻页" })
+  test.skip((await pager.count()) === 0, "文章不够两页")
+  await expect(pager.getByRole("button", { name: "← 上一页" })).toBeDisabled() // 第一页：置灰但还在
+  await expect(pager.getByRole("link", { name: "第 1 页" })).toHaveAttribute("aria-current", "page")
+  await pager.getByRole("link", { name: "下一页 →" }).click()
+  await expect(page).toHaveURL(/page=2/)
+  // 等第 2 页真的渲染出来：Link 会按地址栏先把页码标成当前，那时内容可能还是第 1 页
+  await expect(pager.getByRole("link", { name: "← 上一页" })).toBeVisible()
+  await page.keyboard.press("ArrowLeft")
+  await expect(page).toHaveURL(/page=1/)
 })
 
 test("博客：404 有出路", async ({ page }) => {

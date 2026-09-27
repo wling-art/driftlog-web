@@ -383,10 +383,7 @@ body {
     column-gap: var(--space-4);
     align-items: start;
   }
-  /* 右栏再安静一点：标题降一档、内边距小一档、卡片标题用正文字号 */
-  .wins-aside .win-body {
-    padding: var(--space-4);
-  }
+  /* 右栏安静一点：标题降一档、卡片标题用正文字号（内边距和左栏一样，不挤） */
   .wins-aside .win-body > h2 {
     font-size: var(--px-2);
   }
