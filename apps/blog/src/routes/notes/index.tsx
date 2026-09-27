@@ -2,9 +2,9 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { z } from "zod"
 import { Window } from "@/components/boring"
-import { Archive, Empty, SiteShell } from "@/components/site"
+import { Archive, BackLink, Empty, FolderIntro, SiteShell } from "@/components/site"
 import { indexQuery, topicsQuery } from "@/lib/api"
-import { siteOf } from "@/lib/site"
+import { formatDate, siteOf } from "@/lib/site"
 
 export const Route = createFileRoute("/notes/")({
   validateSearch: z.object({ topic: z.string().optional() }),
@@ -52,10 +52,11 @@ function Notes() {
         id="notes"
         name={current ? `notes/${current.slug}/` : "notes/"}
         title={current?.name ?? "手记"}
-        rule={`// ${current?.introduce || "不成文的碎碎念"} · 共 ${data.length} 篇`}
+        rule={`// ${current ? "专栏" : "不成文的碎碎念"} · 共 ${data.length} 篇${current && data[0] ? ` · 最近一篇 ${formatDate(data[0].publishedAt)}` : ""}`}
+        lead={current ? <BackLink to="/notes" label="手记" /> : <BackLink to="/" label="首页" />}
         closable={false}
       >
-        {current?.description && <p className="topic-desc">{current.description}</p>}
+        {current && <FolderIntro lead={current.introduce} body={current.description} />}
         {data.length ? (
           // 在某个专栏里就不用每篇再写一遍专栏名
           <Archive items={current ? data.map((d) => ({ ...d, topic: null })) : data} type="note" />

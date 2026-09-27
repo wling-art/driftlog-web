@@ -875,12 +875,58 @@
   background: var(--bg);
 }
 
-/* 专栏简介：标题下一段，和下面的年表隔开 */
-.topic-desc {
+/*
+ * 分类 / 专栏简介：文件夹的「属性」卡片，分量比标题和列表轻。
+ * 第三层灰（卡片）、细线框、不加投影；左边 28px 的文件夹图标（和桌面上的同一个），字都是正文字号或小一号
+ */
+.folder-intro {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  gap: var(--space-3);
   margin-bottom: var(--space-6);
-  padding-left: var(--space-4);
-  border-left: 2px solid var(--border-frame);
+  padding: var(--space-3) var(--space-4);
+  border: var(--line) solid var(--border-soft);
+  border-radius: 4px;
+  background: var(--surface);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+.folder-intro-icon {
+  width: 28px;
+  height: 24px;
+  margin-top: 2px;
+  background: var(--text-muted);
+  mask: var(--icon-folder) center / contain no-repeat;
+}
+.folder-intro-text {
+  display: grid;
+  gap: var(--space-1);
   color: var(--text-muted);
+}
+.folder-intro-lead {
+  color: var(--text);
+}
+.folder-intro details > p {
+  margin-top: var(--space-1);
+}
+.folder-intro summary {
+  width: fit-content;
+  cursor: pointer;
+  list-style: none;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.folder-intro summary::-webkit-details-marker {
+  display: none;
+}
+.folder-intro summary:hover {
+  background: var(--text);
+  color: var(--bg);
+  text-decoration: none;
+}
+.folder-intro details[open] summary {
+  display: none;
 }
 
 /* ── 标题栏上的小按钮（‹ ›）：和 × 一样大，指上去反白 ── */

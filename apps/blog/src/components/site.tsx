@@ -13,7 +13,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { useUI } from "@/lib/store"
 import { CommentsFloat, CommentsTaskItem } from "@/components/comments-dock"
-import { takeDirection } from "@/lib/keys"
+import { ChevronLeft } from "lucide-react"
+import { markDirection, takeDirection, useArrowNav } from "@/lib/keys"
 import { entryPath, formatDate } from "@/lib/site"
 import { useSite, type EntryCard } from "@/lib/api"
 
@@ -224,4 +225,65 @@ export function ErrorWindow({ error, reset }: { error: Error; reset: () => void 
 /** 空列表：说明为什么空 */
 export function Empty({ children }: { children: ReactNode }) {
   return <p className="muted py-(--space-4)">{children}</p>
+}
+
+/**
+ * 标题栏左边的「‹ 上一级」：每个不是首页的窗口都有，Esc 同效。
+ * 上一级由页面决定：栏目回首页，分类 / 专栏 / 标签回栏目，详情回列表
+ */
+export function BackLink({
+  to,
+  search,
+  label,
+}: {
+  to: string
+  search?: Record<string, string>
+  label: string
+}) {
+  useArrowNav(null, null, { to, search: search ?? {} })
+  return (
+    <Link
+      to={to}
+      search={search ?? {}}
+      onClick={() => markDirection("back")}
+      className="win-back"
+      aria-label={`回到${label}（Esc）`}
+      title="回到上一级（Esc）"
+    >
+      <ChevronLeft aria-hidden="true" />
+      {label}
+    </Link>
+  )
+}
+
+/**
+ * 分类 / 专栏的简介（参考 Shiro 的专栏页头）：像文件夹的「属性」卡片。
+ * 左边一个小文件夹图标，右边一句话介绍、正文段落。分量比窗口标题和列表轻：字不放大、卡片不厚。
+ * 篇数和最近一篇写在窗口的 // 副标题里，不在这里重复。
+ * 正文长了只露第一段，剩下的收在「继续读」里（原生 details，不用 JS）
+ */
+export function FolderIntro({ lead, body }: { lead?: string; body?: string }) {
+  const paras = (body ?? "")
+    .split(/\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean)
+  if (!lead && !paras.length) return null
+  const [first, ...rest] = paras
+  return (
+    <section className="folder-intro" aria-label="简介">
+      <span className="folder-intro-icon" aria-hidden="true" />
+      <div className="folder-intro-text">
+        {lead && <p className="folder-intro-lead">{lead}</p>}
+        {first && <p>{first}</p>}
+        {rest.length > 0 && (
+          <details>
+            <summary>继续读</summary>
+            {rest.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+          </details>
+        )}
+      </div>
+    </section>
+  )
 }

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Window } from "@/components/boring"
-import { Empty, SiteShell } from "@/components/site"
+import { BackLink, Empty, SiteShell } from "@/components/site"
 import { projectsQuery } from "@/lib/api"
 import { siteOf } from "@/lib/site"
 
@@ -21,6 +21,7 @@ function Projects() {
         name="projects/"
         title="项目"
         rule={`// 做过的东西 · ${data.length} 个`}
+        lead={<BackLink to="/" label="首页" />}
         closable={false}
       >
         {data.length ? (

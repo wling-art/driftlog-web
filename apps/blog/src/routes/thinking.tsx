@@ -4,7 +4,7 @@ import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
 import { unwrap } from "@driftlog/client"
 import { Window } from "@/components/boring"
-import { Empty, SiteShell } from "@/components/site"
+import { BackLink, Empty, SiteShell } from "@/components/site"
 import { api, thoughtsQuery } from "@/lib/api"
 import { fullTime, siteOf, timeAgo } from "@/lib/site"
 
@@ -24,6 +24,7 @@ function Thinking() {
         name="thinking.log"
         title="动态"
         rule="// 比手记还短的碎片，想到就记一句"
+        lead={<BackLink to="/" label="首页" />}
         closable={false}
       >
         {data.length ? (

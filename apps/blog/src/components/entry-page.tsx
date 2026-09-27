@@ -6,7 +6,7 @@ import { useQuery } from "@tanstack/react-query"
 import { ChevronLeft, ChevronRight, Heart, MessageSquare } from "lucide-react"
 import { Window } from "@/components/boring"
 import { Article } from "@/components/article"
-import { SiteShell } from "@/components/site"
+import { BackLink, SiteShell } from "@/components/site"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { api, commentsQuery, entryQuery, isNotFound, useSite, type Entry } from "@/lib/api"
@@ -96,7 +96,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
   const prev = paged && e.prev ? { to: entryPath(type, e.prev.slug), title: e.prev.title } : null
   const next = paged && e.next ? { to: entryPath(type, e.next.slug), title: e.next.title } : null
   const up = upOf[type]
-  useArrowNav(prev, next, up)
+  useArrowNav(prev, next)
 
   return (
     <SiteShell
@@ -113,18 +113,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
         title={e.title}
         rule={e.type === "page" && e.subtitle ? `// ${e.subtitle}` : `// ${meta.join(" · ")}`}
         closable={false}
-        lead={
-          <Link
-            to={up.to}
-            onClick={() => markDirection("back")}
-            className="win-back"
-            aria-label={`回到${up.label}（Esc）`}
-            title="回到上一级（Esc）"
-          >
-            <ChevronLeft aria-hidden="true" />
-            {up.label}
-          </Link>
-        }
+        lead={<BackLink to={up.to} label={up.label} />}
         controls={
           paged && (
             <>

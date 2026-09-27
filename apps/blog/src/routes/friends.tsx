@@ -8,7 +8,7 @@ import { Window } from "@/components/boring"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Empty, SiteShell } from "@/components/site"
+import { BackLink, Empty, SiteShell } from "@/components/site"
 import { api, linksQuery, useSite } from "@/lib/api"
 import { site, siteOf } from "@/lib/site"
 
@@ -67,7 +67,14 @@ function Friends() {
   const collections = data.filter((l) => l.type === "collection")
   return (
     <SiteShell aside={<Apply />}>
-      <Window id="friends" name="friends/" title="友链" rule={`// ${friends.length} 位朋友`} closable={false}>
+      <Window
+        id="friends"
+        name="friends/"
+        title="友链"
+        rule={`// ${friends.length} 位朋友`}
+        lead={<BackLink to="/" label="首页" />}
+        closable={false}
+      >
         {friends.length ? <LinkCards items={friends} /> : <Empty>还没有友链。右边可以申请第一个。</Empty>}
       </Window>
       {collections.length > 0 && (

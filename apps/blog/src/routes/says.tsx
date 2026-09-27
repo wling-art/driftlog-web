@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { Window } from "@/components/boring"
-import { Empty, SiteShell } from "@/components/site"
+import { BackLink, Empty, SiteShell } from "@/components/site"
 import { saysQuery } from "@/lib/api"
 import { siteOf } from "@/lib/site"
 
@@ -15,7 +15,14 @@ function Says() {
   const { data } = useSuspenseQuery(saysQuery())
   return (
     <SiteShell scene="read">
-      <Window id="says" name="says.txt" title="一言" rule="// 在别处看到、想记下来的句子" closable={false}>
+      <Window
+        id="says"
+        name="says.txt"
+        title="一言"
+        rule="// 在别处看到、想记下来的句子"
+        lead={<BackLink to="/" label="首页" />}
+        closable={false}
+      >
         {data.length ? (
           <ul className="says">
             {data.map((s) => (

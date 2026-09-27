@@ -2,7 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router"
 import { useSuspenseQuery } from "@tanstack/react-query"
 import { z } from "zod"
 import { Window } from "@/components/boring"
-import { Archive, Empty, SiteShell } from "@/components/site"
+import { Archive, BackLink, Empty, FolderIntro, SiteShell } from "@/components/site"
 import { categoriesQuery, indexQuery } from "@/lib/api"
 import { siteOf } from "@/lib/site"
 
@@ -53,9 +53,11 @@ function Posts() {
         id="posts"
         name="posts/"
         title={title}
-        rule={`// ${current?.description || `共 ${data.length} 篇`}`}
+        rule={`// 共 ${data.length} 篇`}
+        lead={q.category || q.tag ? <BackLink to="/posts" label="文章" /> : <BackLink to="/" label="首页" />}
         closable={false}
       >
+        {current && <FolderIntro body={current.description} />}
         {data.length ? <Archive items={data} type="post" /> : <Empty>这里还很无聊，一篇都没有。</Empty>}
       </Window>
     </SiteShell>
