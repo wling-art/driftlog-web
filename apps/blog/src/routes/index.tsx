@@ -1,6 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router"
 import { useSuspenseQuery } from "@tanstack/react-query"
-import { Folder, Window } from "@/components/boring"
+import { Window } from "@/components/boring"
 import { Button } from "@/components/ui/button"
 import { Empty, EntryList, SiteShell } from "@/components/site"
 import { entriesQuery } from "@/lib/api"
@@ -50,19 +50,27 @@ function Home() {
         </Window>
       }
       folders={
+        // 首页的图标是快捷方式（像 Windows 桌面上的「文档」）：点了就进那个栏目，不是在本页里跳
         <>
-          <Folder target="readme" icon="doc">
-            简介
-          </Folder>
-          <Folder target="latest-posts">文章</Folder>
-          <Folder target="latest-notes">手记</Folder>
+          <Link to="/posts" className="folder">
+            <span>文章</span>
+          </Link>
+          <Link to="/notes" className="folder">
+            <span>手记</span>
+          </Link>
+          <Link to="/$slug" params={{ slug: "about" }} className="folder" data-icon="doc">
+            <span>关于</span>
+          </Link>
+          <a href="/feed.xml" className="folder" data-icon="doc" title="RSS 订阅地址">
+            <span>订阅</span>
+          </a>
         </>
       }
     >
       <Window id="readme" name="readme.txt" title={site.name} rule={`// ${site.description}`}>
         <p className="max-w-(--measure)">
           {site.author} 写东西的地方。长一点的放在文章，短一点的放在手记。按{" "}
-          <kbd className="font-mono">⌘K</kbd> 搜索，底下的任务栏能去别的地方。
+          <kbd className="font-mono">⌘K</kbd> 搜索，左边的图标和底下的任务栏都能去别的地方。
         </p>
       </Window>
 

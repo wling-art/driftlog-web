@@ -33,6 +33,9 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   await page.goto(BLOG)
   await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible()
   await expect(page.locator(".win").first()).toBeVisible()
+  // 首页的桌面图标是快捷方式：点「文章」进文章栏目
+  await page.getByRole("navigation", { name: "本页目录" }).getByRole("link", { name: "文章" }).click()
+  await expect(page).toHaveURL(/\/posts$/)
 
   const target = email ? `/posts/${slug}` : "/posts"
   await page.goto(BLOG + target)
