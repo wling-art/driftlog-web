@@ -141,7 +141,7 @@ body {
   border: var(--line) solid var(--border-frame);
   border-radius: var(--radius-window);
   overflow: clip;
-  margin: 0 0 var(--space-6);
+  margin: 0 0 var(--space-4); /* 和两栏之间的间距一样：窗口之间别隔太远 */
   min-width: 0;
 }
 .win-bar {
@@ -194,8 +194,19 @@ body {
     opacity: 0;
   }
 }
+/* 窗口内边距：宽屏两边留得宽一点（参考 Shiro），窗口看起来不局促；窄屏收回来给正文 */
+.win {
+  --win-pad-x: var(--space-7);
+  --win-pad-y: var(--space-6);
+}
+@media (max-width: 760px) {
+  .win {
+    --win-pad-x: var(--space-5);
+    --win-pad-y: var(--space-5);
+  }
+}
 .win-body {
-  padding: var(--space-5);
+  padding: var(--win-pad-y) var(--win-pad-x);
 }
 .win-body > h2 {
   font: 400 var(--px-3)/1.3 var(--font-pixel);
@@ -386,6 +397,11 @@ body {
     column-gap: var(--space-4);
     align-items: start;
   }
+  /* 右栏窄：内边距回到小号，不然正文被挤成一小条 */
+  .wins-aside .win {
+    --win-pad-x: var(--space-5);
+    --win-pad-y: var(--space-5);
+  }
   /* 右栏安静一点：窗口标题降一档 */
   .wins-aside .win-body > h2 {
     font-size: var(--px-2);
@@ -414,7 +430,7 @@ body {
  * 正文有最佳行宽（阅读场景 40em，约 40 个汉字，WCAG 对中文的上限），窗口再宽只会在右边留一块空白，
  * 看起来像内容被限制住了。所以阅读页（没有右栏时）窗口宽 = 行宽 + 两边内边距 + 边框，在桌面上居中。 */
 [data-scene="read"] .wins:not(.has-aside) {
-  --wins-max: calc(var(--measure) + 2 * var(--space-5) + 2 * var(--line));
+  --wins-max: calc(var(--measure) + 2 * var(--space-7) + 2 * var(--line));
 }
 
 /* ── Driftlog 的改动：桌面图标像 Windows 一样排在格子里，贴着屏幕左上角 ──
@@ -625,5 +641,30 @@ body {
 @media (max-width: 760px) {
   .win[data-closed] {
     display: none;
+  }
+}
+
+/* ── Driftlog 的改动：窗口里的滚动条 ──
+ * 细细一条圆头的灰条，悬在窗口边上：平时是框线的灰，指上去深一点；轨道透明。
+ * Chrome / Safari 用 ::-webkit-scrollbar（能留内边距、做圆头）；Firefox 只认 scrollbar-color，给个细的 */
+.win-body::-webkit-scrollbar {
+  width: 12px;
+}
+.win-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.win-body::-webkit-scrollbar-thumb {
+  border: 4px solid transparent;
+  border-radius: 999px;
+  background: var(--border-frame) padding-box;
+}
+.win-body::-webkit-scrollbar-thumb:hover {
+  border-width: 3px;
+  background-color: var(--text-muted);
+}
+@supports (-moz-appearance: none) {
+  .win-body {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-frame) transparent;
   }
 }

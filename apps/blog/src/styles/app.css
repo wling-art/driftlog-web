@@ -139,6 +139,19 @@
   white-space: pre;
   color: var(--text-muted);
 }
+/* Excalidraw：画出来之前是一段 JSON，别让它撑出一大片 */
+.prose pre.excalidraw {
+  max-height: 6em;
+  overflow: hidden;
+}
+.prose .excalidraw-figure {
+  margin: var(--space-5) 0;
+  text-align: center;
+}
+.prose .excalidraw-figure svg {
+  max-width: 100%;
+  height: auto;
+}
 .prose pre.mermaid[data-processed] {
   background: var(--window);
   text-align: center;
@@ -862,34 +875,45 @@
 }
 
 /*
- * 手记时间线：日期和标题之间一根竖线，每篇一个空心圆点。
- * 竖线画在列表上，圆点画在行上；两者都按「日期列宽 + 半个间距」对齐
+ * 手记时间线（参考 Shiro）：左边一根竖线，每篇一个圆点落在线上；
+ * 一行里标题在左、日期在右（和首页列表一样），下面一行小字是专栏 · 心情 · 天气
  */
-.archive[data-timeline] .archive-row {
-  position: relative;
-  grid-template-columns: 6ch minmax(0, 1fr);
-  gap: 2px var(--space-5);
-  padding-block: var(--space-3);
-}
 .archive[data-timeline] .archive-list {
   position: relative;
 }
 .archive[data-timeline] .archive-list::before {
   content: "";
   position: absolute;
-  top: var(--space-3);
-  bottom: var(--space-3);
-  left: calc(6ch + var(--space-5) / 2);
+  top: 0;
+  bottom: 0;
+  left: 4px;
   border-left: var(--line) solid var(--border-soft);
+}
+.archive[data-timeline] .archive-row {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "t d" "m m";
+  gap: 0 var(--space-4);
+  margin: 0;
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-5);
+}
+.archive[data-timeline] .archive-row .t {
+  grid-area: t;
+}
+.archive[data-timeline] .archive-row time {
+  grid-area: d;
+}
+.archive[data-timeline] .archive-row .m {
+  grid-area: m;
 }
 .archive[data-timeline] .archive-row::before {
   content: "";
   position: absolute;
-  top: calc(var(--space-3) + var(--text-lg) * 0.725 - 4px);
-  left: calc(var(--space-2) + 6ch + var(--space-5) / 2 - 4px);
+  top: calc(var(--space-2) + var(--text-lg) * 0.725 - 4px);
+  left: 0;
   width: 9px;
   height: 9px;
-  border: var(--line) solid var(--border-frame);
+  border: var(--line) solid var(--text-muted);
   border-radius: 50%;
   background: var(--window);
 }
