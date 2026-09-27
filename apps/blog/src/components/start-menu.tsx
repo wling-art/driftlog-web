@@ -16,6 +16,7 @@ import { useUI } from "@/lib/store"
  */
 
 const sections = [
+  { to: "/", label: "首页", home: true },
   { to: "/posts", label: "文章", count: "post" as const },
   { to: "/notes", label: "手记", count: "note" as const },
   { to: "/thinking", label: "动态" },
@@ -82,9 +83,10 @@ function MenuBody({ close }: { close: () => void }) {
             <Link
               key={s.to}
               to={s.to}
+              activeOptions={{ exact: "home" in s }}
               onClick={close}
               className="start-item"
-              data-icon={s.doc ? "doc" : "folder"}
+              data-icon={"home" in s ? "home" : "doc" in s ? "doc" : "folder"}
             >
               <span className="start-item-label">{s.label}</span>
               {s.count && counts[s.count] !== undefined && (

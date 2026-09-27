@@ -907,3 +907,108 @@ body {
     padding-right: 7px;
   }
 }
+
+/* ── Driftlog 的改动：任务栏上的路径 ──
+ * 开始按钮右边一条像地址栏的路径：「wling: / 手记 / 随想 / 走个面儿」。
+ * 盘符和中间各段是能点的小字，指上去反白；最后一段是当前页，像升起的标签（和以前的导航标签同一个样子）。
+ * 换页时各段依次从下面升起来（每段晚 40ms）；窄屏中间收成「…」，只留盘符和当前页 */
+:root {
+  --icon-home: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 34%27 fill=%27none%27 stroke=%27black%27 stroke-width=%271.3%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M5 16 L20 3 L35 16%27/%3E%3Cpath d=%27M9 13 V32 H31 V13%27/%3E%3Cpath d=%27M17 32 V22 H23 V32%27/%3E%3C/svg%3E");
+}
+.start-item[data-icon="home"]::before {
+  mask-image: var(--icon-home);
+}
+.pathbar {
+  display: flex;
+  flex: 0 1 auto;
+  min-width: 0;
+  align-self: stretch;
+}
+.pathbar ol {
+  display: flex;
+  align-items: flex-end;
+  min-width: 0;
+}
+.pathbar li {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  animation: tb-task-in var(--duration-move) var(--ease-move) both;
+  animation-delay: calc(var(--i) * 40ms * var(--motion-ok));
+}
+.pathbar li:not(:last-child) {
+  flex: none;
+  align-self: center;
+  margin-bottom: 6px;
+}
+.pathbar-sep {
+  padding: 0 2px;
+  font: 400 var(--px-1)/1 var(--font-pixel);
+  color: var(--text-muted);
+}
+.pathbar-seg {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 6px;
+  border-radius: 3px;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  font: 400 var(--px-1)/1 var(--font-pixel);
+}
+a.pathbar-seg:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+.pathbar-root {
+  color: var(--text-muted);
+}
+/* 当前页：升起的标签 */
+.pathbar-seg[aria-current="page"] {
+  min-height: max(30px, var(--hit-min));
+  max-width: min(24em, 40vw);
+  padding: 0 12px;
+  border: var(--line) solid var(--border);
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  background: var(--surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  line-height: max(30px, var(--hit-min));
+}
+.pathbar-seg.pathbar-root[aria-current="page"] {
+  color: var(--text);
+}
+@media (max-width: 760px) {
+  .pathbar-mid {
+    display: none !important;
+  }
+  /* 有被收起的中间段时，盘符后面补一个「…」 */
+  .pathbar li:first-child:has(~ .pathbar-mid)::after {
+    content: "/ …";
+    padding: 0 2px;
+    font: 400 var(--px-1)/1 var(--font-pixel);
+    color: var(--text-muted);
+  }
+  .pathbar-seg[aria-current="page"] {
+    max-width: 38vw;
+    padding: 0 8px;
+  }
+}
+/* 路径里的链接不是导航标签：盖掉上面 .taskbar nav a 的标签样子（最小宽度、边框、下沉） */
+.taskbar .pathbar a.pathbar-seg {
+  min-width: 0;
+  min-height: 24px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  transform: none;
+  transition: none;
+}
+.taskbar .pathbar a.pathbar-seg:hover {
+  background: var(--text);
+  color: var(--bg);
+}

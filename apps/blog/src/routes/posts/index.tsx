@@ -29,6 +29,11 @@ function Posts() {
 
   return (
     <SiteShell
+      crumbs={
+        current || q.tag
+          ? [{ label: "文章", to: "/posts" }, { label: current?.name ?? `#${q.tag}` }]
+          : [{ label: "文章" }]
+      }
       folders={
         // 分类就是文件夹
         <>

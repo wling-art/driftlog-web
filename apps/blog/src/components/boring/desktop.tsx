@@ -512,20 +512,22 @@ export function Taskbar({
   return (
     <footer data-slot="taskbar" className={cn("taskbar", className)}>
       {start}
-      <nav aria-label={start ? "打开的窗口" : "主导航"}>
-        {/* 用路由的 Link：客户端跳转，当前页自动带 aria-current="page"，标签升起来 */}
-        {items.map((it) => (
-          <Link
-            key={it.key ?? it.href + it.label}
-            to={it.href}
-            activeOptions={{ exact: it.exact ?? false }}
-            data-icon={it.icon}
-            title={it.label}
-          >
-            <span className="tb-label">{it.label}</span>
-          </Link>
-        ))}
-      </nav>
+      {items.length > 0 && (
+        <nav aria-label={start ? "打开的窗口" : "主导航"}>
+          {/* 用路由的 Link：客户端跳转，当前页自动带 aria-current="page"，标签升起来 */}
+          {items.map((it) => (
+            <Link
+              key={it.key ?? it.href + it.label}
+              to={it.href}
+              activeOptions={{ exact: it.exact ?? false }}
+              data-icon={it.icon}
+              title={it.label}
+            >
+              <span className="tb-label">{it.label}</span>
+            </Link>
+          ))}
+        </nav>
+      )}
       <span className="spacer" />
       {children}
       {/* 窄屏只留「亮色 / 暗色」两个字，任务栏放得下 */}

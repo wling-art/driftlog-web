@@ -1,7 +1,13 @@
 import { create } from "zustand"
 
-// 跨组件的界面状态：搜索面板、在线人数、评论窗口
+/** 任务栏路径上的一段：点了去哪（最后一段是当前页，不用 to） */
+export type Crumb = { label: string; to?: string; search?: Record<string, string> }
+
+// 跨组件的界面状态：搜索面板、在线人数、评论窗口、任务栏路径
 type UI = {
+  /** 页面告诉任务栏「我在哪」：文章 / 分类 / 标题。没写就按地址猜 */
+  crumbs: Crumb[] | null
+  setCrumbs: (c: Crumb[] | null) => void
   searchOpen: boolean
   setSearchOpen: (open: boolean) => void
   online: number
@@ -17,6 +23,8 @@ type UI = {
 }
 
 export const useUI = create<UI>((set) => ({
+  crumbs: null,
+  setCrumbs: (crumbs) => set({ crumbs }),
   searchOpen: false,
   setSearchOpen: (searchOpen) => set({ searchOpen }),
   online: 0,

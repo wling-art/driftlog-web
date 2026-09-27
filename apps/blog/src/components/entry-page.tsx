@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { api, commentsQuery, entryQuery, isNotFound, useSite, type Entry } from "@/lib/api"
 import { markDirection, useArrowNav } from "@/lib/keys"
-import { useUI } from "@/lib/store"
+import { useUI, type Crumb } from "@/lib/store"
 import { entryPath, formatDate, readingMinutes, site, siteOf } from "@/lib/site"
 export { siteOf }
 
@@ -102,6 +102,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
   return (
     <SiteShell
       scene="read"
+      crumbs={crumbsOf(e)}
       folders={e.toc.slice(0, 12).map((t) => (
         <a key={t.id} href={`#${t.id}`} className="folder" data-icon="doc" title={t.text}>
           <span>{t.text}</span>
@@ -340,4 +341,15 @@ function Copyright({ entry: e, author }: { entry: Entry; author: string }) {
       </div>
     </aside>
   )
+}
+
+/** 任务栏路径：文章 / 分类 / 标题，手记 / 专栏 / 标题，页面只有标题 */
+function crumbsOf(e: Entry): Crumb[] {
+  if (e.type === "page") return [{ label: e.title }]
+  const up = upOf[e.type as "post" | "note"]
+  const group: Crumb | null =
+    e.type === "note"
+      ? e.topic && { label: e.topic.name, to: "/notes", search: { topic: e.topic.slug } }
+      : e.category && { label: e.category.name, to: "/posts", search: { category: e.category.slug } }
+  return [{ label: up.label, to: up.to }, ...(group ? [group] : []), { label: e.title }]
 }

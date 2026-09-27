@@ -27,6 +27,7 @@ function Notes() {
   return (
     <SiteShell
       scene="read"
+      crumbs={current ? [{ label: "手记", to: "/notes" }, { label: current.name }] : [{ label: "手记" }]}
       folders={
         // 专栏就是文件夹（和文章页的分类一样）
         <>

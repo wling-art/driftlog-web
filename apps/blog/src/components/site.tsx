@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore, type ReactNode } from "react"
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { Link, useLocation, useRouter } from "@tanstack/react-router"
 import {
@@ -13,7 +13,7 @@ import {
   useScrollKeys,
 } from "@/components/boring"
 import { Button } from "@/components/ui/button"
-import { useUI } from "@/lib/store"
+import { useUI, type Crumb } from "@/lib/store"
 import { CommentsFloat, CommentsTaskItem } from "@/components/comments-dock"
 import { AccountDialog } from "@/components/account"
 import { StartMenu } from "@/components/start-menu"
@@ -32,24 +32,70 @@ const sectionName: Record<string, string> = {
   friends: "友链",
 }
 
-/**
- * 任务栏上「当前打开的窗口」：列表页是栏目名（文件夹），详情页是标题（文档）。
- * 详情页的标题从评论那边借（EntryPage 挂载时写进 store）
- */
-function useCurrentTask() {
-  const pathname = useLocation({ select: (l) => l.pathname })
-  const { title } = useSite()
-  const entry = useUI((s) => s.comments?.title)
+/** 没有页面给路径时，按地址猜：/notes → 手记，/posts/x → 文章 / x */
+function guessCrumbs(pathname: string): Crumb[] {
   const [, first, second] = pathname.split("/")
-  if (!first) return { href: "/", label: title, icon: "folder" as const, key: "/" }
+  if (!first) return []
   const section = sectionName[first]
-  if (section && !second) return { href: pathname, label: section, icon: "folder" as const, key: first }
-  return {
-    href: pathname,
-    label: entry ?? section ?? decodeURIComponent(first),
-    icon: "doc" as const,
-    key: pathname,
-  }
+  if (!section) return [{ label: decodeURIComponent(first) }]
+  return second
+    ? [{ label: section, to: `/${first}` }, { label: decodeURIComponent(second) }]
+    : [{ label: section }]
+}
+
+/**
+ * 任务栏上的路径（像文件管理器的地址栏）：wling: / 手记 / 随想 / 走个面儿
+ * 盘符是站长的名字，点了回首页；中间每一段都能点回那一级；最后一段是当前页，像升起的标签。
+ * 换页时各段依次从下面升起来；窄屏只留盘符和最后一段，中间收成「…」
+ */
+function PathBar() {
+  const pathname = useLocation({ select: (l) => l.pathname })
+  const { owner } = useSite()
+  const given = useUI((s) => s.crumbs)
+  const crumbs = given ?? guessCrumbs(pathname)
+  const last = crumbs.length - 1
+  return (
+    <nav aria-label="你在这里" className="pathbar" key={pathname}>
+      <ol>
+        <li style={{ "--i": 0 } as React.CSSProperties}>
+          {crumbs.length ? (
+            <Link to="/" className="pathbar-seg pathbar-root">
+              {owner.name}:
+            </Link>
+          ) : (
+            <span className="pathbar-seg pathbar-root" aria-current="page">
+              {owner.name}:
+            </span>
+          )}
+        </li>
+        {crumbs.map((c, i) => (
+          <li
+            key={i}
+            style={{ "--i": i + 1 } as React.CSSProperties}
+            className={i < last ? "pathbar-mid" : undefined}
+          >
+            <span className="pathbar-sep" aria-hidden="true">
+              /
+            </span>
+            {i < last && c.to ? (
+              <Link
+                to={c.to}
+                search={c.search ?? {}}
+                className="pathbar-seg"
+                onClick={() => markDirection("back")}
+              >
+                {c.label}
+              </Link>
+            ) : (
+              <span className="pathbar-seg" aria-current={i === last ? "page" : undefined} title={c.label}>
+                {c.label}
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+    </nav>
+  )
 }
 
 /**
@@ -59,7 +105,6 @@ function useCurrentTask() {
  */
 export function AppShell({ children }: { children: ReactNode }) {
   useScrollKeys()
-  const task = useCurrentTask()
   const online = useUI((s) => s.online)
   const setSearchOpen = useUI((s) => s.setSearchOpen)
   return (
@@ -67,10 +112,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       {children}
       <CommentsFloat />
       <AccountDialog />
-      {/* 左边：开始菜单 + 当前打开的这一个窗口（换栏目时新标签从下面升起来）；主题和账号收进开始菜单 */}
+      {/* 左边：开始菜单 + 你在哪（路径）；主题和账号收进开始菜单 */}
       <Taskbar
-        items={[{ href: task.href, label: task.label, exact: true, icon: task.icon, key: task.key }]}
-        start={<StartMenu />}
+        items={[]}
+        start={
+          <>
+            <StartMenu />
+            <PathBar />
+          </>
+        }
         themeToggle={false}
       >
         {/* 这一页关掉的窗口（ClosedTasks 从页面里传送过来） */}
@@ -98,14 +148,23 @@ export function SiteShell({
   folders,
   scene,
   aside,
+  crumbs,
   children,
 }: {
   folders?: ReactNode
   scene?: "read" | "show"
   aside?: ReactNode
+  /** 任务栏上的路径（不含盘符）。不给就按地址猜 */
+  crumbs?: Crumb[]
   children: ReactNode
 }) {
   const pathname = useLocation({ select: (l) => l.pathname })
+  const setCrumbs = useUI((s) => s.setCrumbs)
+  const crumbKey = JSON.stringify(crumbs ?? null)
+  useEffect(() => {
+    setCrumbs(JSON.parse(crumbKey) as Crumb[] | null)
+    return () => setCrumbs(null)
+  }, [crumbKey, setCrumbs])
   return (
     <DesktopProvider key={pathname}>
       <DesktopArea data-scene={scene}>
