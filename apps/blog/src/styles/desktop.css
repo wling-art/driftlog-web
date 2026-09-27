@@ -413,3 +413,47 @@ body {
 [data-scene="read"] .wins:not(.has-aside) {
   --wins-max: calc(var(--measure) + 2 * var(--space-5) + 2 * var(--line));
 }
+
+/* ── Driftlog 的改动：桌面图标像 Windows 一样排在格子里，贴着屏幕左上角 ──
+ * 每个图标占一个一样大的格子（图标在上、标签最多两行），标签多长格子都不变高，所以永远对齐；
+ * 整列离屏幕边 8px（桌面四周的 20px 留白只给窗口）。图标太多放不下时这一列自己滚。 */
+:root {
+  --icon-cell-w: 76px;
+  --icon-cell-h: 84px;
+  --icon-edge: 8px;
+}
+.desktop-area {
+  grid-template-columns: var(--icon-cell-w) minmax(0, 1fr);
+}
+.folders {
+  /* 粘性定位的 top 从桌面区域的内边距（20px）里面算起，所以也要减掉这 20px */
+  top: calc(var(--icon-edge) - 20px);
+  margin: calc(var(--icon-edge) - 20px) 0 0 calc(var(--icon-edge) - 20px);
+  padding-top: 0;
+  gap: 2px;
+  grid-auto-rows: var(--icon-cell-h);
+  justify-items: stretch;
+  align-content: start;
+  max-height: calc(100dvh - 64px);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+.folder {
+  width: var(--icon-cell-w);
+  height: var(--icon-cell-h);
+  grid-template-rows: 34px auto;
+  align-content: start;
+  padding: 6px 3px 4px;
+  overflow: hidden;
+}
+.folder > span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+/* 焦点描边画在格子里面：格子挨得紧，外扩的描边会压到隔壁 */
+.folder:focus-visible {
+  outline-offset: -2px;
+}

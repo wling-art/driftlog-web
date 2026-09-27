@@ -81,7 +81,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
     <SiteShell
       scene="read"
       folders={e.toc.slice(0, 12).map((t) => (
-        <a key={t.id} href={`#${t.id}`} className="folder" data-icon="doc">
+        <a key={t.id} href={`#${t.id}`} className="folder" data-icon="doc" title={t.text}>
           <span>{t.text}</span>
         </a>
       ))}
