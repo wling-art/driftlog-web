@@ -61,6 +61,7 @@ function Editor({
     queryKey: ["admin-categories"],
     queryFn: () => unwrap(api.admin.categories.get()),
   })
+  const topics = useQuery({ queryKey: ["admin-topics"], queryFn: () => unwrap(api.admin.topics.get()) })
 
   const defaults: EntryInput = {
     type: initial?.type ?? newType ?? "post",
@@ -74,6 +75,9 @@ function Editor({
     pinned: initial?.pinned ?? false,
     mood: initial?.mood ?? null,
     weather: initial?.weather ?? null,
+    topicId: initial?.topicId ?? null,
+    subtitle: initial?.subtitle ?? null,
+    copyright: initial?.copyright ?? true,
   }
 
   const form = useForm({
@@ -249,7 +253,43 @@ function Editor({
               </Field>
             )}
           </form.Field>
-          {type !== "page" && (
+          {type === "note" && (
+            <form.Field name="topicId">
+              {(f) => (
+                <Field label="专栏">
+                  <Select
+                    value={f.state.value ? String(f.state.value) : "none"}
+                    onValueChange={(v) => f.handleChange(v === "none" ? null : Number(v))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">不归专栏</SelectItem>
+                      {topics.data?.map((t) => (
+                        <SelectItem key={t.id} value={String(t.id)}>
+                          {t.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+              )}
+            </form.Field>
+          )}
+          {type === "page" && (
+            <form.Field name="subtitle">
+              {(f) => (
+                <Field label="副标题" hint="显示在页面标题下面那一行">
+                  <Input
+                    value={f.state.value ?? ""}
+                    onChange={(e) => f.handleChange(e.target.value || null)}
+                  />
+                </Field>
+              )}
+            </form.Field>
+          )}
+          {type === "post" && (
             <form.Field name="categoryId">
               {(f) => (
                 <Field label="分类">
@@ -337,6 +377,15 @@ function Editor({
                 </label>
               )}
             </form.Field>
+            {type !== "page" && (
+              <form.Field name="copyright">
+                {(f) => (
+                  <label className="flex items-center justify-between text-sm">
+                    文末版权声明 <Switch checked={f.state.value} onCheckedChange={f.handleChange} />
+                  </label>
+                )}
+              </form.Field>
+            )}
             <form.Field name="pinned">
               {(f) => (
                 <label className="flex items-center justify-between text-sm">

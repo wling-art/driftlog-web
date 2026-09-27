@@ -1,10 +1,14 @@
+// 部署相关的地址从环境变量来；站名、简介、站长这些内容从接口来（后台「站点设置」里改），见 useSite()
 export const site = {
   url: (import.meta.env.VITE_SITE_URL ?? "http://localhost:5173").replace(/\/$/, ""),
   api: (import.meta.env.VITE_API_URL ?? "http://localhost:3900").replace(/\/$/, ""),
-  name: import.meta.env.VITE_SITE_NAME ?? "Driftlog",
-  description: import.meta.env.VITE_SITE_DESCRIPTION ?? "一个无聊的博客",
-  author: import.meta.env.VITE_AUTHOR ?? "wling",
 }
+
+type SiteInfo = { title: string; description: string; owner: { name: string } }
+const fallback: SiteInfo = { title: "Driftlog", description: "", owner: { name: "" } }
+/** 在路由的 head() 里拿站点设置：根路由的 loader 已经取好了 */
+export const siteOf = (matches: { routeId: string; loaderData?: unknown }[]) =>
+  (matches.find((m) => m.routeId === "__root__")?.loaderData as SiteInfo | undefined) ?? fallback
 
 export type EntryType = "post" | "note" | "page"
 /** 前台地址：文章 /posts/x，手记 /notes/x，页面 /x */

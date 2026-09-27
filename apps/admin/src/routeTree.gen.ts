@@ -15,7 +15,12 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppCategoriesRouteImport } from './routes/_app/categories'
 import { Route as AppCommentsRouteImport } from './routes/_app/comments'
 import { Route as AppFilesRouteImport } from './routes/_app/files'
+import { Route as AppLinksRouteImport } from './routes/_app/links'
+import { Route as AppProjectsRouteImport } from './routes/_app/projects'
+import { Route as AppSaysRouteImport } from './routes/_app/says'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
+import { Route as AppThoughtsRouteImport } from './routes/_app/thoughts'
+import { Route as AppTopicsRouteImport } from './routes/_app/topics'
 import { Route as AppEntriesIndexRouteImport } from './routes/_app/entries/index'
 import { Route as AppEntriesIdRouteImport } from './routes/_app/entries/$id'
 
@@ -48,9 +53,34 @@ const AppFilesRoute = AppFilesRouteImport.update({
   path: '/files',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLinksRoute = AppLinksRouteImport.update({
+  id: '/links',
+  path: '/links',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProjectsRoute = AppProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSaysRoute = AppSaysRouteImport.update({
+  id: '/says',
+  path: '/says',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppThoughtsRoute = AppThoughtsRouteImport.update({
+  id: '/thoughts',
+  path: '/thoughts',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppTopicsRoute = AppTopicsRouteImport.update({
+  id: '/topics',
+  path: '/topics',
   getParentRoute: () => AppRoute,
 } as any)
 const AppEntriesIndexRoute = AppEntriesIndexRouteImport.update({
@@ -70,7 +100,12 @@ export interface FileRoutesByFullPath {
   '/categories': typeof AppCategoriesRoute
   '/comments': typeof AppCommentsRoute
   '/files': typeof AppFilesRoute
+  '/links': typeof AppLinksRoute
+  '/projects': typeof AppProjectsRoute
+  '/says': typeof AppSaysRoute
   '/settings': typeof AppSettingsRoute
+  '/thoughts': typeof AppThoughtsRoute
+  '/topics': typeof AppTopicsRoute
   '/entries/$id': typeof AppEntriesIdRoute
   '/entries/': typeof AppEntriesIndexRoute
 }
@@ -79,7 +114,12 @@ export interface FileRoutesByTo {
   '/categories': typeof AppCategoriesRoute
   '/comments': typeof AppCommentsRoute
   '/files': typeof AppFilesRoute
+  '/links': typeof AppLinksRoute
+  '/projects': typeof AppProjectsRoute
+  '/says': typeof AppSaysRoute
   '/settings': typeof AppSettingsRoute
+  '/thoughts': typeof AppThoughtsRoute
+  '/topics': typeof AppTopicsRoute
   '/': typeof AppIndexRoute
   '/entries/$id': typeof AppEntriesIdRoute
   '/entries': typeof AppEntriesIndexRoute
@@ -91,7 +131,12 @@ export interface FileRoutesById {
   '/_app/categories': typeof AppCategoriesRoute
   '/_app/comments': typeof AppCommentsRoute
   '/_app/files': typeof AppFilesRoute
+  '/_app/links': typeof AppLinksRoute
+  '/_app/projects': typeof AppProjectsRoute
+  '/_app/says': typeof AppSaysRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/thoughts': typeof AppThoughtsRoute
+  '/_app/topics': typeof AppTopicsRoute
   '/_app/': typeof AppIndexRoute
   '/_app/entries/$id': typeof AppEntriesIdRoute
   '/_app/entries/': typeof AppEntriesIndexRoute
@@ -104,7 +149,12 @@ export interface FileRouteTypes {
     | '/categories'
     | '/comments'
     | '/files'
+    | '/links'
+    | '/projects'
+    | '/says'
     | '/settings'
+    | '/thoughts'
+    | '/topics'
     | '/entries/$id'
     | '/entries/'
   fileRoutesByTo: FileRoutesByTo
@@ -113,7 +163,12 @@ export interface FileRouteTypes {
     | '/categories'
     | '/comments'
     | '/files'
+    | '/links'
+    | '/projects'
+    | '/says'
     | '/settings'
+    | '/thoughts'
+    | '/topics'
     | '/'
     | '/entries/$id'
     | '/entries'
@@ -124,7 +179,12 @@ export interface FileRouteTypes {
     | '/_app/categories'
     | '/_app/comments'
     | '/_app/files'
+    | '/_app/links'
+    | '/_app/projects'
+    | '/_app/says'
     | '/_app/settings'
+    | '/_app/thoughts'
+    | '/_app/topics'
     | '/_app/'
     | '/_app/entries/$id'
     | '/_app/entries/'
@@ -179,11 +239,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFilesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/links': {
+      id: '/_app/links'
+      path: '/links'
+      fullPath: '/links'
+      preLoaderRoute: typeof AppLinksRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/projects': {
+      id: '/_app/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof AppProjectsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/says': {
+      id: '/_app/says'
+      path: '/says'
+      fullPath: '/says'
+      preLoaderRoute: typeof AppSaysRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/settings': {
       id: '/_app/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/thoughts': {
+      id: '/_app/thoughts'
+      path: '/thoughts'
+      fullPath: '/thoughts'
+      preLoaderRoute: typeof AppThoughtsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/topics': {
+      id: '/_app/topics'
+      path: '/topics'
+      fullPath: '/topics'
+      preLoaderRoute: typeof AppTopicsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/entries/': {
@@ -207,7 +302,12 @@ interface AppRouteChildren {
   AppCategoriesRoute: typeof AppCategoriesRoute
   AppCommentsRoute: typeof AppCommentsRoute
   AppFilesRoute: typeof AppFilesRoute
+  AppLinksRoute: typeof AppLinksRoute
+  AppProjectsRoute: typeof AppProjectsRoute
+  AppSaysRoute: typeof AppSaysRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppThoughtsRoute: typeof AppThoughtsRoute
+  AppTopicsRoute: typeof AppTopicsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppEntriesIdRoute: typeof AppEntriesIdRoute
   AppEntriesIndexRoute: typeof AppEntriesIndexRoute
@@ -217,7 +317,12 @@ const AppRouteChildren: AppRouteChildren = {
   AppCategoriesRoute: AppCategoriesRoute,
   AppCommentsRoute: AppCommentsRoute,
   AppFilesRoute: AppFilesRoute,
+  AppLinksRoute: AppLinksRoute,
+  AppProjectsRoute: AppProjectsRoute,
+  AppSaysRoute: AppSaysRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppThoughtsRoute: AppThoughtsRoute,
+  AppTopicsRoute: AppTopicsRoute,
   AppIndexRoute: AppIndexRoute,
   AppEntriesIdRoute: AppEntriesIdRoute,
   AppEntriesIndexRoute: AppEntriesIndexRoute,

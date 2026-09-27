@@ -13,13 +13,18 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SlugRouteImport } from './routes/$slug'
 import { Route as AtomDotxmlRouteImport } from './routes/atom[.]xml'
 import { Route as FeedDotxmlRouteImport } from './routes/feed[.]xml'
+import { Route as FriendsRouteImport } from './routes/friends'
+import { Route as ProjectsRouteImport } from './routes/projects'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
+import { Route as SaysRouteImport } from './routes/says'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ThinkingRouteImport } from './routes/thinking'
 import { Route as NotesIndexRouteImport } from './routes/notes/index'
 import { Route as NotesSlugRouteImport } from './routes/notes/$slug'
 import { Route as PostsIndexRouteImport } from './routes/posts/index'
 import { Route as PostsSlugRouteImport } from './routes/posts/$slug'
 import { Route as OgTypeSlugRouteImport } from './routes/og/$type.$slug'
+import { Route as PostsCategorySlugRouteImport } from './routes/posts/$category.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,14 +46,34 @@ const FeedDotxmlRoute = FeedDotxmlRouteImport.update({
   path: '/feed.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FriendsRoute = FriendsRouteImport.update({
+  id: '/friends',
+  path: '/friends',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsRoute = ProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SaysRoute = SaysRouteImport.update({
+  id: '/says',
+  path: '/says',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ThinkingRoute = ThinkingRouteImport.update({
+  id: '/thinking',
+  path: '/thinking',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotesIndexRoute = NotesIndexRouteImport.update({
@@ -76,32 +101,47 @@ const OgTypeSlugRoute = OgTypeSlugRouteImport.update({
   path: '/og/$type/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PostsCategorySlugRoute = PostsCategorySlugRouteImport.update({
+  id: '/posts/$category/$slug',
+  path: '/posts/$category/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/atom.xml': typeof AtomDotxmlRoute
   '/feed.xml': typeof FeedDotxmlRoute
+  '/friends': typeof FriendsRoute
+  '/projects': typeof ProjectsRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/says': typeof SaysRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/thinking': typeof ThinkingRoute
   '/notes/$slug': typeof NotesSlugRoute
   '/posts/$slug': typeof PostsSlugRoute
   '/notes/': typeof NotesIndexRoute
   '/posts/': typeof PostsIndexRoute
   '/og/$type/$slug': typeof OgTypeSlugRoute
+  '/posts/$category/$slug': typeof PostsCategorySlugRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$slug': typeof SlugRoute
   '/atom.xml': typeof AtomDotxmlRoute
   '/feed.xml': typeof FeedDotxmlRoute
+  '/friends': typeof FriendsRoute
+  '/projects': typeof ProjectsRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/says': typeof SaysRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/thinking': typeof ThinkingRoute
   '/notes/$slug': typeof NotesSlugRoute
   '/posts/$slug': typeof PostsSlugRoute
   '/notes': typeof NotesIndexRoute
   '/posts': typeof PostsIndexRoute
   '/og/$type/$slug': typeof OgTypeSlugRoute
+  '/posts/$category/$slug': typeof PostsCategorySlugRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -109,13 +149,18 @@ export interface FileRoutesById {
   '/$slug': typeof SlugRoute
   '/atom.xml': typeof AtomDotxmlRoute
   '/feed.xml': typeof FeedDotxmlRoute
+  '/friends': typeof FriendsRoute
+  '/projects': typeof ProjectsRoute
   '/robots.txt': typeof RobotsDottxtRoute
+  '/says': typeof SaysRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/thinking': typeof ThinkingRoute
   '/notes/$slug': typeof NotesSlugRoute
   '/posts/$slug': typeof PostsSlugRoute
   '/notes/': typeof NotesIndexRoute
   '/posts/': typeof PostsIndexRoute
   '/og/$type/$slug': typeof OgTypeSlugRoute
+  '/posts/$category/$slug': typeof PostsCategorySlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -124,39 +169,54 @@ export interface FileRouteTypes {
     | '/$slug'
     | '/atom.xml'
     | '/feed.xml'
+    | '/friends'
+    | '/projects'
     | '/robots.txt'
+    | '/says'
     | '/sitemap.xml'
+    | '/thinking'
     | '/notes/$slug'
     | '/posts/$slug'
     | '/notes/'
     | '/posts/'
     | '/og/$type/$slug'
+    | '/posts/$category/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/$slug'
     | '/atom.xml'
     | '/feed.xml'
+    | '/friends'
+    | '/projects'
     | '/robots.txt'
+    | '/says'
     | '/sitemap.xml'
+    | '/thinking'
     | '/notes/$slug'
     | '/posts/$slug'
     | '/notes'
     | '/posts'
     | '/og/$type/$slug'
+    | '/posts/$category/$slug'
   id:
     | '__root__'
     | '/'
     | '/$slug'
     | '/atom.xml'
     | '/feed.xml'
+    | '/friends'
+    | '/projects'
     | '/robots.txt'
+    | '/says'
     | '/sitemap.xml'
+    | '/thinking'
     | '/notes/$slug'
     | '/posts/$slug'
     | '/notes/'
     | '/posts/'
     | '/og/$type/$slug'
+    | '/posts/$category/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -164,13 +224,18 @@ export interface RootRouteChildren {
   SlugRoute: typeof SlugRoute
   AtomDotxmlRoute: typeof AtomDotxmlRoute
   FeedDotxmlRoute: typeof FeedDotxmlRoute
+  FriendsRoute: typeof FriendsRoute
+  ProjectsRoute: typeof ProjectsRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
+  SaysRoute: typeof SaysRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ThinkingRoute: typeof ThinkingRoute
   NotesSlugRoute: typeof NotesSlugRoute
   PostsSlugRoute: typeof PostsSlugRoute
   NotesIndexRoute: typeof NotesIndexRoute
   PostsIndexRoute: typeof PostsIndexRoute
   OgTypeSlugRoute: typeof OgTypeSlugRoute
+  PostsCategorySlugRoute: typeof PostsCategorySlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -203,6 +268,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FeedDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/friends': {
+      id: '/friends'
+      path: '/friends'
+      fullPath: '/friends'
+      preLoaderRoute: typeof FriendsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects': {
+      id: '/projects'
+      path: '/projects'
+      fullPath: '/projects'
+      preLoaderRoute: typeof ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/robots.txt': {
       id: '/robots.txt'
       path: '/robots.txt'
@@ -210,11 +289,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/says': {
+      id: '/says'
+      path: '/says'
+      fullPath: '/says'
+      preLoaderRoute: typeof SaysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/thinking': {
+      id: '/thinking'
+      path: '/thinking'
+      fullPath: '/thinking'
+      preLoaderRoute: typeof ThinkingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notes/': {
@@ -252,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OgTypeSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/posts/$category/$slug': {
+      id: '/posts/$category/$slug'
+      path: '/posts/$category/$slug'
+      fullPath: '/posts/$category/$slug'
+      preLoaderRoute: typeof PostsCategorySlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -260,13 +360,18 @@ const rootRouteChildren: RootRouteChildren = {
   SlugRoute: SlugRoute,
   AtomDotxmlRoute: AtomDotxmlRoute,
   FeedDotxmlRoute: FeedDotxmlRoute,
+  FriendsRoute: FriendsRoute,
+  ProjectsRoute: ProjectsRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
+  SaysRoute: SaysRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ThinkingRoute: ThinkingRoute,
   NotesSlugRoute: NotesSlugRoute,
   PostsSlugRoute: PostsSlugRoute,
   NotesIndexRoute: NotesIndexRoute,
   PostsIndexRoute: PostsIndexRoute,
   OgTypeSlugRoute: OgTypeSlugRoute,
+  PostsCategorySlugRoute: PostsCategorySlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

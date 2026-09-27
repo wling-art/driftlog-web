@@ -9,13 +9,21 @@ export default defineConfig({
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
   ],
-  webServer: [
-    { command: "bun run dev:blog", url: "http://localhost:5173", reuseExistingServer: true, timeout: 60_000 },
-    {
-      command: "bun run dev:admin",
-      url: "http://localhost:5174",
-      reuseExistingServer: true,
-      timeout: 60_000,
-    },
-  ],
+  // 给了 E2E_BLOG / E2E_ADMIN 就用那一套，不自己起服务
+  webServer: process.env.E2E_BLOG
+    ? undefined
+    : [
+        {
+          command: "bun run dev:blog",
+          url: "http://localhost:5173",
+          reuseExistingServer: true,
+          timeout: 60_000,
+        },
+        {
+          command: "bun run dev:admin",
+          url: "http://localhost:5174",
+          reuseExistingServer: true,
+          timeout: 60_000,
+        },
+      ],
 })

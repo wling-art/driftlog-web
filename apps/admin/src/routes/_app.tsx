@@ -13,6 +13,11 @@ import {
   Settings,
   StickyNote,
   Sun,
+  Boxes,
+  Library,
+  Link2,
+  Quote,
+  Zap,
 } from "lucide-react"
 import {
   Sidebar,
@@ -57,9 +62,22 @@ const content = [
   { to: "/entries", search: { type: "page" as const }, label: "页面", icon: StickyNote },
 ]
 
+// mx-space 带过来的栏目
+const extras = [
+  { to: "/topics", label: "手记专栏", icon: Library },
+  { to: "/thoughts", label: "动态", icon: Zap },
+  { to: "/says", label: "一言", icon: Quote },
+  { to: "/projects", label: "项目", icon: Boxes },
+] as const
+
 function Layout() {
   const { data: me } = useSuspenseQuery(meQuery)
   const { data: stats } = useQuery(statsQuery)
+  const { data: links } = useQuery({
+    queryKey: ["admin-links-pending"],
+    queryFn: () => unwrap(api.admin.links.get()),
+    staleTime: 60_000,
+  })
   const { theme, toggle } = useTheme()
   const navigate = useNavigate()
 
@@ -117,8 +135,30 @@ function Layout() {
             </SidebarMenu>
           </SidebarGroup>
           <SidebarGroup>
+            <SidebarGroupLabel>栏目</SidebarGroupLabel>
+            <SidebarMenu>
+              {extras.map((c) => (
+                <SidebarMenuItem key={c.to}>
+                  <SidebarMenuButton asChild tooltip={c.label}>
+                    <Link to={c.to} activeProps={{ "data-active": true }}>
+                      <c.icon /> {c.label}
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+          <SidebarGroup>
             <SidebarGroupLabel>互动与资源</SidebarGroupLabel>
             <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild tooltip="友链">
+                  <Link to="/links" activeProps={{ "data-active": true }}>
+                    <Link2 /> 友链
+                  </Link>
+                </SidebarMenuButton>
+                {!!links?.pending && <SidebarMenuBadge className="tabular">{links.pending}</SidebarMenuBadge>}
+              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild tooltip="评论">
                   <Link to="/comments" activeProps={{ "data-active": true }}>

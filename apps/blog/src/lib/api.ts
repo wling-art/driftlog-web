@@ -1,4 +1,4 @@
-import { queryOptions } from "@tanstack/react-query"
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query"
 import { createClient, unwrap } from "@driftlog/client"
 import { site, type EntryType } from "./site"
 
@@ -17,11 +17,31 @@ export const entryQuery = (type: EntryType, slug: string, lang?: string) =>
     queryFn: () => unwrap(api.entries.slug({ slug }).get({ query: { type, lang } })),
   })
 
-export const indexQuery = (type: EntryType, filter: { category?: string; tag?: string } = {}) =>
+export const indexQuery = (
+  type: EntryType,
+  filter: { category?: string; tag?: string; topic?: string } = {},
+) =>
   queryOptions({
     queryKey: ["index", type, filter],
     queryFn: () => unwrap(api.entries.index.get({ query: { type, ...filter } })),
   })
+
+// 站点设置（站名、简介、站长资料）：根路由加载时就取好，组件里用 useSite() 读
+export const siteQuery = () =>
+  queryOptions({ queryKey: ["site"], queryFn: () => unwrap(api.site.get()), staleTime: 600_000 })
+export const topicsQuery = () =>
+  queryOptions({ queryKey: ["topics"], queryFn: () => unwrap(api.topics.get()), staleTime: 600_000 })
+export const saysQuery = () =>
+  queryOptions({ queryKey: ["says"], queryFn: () => unwrap(api.says.get()), staleTime: 600_000 })
+export const thoughtsQuery = () =>
+  queryOptions({ queryKey: ["thoughts"], queryFn: () => unwrap(api.thoughts.get()) })
+export const linksQuery = () =>
+  queryOptions({ queryKey: ["links"], queryFn: () => unwrap(api.links.get()), staleTime: 600_000 })
+export const projectsQuery = () =>
+  queryOptions({ queryKey: ["projects"], queryFn: () => unwrap(api.projects.get()), staleTime: 600_000 })
+/** 站点设置（根路由已经取好，不会再等） */
+export const useSite = () => useSuspenseQuery(siteQuery()).data
+export type SiteSettings = Awaited<ReturnType<ReturnType<typeof siteQuery>["queryFn"] & {}>>
 
 export const categoriesQuery = () =>
   queryOptions({ queryKey: ["categories"], queryFn: () => unwrap(api.categories.get()), staleTime: 600_000 })

@@ -1,18 +1,21 @@
-import { useEffect } from "react"
-import { Link } from "@tanstack/react-router"
+import { useEffect, useState } from "react"
+import { Link, notFound, redirect } from "@tanstack/react-router"
+import type { QueryClient } from "@tanstack/react-query"
+import { unwrap } from "@driftlog/client"
 import { useQuery } from "@tanstack/react-query"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Window } from "@/components/boring"
 import { Article } from "@/components/article"
 import { SiteShell } from "@/components/site"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { commentsQuery, type Entry } from "@/lib/api"
+import { api, commentsQuery, entryQuery, isNotFound, useSite, type Entry } from "@/lib/api"
 import { markDirection, useArrowNav } from "@/lib/keys"
 import { useUI } from "@/lib/store"
-import { entryPath, formatDate, readingMinutes, site } from "@/lib/site"
+import { entryPath, formatDate, readingMinutes, site, siteOf } from "@/lib/site"
+export { siteOf }
 
 /** 文章 / 手记 / 页面的 head：标题、描述、OG 图、JSON-LD */
-export function entryHead(e: Entry | undefined) {
+export function entryHead(e: Entry | undefined, info: { title: string; owner: { name: string } }) {
   if (!e) return {}
   const url = `${site.url}${entryPath(e.type, e.slug)}`
   const description = e.summary ?? e.excerpt
@@ -24,14 +27,14 @@ export function entryHead(e: Entry | undefined) {
     description,
     datePublished: e.publishedAt,
     dateModified: e.updatedAt,
-    author: { "@type": "Person", name: site.author },
+    author: { "@type": "Person", name: info.owner.name },
     image,
     url,
     keywords: e.tags.join(","),
   }
   return {
     meta: [
-      { title: `${e.title} · ${site.name}` },
+      { title: `${e.title} · ${info.title}` },
       { name: "description", content: description },
       { property: "og:type", content: e.type === "page" ? "website" : "article" },
       { property: "og:title", content: e.title },
@@ -57,7 +60,8 @@ const typeLabel = { post: "文章", note: "手记", page: "页面" } as const
 export function EntryPage({ entry: e }: { entry: Entry }) {
   const type = e.type as keyof typeof typeLabel
   const meta = [
-    e.type === "note" ? [e.mood, e.weather].filter(Boolean).join(" · ") : e.category?.name,
+    e.type === "note" ? e.topic?.name : e.category?.name,
+    e.type === "note" && [e.mood, e.weather].filter(Boolean).join(" · "),
     formatDate(e.publishedAt ?? e.createdAt),
     e.type !== "page" && `阅读 ${readingMinutes(e.html)} 分钟`,
     e.views > 0 && `${e.views} 次阅读`,
@@ -72,6 +76,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
   }, [e.id, e.title, setComments])
   const { data: comments } = useQuery(commentsQuery(e.id))
 
+  const info = useSite()
   const paged = e.type !== "page"
   const prev = paged && e.prev ? { to: entryPath(type, e.prev.slug), title: e.prev.title } : null
   const next = paged && e.next ? { to: entryPath(type, e.next.slug), title: e.next.title } : null
@@ -90,7 +95,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
         id="article"
         name={`${e.slug}.md`}
         title={e.title}
-        rule={`// ${meta.join(" · ")}`}
+        rule={e.type === "page" && e.subtitle ? `// ${e.subtitle}` : `// ${meta.join(" · ")}`}
         closable={false}
         controls={
           paged && (
@@ -138,6 +143,10 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
           </p>
         )}
 
+        {e.copyright && e.type !== "page" && (
+          <p className="article-copyright">版权归 {info.owner.name} 所有，转载请注明出处。</p>
+        )}
+
         {/* 正文末尾一行：接着读，或者看看别人说了什么 */}
         <footer id="article-end" className="article-end">
           {next ? (
@@ -147,9 +156,12 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
           ) : (
             paged && <span className="muted">这是最新的一篇</span>
           )}
-          <button type="button" className="article-end-comments" onClick={() => setCommentsOpen(true)}>
-            {comments?.length ? `${comments.length} 条评论 · 打开` : "写评论"}
-          </button>
+          <span className="article-end-actions">
+            <LikeButton id={e.id} likes={e.likes} />
+            <button type="button" className="article-end-comments" onClick={() => setCommentsOpen(true)}>
+              {comments?.length ? `${comments.length} 条评论 · 打开` : "写评论"}
+            </button>
+          </span>
         </footer>
       </Window>
     </SiteShell>
@@ -194,4 +206,47 @@ function BarNav({
       </TooltipContent>
     </Tooltip>
   )
+}
+
+/** 喜欢：同一个人（IP）只算一次；点过就变成「已喜欢」 */
+function LikeButton({ id, likes }: { id: number; likes: number }) {
+  const [state, setState] = useState<{ n: number; liked: boolean }>({ n: likes, liked: false })
+  const like = async () => {
+    try {
+      const r = await unwrap(api.entries({ id }).like.post())
+      setState({ n: r.likes, liked: true })
+    } catch {
+      setState((s) => ({ ...s, liked: true }))
+    }
+  }
+  return (
+    <button
+      type="button"
+      className="article-end-like"
+      aria-pressed={state.liked}
+      disabled={state.liked}
+      onClick={like}
+    >
+      {state.liked ? "已喜欢" : "喜欢"} {state.n > 0 && state.n}
+    </button>
+  )
+}
+
+/**
+ * 详情页的 loader：找不到时查一下是不是改过名的旧 slug，是就 301 到新地址，否则 404
+ */
+export async function loadEntry(
+  qc: QueryClient,
+  type: "post" | "note" | "page",
+  slug: string,
+  lang?: string,
+) {
+  try {
+    return await qc.ensureQueryData(entryQuery(type, slug, lang))
+  } catch (e) {
+    if (!isNotFound(e)) throw e
+    const moved = await unwrap(api.entries.resolve.get({ query: { type, slug } })).catch(() => null)
+    if (moved) throw redirect({ href: entryPath(type, moved.slug), statusCode: 301 })
+    throw notFound()
+  }
 }

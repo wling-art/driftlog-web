@@ -212,7 +212,7 @@ function Composer({
   const [engaged, setEngaged] = useState(false)
 
   const form = useForm({
-    defaultValues: { author: "", email: "", body: "" },
+    defaultValues: { author: "", email: "", body: "", private: false },
     // 先不打扰；提交过一次之后边输边校验，改对就消失
     validationLogic: revalidateLogic({ mode: "submit", modeAfterSubmission: "change" }),
     onSubmit: async ({ value, formApi }) => {
@@ -226,6 +226,7 @@ function Composer({
             email: who.email,
             url: null,
             body: value.body,
+            private: value.private,
           }),
         )
         saveIdentity(who)
@@ -233,7 +234,13 @@ function Composer({
         setEngaged(false)
         onCancelReply()
         await qc.invalidateQueries({ queryKey: ["comments", entryId] })
-        toast(c.status === "approved" ? "评论发出去了 ✓" : "收到了。审核完就会出现在这里")
+        toast(
+          value.private
+            ? "悄悄话送到了，只有站长看得到 ✓"
+            : c.status === "approved"
+              ? "评论发出去了 ✓"
+              : "收到了。审核完就会出现在这里",
+        )
       } catch (e) {
         toast.error(`没发出去：${(e as Error).message}。内容还在输入框里`)
       }
@@ -331,6 +338,19 @@ function Composer({
           </motion.div>
         )}
       </AnimatePresence>
+
+      <form.Field name="private">
+        {(f) => (
+          <label className="c-private">
+            <input
+              type="checkbox"
+              checked={f.state.value}
+              onChange={(e) => f.handleChange(e.target.checked)}
+            />
+            悄悄话（只有站长看得到，不会公开）
+          </label>
+        )}
+      </form.Field>
 
       <div className="c-composer-foot">
         <p id="comment-hint" className="c-hint">

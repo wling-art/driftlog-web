@@ -14,13 +14,14 @@ import { Button } from "@/components/ui/button"
 import { useUI } from "@/lib/store"
 import { CommentsFloat, CommentsTaskItem } from "@/components/comments-dock"
 import { takeDirection } from "@/lib/keys"
-import { entryPath, formatDate, site } from "@/lib/site"
-import type { EntryCard } from "@/lib/api"
+import { entryPath, formatDate } from "@/lib/site"
+import { useSite, type EntryCard } from "@/lib/api"
 
-const nav = [
-  { href: "/", label: site.name, exact: true },
+const sections = [
   { href: "/posts", label: "文章" },
   { href: "/notes", label: "手记" },
+  { href: "/thinking", label: "动态" },
+  { href: "/friends", label: "友链" },
   { href: "/about", label: "关于" },
 ]
 
@@ -31,6 +32,8 @@ const nav = [
  */
 export function AppShell({ children }: { children: ReactNode }) {
   useScrollKeys()
+  const { title } = useSite()
+  const nav = [{ href: "/", label: title, exact: true }, ...sections]
   const online = useUI((s) => s.online)
   const setSearchOpen = useUI((s) => s.setSearchOpen)
   return (

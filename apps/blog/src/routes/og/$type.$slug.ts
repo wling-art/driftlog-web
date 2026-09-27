@@ -11,7 +11,7 @@ export const Route = createFileRoute("/og/$type/$slug")({
         const all = await unwrap(api.entries.feed.get())
         const e = all.find((x) => x.type === params.type && x.slug === params.slug)
         if (!e) return new Response("not found", { status: 404 })
-        const png = await ogImage(new URL(request.url).origin, e)
+        const png = await ogImage(new URL(request.url).origin, e, (await unwrap(api.site.get())).title)
         return new Response(new Uint8Array(png), { headers: { "content-type": "image/png" } })
       },
     },

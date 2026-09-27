@@ -4,7 +4,7 @@ import { z } from "zod"
 import { Window } from "@/components/boring"
 import { Archive, Empty, SiteShell } from "@/components/site"
 import { categoriesQuery, indexQuery } from "@/lib/api"
-import { site } from "@/lib/site"
+import { siteOf } from "@/lib/site"
 
 const search = z.object({ category: z.string().optional(), tag: z.string().optional() })
 
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/posts/")({
       context.queryClient.ensureQueryData(indexQuery("post", deps)),
       context.queryClient.ensureQueryData(categoriesQuery()),
     ]),
-  head: () => ({ meta: [{ title: `文章 · ${site.name}` }] }),
+  head: ({ matches }) => ({ meta: [{ title: `文章 · ${siteOf(matches).title}` }] }),
   component: Posts,
 })
 

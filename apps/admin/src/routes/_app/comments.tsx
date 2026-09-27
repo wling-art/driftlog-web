@@ -72,8 +72,14 @@ function Comments() {
             <div className="flex items-center gap-2">
               <img src={c.row.original.avatar} alt="" className="size-7 rounded-full" />
               <div className="min-w-0">
-                <div className="font-medium">{c.getValue()}</div>
-                <div className="truncate text-xs text-muted-foreground">{c.row.original.email}</div>
+                <div className="flex items-center gap-1.5 font-medium">
+                  {c.getValue()}
+                  {c.row.original.private && <Badge variant="outline">悄悄话</Badge>}
+                </div>
+                <div className="truncate text-xs text-muted-foreground">
+                  {c.row.original.email}
+                  {c.row.original.location && ` · ${c.row.original.location}`}
+                </div>
               </div>
             </div>
           ),

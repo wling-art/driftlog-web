@@ -12,7 +12,13 @@ E2E_EMAIL=… E2E_PASSWORD=… bun run test   # Playwright; admin cases skip wit
 ```
 
 - Vite must run under Bun: scripts use `bun --bun vite`. Plain `vite` runs on Node and breaks.
-- E2E creates posts and comments every run, and comments are rate-limited to 5 per minute per IP. Running the suite several times in a row can fail on the comment step; wait a minute.
+- **Dev points at the real database** (`driftlog` on the home server). E2E creates posts, comments and an owner account, so **never run it against the normal dev servers**. Run an isolated stack on the local empty DB and Redis db 1, then point the tests at it:
+  ```bash
+  # API :3901 (WORKER=off, DATABASE_URL=postgres://postgres@localhost:5432/driftlog, REDIS_URL=redis://localhost:6379/1,
+  #   ADMIN_URL=http://localhost:5175, BLOG_URL=http://localhost:5176), admin :5175 and blog :5176 with VITE_API_URL=http://localhost:3901
+  E2E_BLOG=http://localhost:5176 E2E_ADMIN=http://localhost:5175 E2E_EMAIL=… E2E_PASSWORD=… bun run test
+  ```
+  Afterwards drop and re-migrate the local DB and `redis-cli -n 1 flushdb`. Comments are rate-limited to 5 per minute per IP.
 - Visual checks: take Playwright screenshots (the Chrome extension isn't connected on this machine). Check light, dark, and 390px wide.
 
 ## Blog layout model (don't regress these)
@@ -20,6 +26,8 @@ E2E_EMAIL=… E2E_PASSWORD=… bun run test   # Playwright; admin cases skip wit
 - **Wide screens (≥ 761px)**: the page never scrolls (`html, body { overflow: clip }`, not `hidden`, because anchor jumps still scroll `hidden`). `.desktop-area` is a size container; each window is capped to it and scrolls *inside* `.win-body`. The taskbar and desktop icons never move.
 - **The taskbar lives in the root layout** (`AppShell` in `__root.tsx`), rendered once. Routes render only `SiteShell` (their desktop area: icons + windows), keyed by pathname. If a route renders its own taskbar again, it remounts on every navigation and the tab rise/drop transitions stop playing.
 - **Page transitions**: no browser View Transitions. `SiteShell` keys the window column by pathname so it remounts and plays the CSS `page-in` animation. For prev/next, call `markDirection("forward" | "back")` before navigating (`lib/keys.ts`).
+- **Site name, description and owner info come from the API** (`GET /site`, edited in admin 设置), loaded once by the root route: use `useSite()` in components and `siteOf(matches)` in `head()`. Don't reintroduce `VITE_SITE_NAME`-style env vars.
+- **Old Shiro URLs keep working**: `/posts/:category/:slug` 301s to `/posts/:slug`; note slugs are the old numeric `nid`; entry loaders (`loadEntry`) 301 renamed slugs via `/entries/resolve`.
 - **Secondary things live in the shell**: comments are minimized to the taskbar and open as a floating window (`comments-dock.tsx`); prev/next are title-bar `‹ ›` controls; lists are a year-grouped archive with no pagination.
 - Reading width is `--measure: 40em` (≈ 40 CJK characters, the WCAG 1.4.8 limit), and the reading window hugs it. Don't put a `max-width: var(--measure)` on smaller-font children: `em` follows their own font size.
 - Desktop icons sit in fixed 76 × 82px cells; pixel-font labels need integer line heights (16px).

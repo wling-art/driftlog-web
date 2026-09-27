@@ -6,6 +6,10 @@ const esc = (s: string) =>
   s.replace(/[<>&'"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" })[c]!)
 const cdata = (s: string) => `<![CDATA[${s.replaceAll("]]>", "]]]]><![CDATA[>")}]]>`
 
+async function info() {
+  return unwrap(api.site.get())
+}
+
 async function items() {
   const all = await unwrap(api.entries.feed.get())
   return all
@@ -20,10 +24,10 @@ const xml = (body: string, type: string) =>
   })
 
 export async function rss() {
-  const list = await items()
+  const [list, s] = await Promise.all([items(), info()])
   return xml(
     `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel>
-<title>${esc(site.name)}</title><link>${site.url}</link><description>${esc(site.description)}</description><language>zh-CN</language>
+<title>${esc(s.title)}</title><link>${site.url}</link><description>${esc(s.description)}</description><language>zh-CN</language>
 <atom:link href="${site.url}/feed.xml" rel="self" type="application/rss+xml"/>
 ${list
   .map(
@@ -39,13 +43,13 @@ ${list
 }
 
 export async function atom() {
-  const list = await items()
+  const [list, s] = await Promise.all([items(), info()])
   const updated = list[0]?.updatedAt ?? new Date().toISOString()
   return xml(
     `<feed xmlns="http://www.w3.org/2005/Atom">
-<title>${esc(site.name)}</title><subtitle>${esc(site.description)}</subtitle><id>${site.url}/</id>
+<title>${esc(s.title)}</title><subtitle>${esc(s.description)}</subtitle><id>${site.url}/</id>
 <link href="${site.url}"/><link rel="self" href="${site.url}/atom.xml"/><updated>${new Date(updated).toISOString()}</updated>
-<author><name>${esc(site.author)}</name></author>
+<author><name>${esc(s.owner.name)}</name></author>
 ${list
   .map(
     (e) => `<entry><title>${esc(e.title)}</title><id>${e.link}</id><link href="${e.link}"/>

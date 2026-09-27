@@ -24,6 +24,7 @@ const c = {
 export async function ogImage(
   origin: string,
   e: { title: string; slug: string; type: string; publishedAt: string | Date | null },
+  siteTitle: string,
 ) {
   const svg = await satori(
     <div
@@ -78,7 +79,7 @@ export async function ogImage(
         </div>
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 24, fontSize: 24 }}>
-        <span style={{ color: c.accent }}>{site.name}</span>
+        <span style={{ color: c.accent }}>{siteTitle}</span>
         <span style={{ color: c.muted }}>{site.url.replace(/^https?:\/\//, "")}</span>
       </div>
     </div>,
