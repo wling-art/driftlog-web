@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, Heart, MessageSquare } from "lucide-react"
 import { Window } from "@/components/boring"
 import { Article } from "@/components/article"
 import { BackLink, SiteShell } from "@/components/site"
+import { TocButton, TocPanel } from "@/components/toc"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { api, commentsQuery, entryQuery, isNotFound, useSite, type Entry } from "@/lib/api"
@@ -103,11 +104,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
     <SiteShell
       scene="read"
       crumbs={crumbsOf(e)}
-      folders={e.toc.slice(0, 12).map((t) => (
-        <a key={t.id} href={`#${t.id}`} className="folder" data-icon="doc" title={t.text}>
-          <span>{t.text}</span>
-        </a>
-      ))}
+      toc={e.toc.length > 1 ? <TocPanel items={e.toc} /> : undefined}
     >
       <Window
         id="article"
@@ -117,10 +114,15 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
 
         lead={<BackLink to={up.to} label={up.label} />}
         controls={
-          paged && (
+          (paged || e.toc.length > 1) && (
             <>
-              <BarNav dir="prev" target={prev} label={typeLabel[type]} />
-              <BarNav dir="next" target={next} label={typeLabel[type]} />
+              {e.toc.length > 1 && <TocButton items={e.toc} />}
+              {paged && (
+                <>
+                  <BarNav dir="prev" target={prev} label={typeLabel[type]} />
+                  <BarNav dir="next" target={next} label={typeLabel[type]} />
+                </>
+              )}
             </>
           )
         }

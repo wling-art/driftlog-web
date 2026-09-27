@@ -133,12 +133,15 @@ export function AppShell({ children }: { children: ReactNode }) {
  */
 export function SiteShell({
   folders,
+  toc,
   scene,
   aside,
   crumbs,
   children,
 }: {
   folders?: ReactNode
+  /** 左边那一列放文章目录（文字清单）而不是图标 */
+  toc?: ReactNode
   scene?: "read" | "show"
   aside?: ReactNode
   /** 任务栏上的路径（不含盘符）。不给就按地址猜 */
@@ -154,8 +157,8 @@ export function SiteShell({
   }, [crumbKey, setCrumbs])
   return (
     <DesktopProvider key={pathname}>
-      <DesktopArea data-scene={scene}>
-        <Folders>{folders}</Folders>
+      <DesktopArea data-scene={scene} className={toc ? "has-toc" : undefined}>
+        {toc ?? <Folders>{folders}</Folders>}
         <PageWindows aside={aside}>{children}</PageWindows>
       </DesktopArea>
       <ClosedTasks />

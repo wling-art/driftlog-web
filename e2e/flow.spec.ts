@@ -21,7 +21,7 @@ test("后台：登录、写一篇、实时预览、发布", async ({ page }) => 
   await page.goto(`${ADMIN}/entries/new?type=post`)
   await page.getByLabel("标题").fill("端到端测试")
   await page.locator(".cm-content").click()
-  await page.keyboard.type("## 小标题\n\n这是==重点==。")
+  await page.keyboard.type("## 小标题\n\n这是==重点==。\n\n## 第二节\n\n收尾。")
   await expect(page.locator(".md-preview mark").first()).toHaveText("重点")
   await page.getByPlaceholder("hello-world").fill(slug)
   await page.getByRole("switch", { name: "发布" }).click()
@@ -46,7 +46,10 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   await page.goto(BLOG + target)
   if (!email) return
   await expect(page.getByRole("heading", { level: 2, name: "端到端测试" })).toBeVisible()
-  await expect(page.locator('a.folder[href="#小标题"]')).toBeVisible()
+  // 目录：宽屏左边一张文字清单
+  await expect(
+    page.getByRole("navigation", { name: "文章目录" }).getByRole("link", { name: "小标题" }),
+  ).toBeVisible()
   // 任务栏上的路径：盘符 / 文章 / …… / 这一篇
   await expect(page.getByRole("navigation", { name: "你在这里" })).toContainText("端到端测试")
 
