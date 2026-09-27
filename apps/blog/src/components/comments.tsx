@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { revalidateLogic, useForm, type AnyFieldApi } from "@tanstack/react-form"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
-import { motion } from "motion/react"
+import { AnimatePresence, motion } from "motion/react"
 import { toast } from "sonner"
 import { commentInput, unwrap } from "@driftlog/client"
 import { Button } from "@/components/ui/button"
@@ -12,8 +12,9 @@ import { Window } from "@/components/boring"
 import { api, commentsQuery, type Comment } from "@/lib/api"
 import { formatDate } from "@/lib/site"
 
-// 「出现」曲线，和 tokens.css 的 --ease-enter 是同一条
+// 和 tokens.css 同一套曲线和时长：出现 240ms、离开 160ms（离开比出现短）
 const easeEnter = [0.37, 0.42, 0.12, 0.85] as const
+const easeExit = [0.88, 0.15, 0.63, 0.58] as const
 const REMEMBER = "driftlog-commenter"
 
 type Node = Comment & { children: Node[] }
@@ -76,11 +77,22 @@ export function Comments({ entryId }: { entryId: number }) {
           ))}
         </ol>
       )}
-      {writing && (
-        <div className="mt-(--space-5) border-t border-border-soft pt-(--space-4)">
-          <CommentForm entryId={entryId} replyTo={replyTo} onClose={close} />
-        </div>
-      )}
+      {/* 表单展开 / 收起：高度和透明度一起走，外层 overflow 裁掉，里面不会被挤变形 */}
+      <AnimatePresence initial={false}>
+        {writing && (
+          <motion.div
+            key="form"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1, transition: { duration: 0.24, ease: easeEnter } }}
+            exit={{ height: 0, opacity: 0, transition: { duration: 0.16, ease: easeExit } }}
+            className="overflow-hidden"
+          >
+            <div className="mt-(--space-5) border-t border-border-soft pt-(--space-4)">
+              <CommentForm entryId={entryId} replyTo={replyTo} onClose={close} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Window>
   )
 }

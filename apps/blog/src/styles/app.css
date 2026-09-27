@@ -443,12 +443,34 @@
   } /* 叠起来时都靠左，眼睛不用左右跳 */
 }
 
-/* ── 路由切换：View Transitions，只用 tokens 里的曲线 ── */
-::view-transition-old(root) {
+/* ── 路由切换：View Transitions ──
+ * 桌面是不动的：背景、任务栏、文件夹原地换成新页面，不做动画（root 不动）。
+ * 只有窗口那一列（.wins）有过渡：旧窗口用「离开」曲线淡出，新窗口用「出现」曲线从下面 8px 升上来。
+ * 任务栏单独起个名字：它在 DOM 里排在窗口后面，过渡期间就画在窗口快照上面，长文章的快照不会盖住它。 */
+.wins {
+  view-transition-name: wins;
+}
+.taskbar {
+  view-transition-name: taskbar;
+}
+::view-transition-group(root),
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-old(taskbar),
+::view-transition-new(taskbar),
+::view-transition-group(taskbar) {
+  animation: none;
+}
+/* 窗口列不做「从旧位置 / 尺寸变形到新的」：直接落在新位置，只淡出淡入 */
+::view-transition-group(wins) {
+  animation: none;
+}
+::view-transition-old(wins) {
   animation: var(--duration-exit) var(--ease-exit) both vt-out;
 }
-::view-transition-new(root) {
-  animation: var(--duration-enter) var(--ease-enter) both vt-in;
+/* 新窗口等旧的淡到一半再出来，文字不会叠成重影 */
+::view-transition-new(wins) {
+  animation: var(--duration-enter) var(--ease-enter) calc(var(--duration-exit) / 2) both vt-in;
 }
 @keyframes vt-out {
   to {
@@ -458,7 +480,7 @@
 @keyframes vt-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    translate: 0 8px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

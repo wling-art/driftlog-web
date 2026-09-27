@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { SearchPanel } from "@/components/search"
 import { ErrorWindow, NotFound } from "@/components/site"
+import { MotionConfig } from "motion/react"
 import { useRealtime } from "@/lib/realtime"
 import { site } from "@/lib/site"
 import css from "@/styles/app.css?url"
@@ -52,11 +53,14 @@ function Document({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <TooltipProvider delayDuration={400}>
-          {children}
-          <SearchPanel />
-          <Toaster />
-        </TooltipProvider>
+        {/* 系统开了「减少动效」时，Motion 的动画也跟着关 */}
+        <MotionConfig reducedMotion="user">
+          <TooltipProvider delayDuration={400}>
+            {children}
+            <SearchPanel />
+            <Toaster />
+          </TooltipProvider>
+        </MotionConfig>
         <Scripts />
       </body>
     </html>
