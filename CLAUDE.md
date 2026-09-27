@@ -31,6 +31,9 @@ E2E_EMAIL=… E2E_PASSWORD=… bun run test   # Playwright; admin cases skip wit
 - **Secondary things live in the shell**: comments are minimized to the taskbar and open as a floating window (`comments-dock.tsx`); prev/next are title-bar `‹ ›` controls; lists are a year-grouped archive with no pagination.
 - Reading width is `--measure: 40em` (≈ 40 CJK characters, the WCAG 1.4.8 limit), and the reading window hugs it. Don't put a `max-width: var(--measure)` on smaller-font children: `em` follows their own font size.
 - Desktop icons sit in fixed 76 × 82px cells; pixel-font labels need integer line heights (16px).
+- **Windows** are resizable (bottom-right grip) and all closable; closed ones sit in the taskbar (`ClosedTasks` portals into `#tb-closed`) until the page changes. Resizing and closing never move other windows: a resized window compensates with `margin-bottom`, and on wide screens a closed window keeps its slot (`data-closed` + `visibility: hidden`), so don't switch back to the `hidden` attribute.
+- **Accounts**: readers register and sign in on the blog (taskbar → `components/account.tsx`, Better Auth client in `lib/auth.ts`); signed-in comments use the account's name and email. The admin only lets the owner in and signs readers out with a message.
+- **Diagrams**: Mermaid and Excalidraw are drawn in the browser (`components/article.tsx`), loading the library only when a page has one. Excalidraw blocks are ```` ```excalidraw ```` with clipboard JSON; older stored HTML and translations have them as Shiki code blocks, recognised by content.
 - Forms: once a field shows an error, re-validate on change (otherwise blur removes the error line, the button jumps, and the click misses).
 
 ## Traps

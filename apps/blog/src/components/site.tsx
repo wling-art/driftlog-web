@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { useUI } from "@/lib/store"
 import { CommentsFloat, CommentsTaskItem } from "@/components/comments-dock"
+import { AccountTask } from "@/components/account"
 import { ChevronLeft } from "lucide-react"
 import { markDirection, takeDirection, useArrowNav } from "@/lib/keys"
 import { entryPath, formatDate } from "@/lib/site"
@@ -47,6 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* 这一页关掉的窗口（ClosedTasks 从页面里传送过来） */}
         <span id="tb-closed" className="tb-closed" />
         <CommentsTaskItem />
+        <AccountTask />
         {online > 0 && (
           <span className="clock" title="现在在看这个站的人">
             {online} 人在看

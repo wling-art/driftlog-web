@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { API_URL, auth } from "@/lib/api"
+import { API_URL, api, auth } from "@/lib/api"
 
 export const Route = createFileRoute("/login")({
   validateSearch: z.object({ redirect: z.string().optional() }),
@@ -21,7 +21,16 @@ function Login() {
   const navigate = useNavigate()
   const { redirect } = Route.useSearch()
   const [error, setError] = useState<string | null>(null)
-  const done = () => navigate({ to: redirect ?? "/" })
+  // 后台只认站长：登录成功后问一下 /admin/me，不是站长就退出并说清楚（不然会被默默弹回登录页）
+  const done = async () => {
+    const { error } = await api.admin.me.get()
+    if (error?.status === 403) {
+      await auth.signOut()
+      setError("这个账号不是站长。后台只有站长能进，读者账号请在博客前台用。")
+      return
+    }
+    await navigate({ to: redirect ?? "/" })
+  }
 
   const form = useForm({
     defaultValues: { email: "", password: "" },
@@ -29,15 +38,15 @@ function Login() {
     onSubmit: async ({ value }) => {
       setError(null)
       const { error } = await auth.signIn.email(value)
-      if (error) setError(error.message ?? "登录失败")
-      else done()
+      if (error) setError(error.status === 429 ? "试得太快了，歇一分钟再来" : (error.message ?? "登录失败"))
+      else await done()
     },
   })
 
   const passkey = async () => {
     const r = await auth.signIn.passkey()
     if (r?.error) toast.error(r.error.message ?? "Passkey 登录失败")
-    else done()
+    else await done()
   }
 
   const social = (provider: "github" | "google") =>

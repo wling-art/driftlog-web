@@ -71,6 +71,7 @@
         "@tanstack/react-start": "^1.168.58",
         "@vitejs/plugin-react": "catalog:",
         "@vp-tw/cjk-web-fonts-fusion-pixel-font": "^0.0.1",
+        "better-auth": "^1.7.6",
         "class-variance-authority": "catalog:",
         "cmdk": "^1.1.1",
         "cn": "^0.4.0",

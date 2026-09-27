@@ -1047,7 +1047,7 @@ a.win-btn:hover {
   gap: var(--space-2);
   margin-bottom: var(--space-5);
 }
-:is(.lang-switch a, .article-end-actions button)[data-on] {
+:is(.lang-switch a, .lang-switch button, .article-end-actions button)[data-on] {
   border-color: var(--text);
   background: var(--text);
   color: var(--bg);

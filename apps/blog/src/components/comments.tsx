@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { auth } from "@/lib/auth"
 import { api, commentsQuery, type Comment } from "@/lib/api"
 import { fullTime, timeAgo } from "@/lib/site"
 
@@ -207,7 +208,10 @@ function Composer({
   empty: boolean
 }) {
   const qc = useQueryClient()
-  const identity = useIdentity()
+  // 登录了就用账号的名字和邮箱（服务端也按会话认人）；没登录用上次记住的
+  const account = auth.useSession().data?.user
+  const remembered = useIdentity()
+  const identity = account ? { author: account.name, email: account.email } : remembered
   // 名字、邮箱：没记住身份、而且开始写了才出现（渐进展开，不一上来就摆一张表）
   const [engaged, setEngaged] = useState(false)
 
@@ -229,7 +233,7 @@ function Composer({
             private: value.private,
           }),
         )
-        saveIdentity(who)
+        if (!account) saveIdentity(who)
         formApi.reset()
         setEngaged(false)
         onCancelReply()
@@ -357,8 +361,12 @@ function Composer({
           {identity ? (
             <>
               以 {identity.author} 的身份 ·{" "}
-              <button type="button" className="c-reply" onClick={() => saveIdentity(null)}>
-                换一个
+              <button
+                type="button"
+                className="c-reply"
+                onClick={() => (account ? void auth.signOut() : saveIdentity(null))}
+              >
+                {account ? "退出登录" : "换一个"}
               </button>
             </>
           ) : (
