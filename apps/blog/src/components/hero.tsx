@@ -53,7 +53,7 @@ export function Hero({ info, say }: { info: SiteSettings; say: Say }) {
   const links = Object.entries(info.owner.socials).filter(([k, v]) => v && socials[k])
 
   return (
-    <Window id="hello" name="about.me" closable={false} className="hero-win win-fixed">
+    <Window id="hello" name="about.me" className="hero-win win-fixed">
       <div className="hero">
         <div className="hero-text">
           {/* 逐字升起：每个字晚 40ms，只在进页面时播一次；读屏读整句 */}

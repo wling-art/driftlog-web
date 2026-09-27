@@ -21,7 +21,6 @@ function Says() {
         title="一言"
         rule="// 在别处看到、想记下来的句子"
         lead={<BackLink to="/" label="首页" />}
-        closable={false}
       >
         {data.length ? (
           <ul className="says">

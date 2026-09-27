@@ -20,6 +20,8 @@ type Scene = "read" | "tool" | "touch" | "show"
 type WinEntry = { el: HTMLElement | null; close: HTMLButtonElement | null; title: string }
 type DesktopCtx = {
   hidden: ReadonlySet<string>
+  /** 窗口标题（关掉的窗口在任务栏上用它） */
+  titleOf: (id: string) => string
   register: (id: string, entry: WinEntry) => () => void
   open: (id: string) => void
   close: (id: string) => void
@@ -92,9 +94,16 @@ export function DesktopProvider({ children }: { children: React.ReactNode }) {
     [open],
   )
 
-  const value = React.useMemo(() => ({ hidden, register, open, close }), [hidden, register, open, close])
+  const titleOf = React.useCallback((id: string) => wins.current.get(id)?.title ?? "窗口", [])
+  const value = React.useMemo(
+    () => ({ hidden, titleOf, register, open, close }),
+    [hidden, titleOf, register, open, close],
+  )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
+
+/** 当前这页桌面的窗口状态（任务栏上列出关掉的窗口、点了恢复） */
+export const useDesktop = () => React.useContext(Ctx)
 
 /**
  * 宽屏下整页不滚、窗口自己滚。焦点不在任何东西上时（刚打开页面、点了桌面空白处），
@@ -123,7 +132,7 @@ export function useScrollKeys() {
       )
         return
       const body = document.querySelector<HTMLElement>(
-        ".wins-main > .win:not([hidden]) > .win-body, .wins > .win:not([hidden]) > .win-body",
+        ".wins-main > .win:not([data-closed]) > .win-body, .wins > .win:not([data-closed]) > .win-body",
       )
       if (!body || body.scrollHeight <= body.clientHeight) return
       e.preventDefault()
@@ -240,7 +249,8 @@ export function Window({
       data-slot="window"
       aria-labelledby={title ? titleId : undefined}
       aria-label={title ? undefined : name}
-      hidden={ctx?.hidden.has(id)}
+      data-closed={ctx?.hidden.has(id) || undefined}
+      inert={ctx?.hidden.has(id) || undefined}
       className={cn("win", className)}
       onPointerDownCapture={drag.raise}
       onKeyDown={drag.onKeyDown}
@@ -249,7 +259,7 @@ export function Window({
       <div
         data-slot="window-bar"
         className="win-bar"
-        title="拖动标题栏移动窗口，双击复位；键盘：Alt + 方向键"
+        title="拖动标题栏移动窗口，拖右下角改大小，双击复位；键盘：Alt + 方向键移动，再按住 Shift 改大小"
         onPointerDown={drag.onPointerDown}
         onDoubleClick={drag.reset}
       >
@@ -277,6 +287,13 @@ export function Window({
         {rule && <p className="rule">{rule}</p>}
         {children}
       </div>
+      {/* 右下角拖着改大小（宽屏）；键盘：Alt + Shift + 方向键 */}
+      <span
+        className="win-resize"
+        aria-hidden="true"
+        onPointerDown={drag.onResizeDown}
+        onDoubleClick={drag.reset}
+      />
     </section>
   )
 }
@@ -356,27 +373,83 @@ export function useWindowDrag(ref: React.RefObject<HTMLElement | null>) {
     bar.addEventListener("pointercancel", up)
   }
 
+  /**
+   * 改大小：左上角不动，右下角跟着指针走。最小 280 × 160；最大到桌面右边缘、高不超过桌面（CSS 的 max-height 兜底）。
+   * 窗口之间互不影响：改大小前记下它在排版里占的位置（高 + 下外边距），之后用下外边距补差，
+   * 占的位置永远不变——变大就盖在下面的窗口上，变小就留出空，下面的窗口都不动。
+   * 也不参与一栏里的伸缩（flex: none），不然会被挤回去
+   */
+  const slot = React.useRef<{ h: number; mb: number } | null>(null)
+  const resize = (w: number, h: number) => {
+    const el = ref.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    slot.current ??= { h: r.height, mb: parseFloat(getComputedStyle(el).marginBottom) || 0 }
+    const right = el.closest(".desktop-area")?.getBoundingClientRect().right ?? innerWidth
+    const height = Math.round(Math.max(h, 160))
+    el.style.width = `${Math.round(Math.min(Math.max(w, 280), right - r.left))}px`
+    el.style.height = `${height}px`
+    el.style.flex = "none"
+    el.style.marginBottom = `${slot.current.mb + slot.current.h - height}px`
+  }
+
+  const onResizeDown = (e: React.PointerEvent<HTMLElement>) => {
+    const el = ref.current
+    if (e.button !== 0 || !el || !canDrag()) return
+    e.preventDefault()
+    e.stopPropagation()
+    raise()
+    const grip = e.currentTarget
+    grip.setPointerCapture(e.pointerId)
+    const r = el.getBoundingClientRect()
+    const start = { px: e.clientX, py: e.clientY, w: r.width, h: r.height }
+    el.classList.add("is-resizing")
+    const move = (ev: PointerEvent) =>
+      resize(start.w + ev.clientX - start.px, start.h + ev.clientY - start.py)
+    const up = () => {
+      el.classList.remove("is-resizing")
+      grip.removeEventListener("pointermove", move)
+      grip.removeEventListener("pointerup", up)
+      grip.removeEventListener("pointercancel", up)
+    }
+    grip.addEventListener("pointermove", move)
+    grip.addEventListener("pointerup", up)
+    grip.addEventListener("pointercancel", up)
+  }
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     const d = { ArrowLeft: [-16, 0], ArrowRight: [16, 0], ArrowUp: [0, -16], ArrowDown: [0, 16] }[e.key]
     if (!e.altKey || !d || !canDrag()) return
     e.preventDefault()
     raise()
+    if (e.shiftKey) {
+      const r = ref.current!.getBoundingClientRect()
+      return resize(r.width + d[0]!, r.height + d[1]!)
+    }
     const next = clamp(offset.current.x + d[0]!, offset.current.y + d[1]!)
     apply(next.x, next.y)
   }
 
-  const reset = () => apply(0, 0)
+  /** 双击标题栏（或右下角）：位置和大小都复原 */
+  const reset = () => {
+    apply(0, 0)
+    ref.current?.style.removeProperty("width")
+    ref.current?.style.removeProperty("height")
+    ref.current?.style.removeProperty("flex")
+    ref.current?.style.removeProperty("margin-bottom")
+    slot.current = null
+  }
 
   // 缩到窄屏时回到原位，免得窗口挂在屏幕外
   React.useEffect(() => {
     const mq = window.matchMedia("(min-width: 761px)")
-    const onChange = () => !mq.matches && apply(0, 0)
+    const onChange = () => !mq.matches && reset()
     mq.addEventListener("change", onChange)
     return () => mq.removeEventListener("change", onChange)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  return { raise, onPointerDown, onKeyDown, reset }
+  return { raise, onPointerDown, onResizeDown, onKeyDown, reset }
 }
 
 // 每秒跳一次的「时间源」。SSR 时是 null：服务器的时间和时区和浏览器不一样，会水合不一致

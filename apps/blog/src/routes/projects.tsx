@@ -22,7 +22,6 @@ function Projects() {
         title="项目"
         rule={`// 做过的东西 · ${data.length} 个`}
         lead={<BackLink to="/" label="首页" />}
-        closable={false}
       >
         {data.length ? (
           <ul className="card-grid">

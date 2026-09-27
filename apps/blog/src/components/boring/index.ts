@@ -2,6 +2,7 @@ export {
   Desktop,
   DesktopProvider,
   useScrollKeys,
+  useDesktop,
   DesktopArea,
   Folders,
   Folder,

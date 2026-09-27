@@ -112,7 +112,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
         name={`${e.slug}.md`}
         title={e.title}
         rule={e.type === "page" && e.subtitle ? `// ${e.subtitle}` : `// ${meta.join(" · ")}`}
-        closable={false}
+
         lead={<BackLink to={up.to} label={up.label} />}
         controls={
           paged && (

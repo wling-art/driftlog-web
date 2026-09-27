@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react"
+import { useState, useSyncExternalStore, type ReactNode } from "react"
+import { createPortal } from "react-dom"
 import { Link, useLocation, useRouter } from "@tanstack/react-router"
 import {
   DesktopArea,
@@ -8,6 +9,7 @@ import {
   TaskbarButton,
   Window,
   Windows,
+  useDesktop,
   useScrollKeys,
 } from "@/components/boring"
 import { Button } from "@/components/ui/button"
@@ -42,6 +44,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       {children}
       <CommentsFloat />
       <Taskbar items={nav}>
+        {/* 这一页关掉的窗口（ClosedTasks 从页面里传送过来） */}
+        <span id="tb-closed" className="tb-closed" />
         <CommentsTaskItem />
         {online > 0 && (
           <span className="clock" title="现在在看这个站的人">
@@ -79,6 +83,7 @@ export function SiteShell({
         <Folders>{folders}</Folders>
         <PageWindows aside={aside}>{children}</PageWindows>
       </DesktopArea>
+      <ClosedTasks />
     </DesktopProvider>
   )
 }
@@ -178,13 +183,7 @@ export function NotFound() {
   const setSearchOpen = useUI((s) => s.setSearchOpen)
   return (
     <SiteShell>
-      <Window
-        id="lost"
-        name="404.txt"
-        title="这页走丢了"
-        rule="// 链接可能写错了，或者这篇已经删了"
-        closable={false}
-      >
+      <Window id="lost" name="404.txt" title="这页走丢了" rule="// 链接可能写错了，或者这篇已经删了">
         <div className="flex flex-wrap gap-(--space-3)">
           <Button variant="primary" asChild>
             <Link to="/">回首页</Link>
@@ -200,13 +199,7 @@ export function ErrorWindow({ error, reset }: { error: Error; reset: () => void 
   const router = useRouter()
   return (
     <SiteShell>
-      <Window
-        id="error"
-        name="error.log"
-        title="服务器摆烂了"
-        rule="// 不是你的问题。再试一次，多半就好了"
-        closable={false}
-      >
+      <Window id="error" name="error.log" title="服务器摆烂了" rule="// 不是你的问题。再试一次，多半就好了">
         <p className="muted mb-(--space-4) font-mono text-(length:--text-sm)">{error.message}</p>
         <Button
           variant="primary"
@@ -285,5 +278,35 @@ export function FolderIntro({ lead, body }: { lead?: string; body?: string }) {
         )}
       </div>
     </section>
+  )
+}
+
+/**
+ * 关掉的窗口留在任务栏上（像最小化的程序）：点一下就回来。
+ * 窗口状态在每页自己的 DesktopProvider 里，任务栏在根布局里，所以用 portal 放进任务栏的空位
+ */
+const noSubscribe = () => () => {}
+function ClosedTasks() {
+  const desk = useDesktop()
+  // 任务栏的空位：服务器上没有（null），浏览器里取一次
+  const slot = useSyncExternalStore(
+    noSubscribe,
+    () => document.getElementById("tb-closed"),
+    () => null,
+  )
+  if (!slot || !desk?.hidden.size) return null
+  return createPortal(
+    [...desk.hidden].map((id) => (
+      <TaskbarButton
+        key={id}
+        className="tb-restore"
+        onClick={() => desk.open(id)}
+        title={`恢复「${desk.titleOf(id)}」`}
+        aria-label={`恢复窗口「${desk.titleOf(id)}」`}
+      >
+        {desk.titleOf(id)}
+      </TaskbarButton>
+    )),
+    slot,
   )
 }

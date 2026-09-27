@@ -551,3 +551,79 @@ body {
     flex-shrink: 0;
   }
 }
+
+/* ── Driftlog 的改动：窗口能改大小、关掉的窗口留在任务栏 ──
+ * 右下角 14px 的斜纹把手（宽屏才有），拖着改大小；双击复位。
+ * 关掉的窗口在任务栏上是虚线框的按钮（像最小化的程序），点一下回来；换页就清空。 */
+.win-resize {
+  display: none;
+}
+@media (min-width: 761px) {
+  .win-resize {
+    display: block;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 14px;
+    height: 14px;
+    cursor: nwse-resize;
+    touch-action: none;
+    background: linear-gradient(
+      135deg,
+      transparent 45%,
+      var(--border-frame) 45% 52%,
+      transparent 52% 68%,
+      var(--border-frame) 68% 75%,
+      transparent 75%
+    );
+    opacity: 0.8;
+  }
+  .win-resize:hover,
+  .win.is-resizing .win-resize {
+    opacity: 1;
+    background-color: color-mix(in srgb, var(--text) 8%, transparent);
+  }
+  .win.is-resizing {
+    user-select: none;
+    box-shadow: var(--shadow-3);
+  }
+}
+.tb-closed {
+  display: contents;
+}
+.taskbar .tb-restore {
+  max-width: 10em;
+  border-style: dashed;
+  background: transparent;
+  animation: tb-restore-in var(--duration-enter) var(--ease-enter);
+}
+.taskbar .tb-restore:hover {
+  border-style: solid;
+  background: var(--text);
+  color: var(--bg);
+}
+.tb-restore {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@keyframes tb-restore-in {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+@media (max-width: 760px) {
+  .taskbar .tb-restore {
+    max-width: 6em;
+  }
+}
+/* 关掉的窗口：宽屏上位置还留着（像真的桌面，关一个窗口别的不会挪），窄屏一列排下来时直接收起 */
+.win[data-closed] {
+  visibility: hidden;
+}
+@media (max-width: 760px) {
+  .win[data-closed] {
+    display: none;
+  }
+}

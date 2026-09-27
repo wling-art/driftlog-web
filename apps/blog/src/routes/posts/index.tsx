@@ -55,7 +55,6 @@ function Posts() {
         title={title}
         rule={`// 共 ${data.length} 篇`}
         lead={q.category || q.tag ? <BackLink to="/posts" label="文章" /> : <BackLink to="/" label="首页" />}
-        closable={false}
       >
         {current && <FolderIntro body={current.description} />}
         {data.length ? <Archive items={data} type="post" /> : <Empty>这里还很无聊，一篇都没有。</Empty>}

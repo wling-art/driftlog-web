@@ -25,7 +25,6 @@ function Thinking() {
         title="动态"
         rule="// 比手记还短的碎片，想到就记一句"
         lead={<BackLink to="/" label="首页" />}
-        closable={false}
       >
         {data.length ? (
           <ol className="thoughts">

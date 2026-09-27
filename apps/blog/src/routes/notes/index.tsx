@@ -54,7 +54,6 @@ function Notes() {
         title={current?.name ?? "手记"}
         rule={`// ${current ? "专栏" : "不成文的碎碎念"} · 共 ${data.length} 篇${current && data[0] ? ` · 最近一篇 ${formatDate(data[0].publishedAt)}` : ""}`}
         lead={current ? <BackLink to="/notes" label="手记" /> : <BackLink to="/" label="首页" />}
-        closable={false}
       >
         {current && <FolderIntro lead={current.introduce} body={current.description} />}
         {data.length ? (

@@ -73,12 +73,11 @@ function Friends() {
         title="友链"
         rule={`// ${friends.length} 位朋友`}
         lead={<BackLink to="/" label="首页" />}
-        closable={false}
       >
         {friends.length ? <LinkCards items={friends} /> : <Empty>还没有友链。右边可以申请第一个。</Empty>}
       </Window>
       {collections.length > 0 && (
-        <Window id="collections" name="collections/" title="收藏" rule="// 常去逛的站" closable={false}>
+        <Window id="collections" name="collections/" title="收藏" rule="// 常去逛的站">
           <LinkCards items={collections} />
         </Window>
       )}
@@ -117,7 +116,7 @@ function Apply() {
     { name: "email", label: "邮箱（不公开，审核结果发到这里）", type: "email" },
   ] as const
   return (
-    <Window id="apply" name="apply.txt" title="申请友链" closable={false}>
+    <Window id="apply" name="apply.txt" title="申请友链">
       <p className="c-hint mb-(--space-4)">
         先把本站加到你那边：{info.title} · {site.url}
       </p>
