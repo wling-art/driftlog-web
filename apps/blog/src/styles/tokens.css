@@ -251,7 +251,7 @@
   --ui-scale: 1;
   --roundness: 1;
   --motion: 1;
-  --measure: 36em;
+  --measure: 40em; /* Driftlog：每行约 40 个汉字 = WCAG 1.4.8 对中日韩文字的上限；26–46 字之间阅读速度无差别（Chan 等 2014） */
 }
 
 /* 工具：后台、开发者工具 —— 密度优先，一屏看更多 */
