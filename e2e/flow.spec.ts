@@ -41,6 +41,9 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   await expect(page.locator('a.folder[href="#小标题"]')).toBeVisible()
   await expect(page.getByRole("link", { name: "文章" })).toHaveAttribute("aria-current", "page")
 
+  // 表单默认收起
+  await expect(page.getByRole("form", { name: "写评论" })).toHaveCount(0)
+  await page.getByRole("button", { name: "写评论" }).click()
   await page.getByLabel("名字").fill("测试员")
   await page.getByLabel("邮箱（不公开）").fill("bad")
   await page.getByRole("textbox", { name: "评论" }).fill("好")
@@ -49,6 +52,7 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   await page.getByLabel("邮箱（不公开）").fill("tester@example.com")
   await page.getByRole("button", { name: "发表评论" }).click()
   await expect(page.getByText(/评论发出去了|审核完就会出现/)).toBeVisible()
+  await expect(page.getByRole("form", { name: "写评论" })).toHaveCount(0) // 发完收起
 })
 
 test("博客：⌘K 搜索", async ({ page }) => {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { revalidateLogic, useForm, type AnyFieldApi } from "@tanstack/react-form"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { motion } from "motion/react"
@@ -29,36 +29,58 @@ function buildTree(list: Comment[]) {
   return roots
 }
 
+/**
+ * 评论是文章的附属：一个安静的小窗口，不抢正文。
+ * - 没有 36px 大标题，只有一行「N 条评论」和「写评论」
+ * - 列表紧凑：小头像、小字号
+ * - 表单默认收起，点「写评论」或某条下面的「回复」才展开，发完再收起
+ */
 export function Comments({ entryId }: { entryId: number }) {
   const { data, isPending, isError, refetch } = useQuery(commentsQuery(entryId))
   const tree = useMemo(() => buildTree(data ?? []), [data])
   const [replyTo, setReplyTo] = useState<Comment | null>(null)
+  const [writing, setWriting] = useState(false)
+  const open = (to: Comment | null) => {
+    setReplyTo(to)
+    setWriting(true)
+  }
+  const close = () => {
+    setReplyTo(null)
+    setWriting(false)
+  }
 
   return (
-    <Window
-      id="comments"
-      name="comments.log"
-      title={data?.length ? `${data.length} 条评论` : "评论"}
-      rule="// 友善一点，邮箱不会公开"
-      closable={false}
-    >
-      {isPending && <p className="muted">在翻评论…</p>}
+    <Window id="comments" name="comments.log" aria-label="评论" closable={false} className="comments">
+      <div className="flex flex-wrap items-center justify-between gap-(--space-3)">
+        <p className="pixel-1 muted">
+          {isPending ? "在翻评论…" : data?.length ? `${data.length} 条评论` : "还没人说话"}
+        </p>
+        {!writing && (
+          <Button size="sm" onClick={() => open(null)}>
+            写评论
+          </Button>
+        )}
+      </div>
       {isError && (
-        <p className="text-danger">
+        <p className="mt-(--space-2) text-(length:--text-sm) text-danger">
           ✕ 评论没加载出来。
-          <Button variant="link" onClick={() => refetch()}>
+          <Button variant="link" size="sm" onClick={() => refetch()}>
             重试
           </Button>
         </p>
       )}
-      {data?.length === 0 && <p className="muted">还没人说话。第一个留言的人最显眼 ~</p>}
-      <ol className="grid gap-(--space-4)">
-        {tree.map((n) => (
-          <CommentNode key={n.id} node={n} onReply={setReplyTo} />
-        ))}
-      </ol>
-      <hr className="my-(--space-5) border-border-soft" />
-      <CommentForm entryId={entryId} replyTo={replyTo} onCancelReply={() => setReplyTo(null)} />
+      {tree.length > 0 && (
+        <ol className="mt-(--space-4) grid gap-(--space-4)">
+          {tree.map((n) => (
+            <CommentNode key={n.id} node={n} onReply={open} />
+          ))}
+        </ol>
+      )}
+      {writing && (
+        <div className="mt-(--space-5) border-t border-border-soft pt-(--space-4)">
+          <CommentForm entryId={entryId} replyTo={replyTo} onClose={close} />
+        </div>
+      )}
     </Window>
   )
 }
@@ -70,18 +92,18 @@ function CommentNode({ node, onReply }: { node: Node; onReply: (c: Comment) => v
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.24, ease: easeEnter }}
-      className="grid grid-cols-[40px_minmax(0,1fr)] gap-(--space-3)"
+      className="grid grid-cols-[28px_minmax(0,1fr)] gap-(--space-3) text-(length:--text-sm)"
     >
       <img
         src={node.avatar}
         alt=""
-        width={40}
-        height={40}
+        width={28}
+        height={28}
         loading="lazy"
-        className="rounded-[4px] border border-border"
+        className="mt-0.5 rounded-[3px] border border-border"
       />
       <div className="min-w-0">
-        <div className="flex flex-wrap items-baseline gap-x-(--space-3)">
+        <div className="flex flex-wrap items-baseline gap-x-(--space-2)">
           {node.url ? (
             <a
               href={node.url}
@@ -97,13 +119,17 @@ function CommentNode({ node, onReply }: { node: Node; onReply: (c: Comment) => v
           <time className="pixel-1 muted" dateTime={String(node.createdAt)}>
             {formatDate(node.createdAt)}
           </time>
+          <button
+            type="button"
+            className="pixel-1 text-primary underline underline-offset-2 hover:bg-foreground hover:text-background"
+            onClick={() => onReply(node)}
+          >
+            回复
+          </button>
         </div>
-        <div className="prose mt-1" dangerouslySetInnerHTML={{ __html: node.html }} />
-        <Button variant="link" size="sm" className="-ml-1.5 mt-1" onClick={() => onReply(node)}>
-          回复
-        </Button>
+        <div className="comment-body" dangerouslySetInnerHTML={{ __html: node.html }} />
         {node.children.length > 0 && (
-          <ol className="mt-(--space-3) grid gap-(--space-4) border-l border-border-soft pl-(--space-4)">
+          <ol className="mt-(--space-3) grid gap-(--space-3) border-l border-border-soft pl-(--space-3)">
             {node.children.map((c) => (
               <CommentNode key={c.id} node={c} onReply={onReply} />
             ))}
@@ -145,11 +171,11 @@ function FieldError({ errors }: { errors: unknown[] }) {
 function CommentForm({
   entryId,
   replyTo,
-  onCancelReply,
+  onClose,
 }: {
   entryId: number
   replyTo: Comment | null
-  onCancelReply: () => void
+  onClose: () => void
 }) {
   const qc = useQueryClient()
   const saved = typeof window === "undefined" ? {} : remembered()
@@ -176,7 +202,7 @@ function CommentForm({
           )
         } catch {}
         formApi.reset({ ...value, body: "" })
-        onCancelReply()
+        onClose()
         await qc.invalidateQueries({ queryKey: ["comments", entryId] })
         toast(c.status === "approved" ? "评论发出去了 ✓" : "收到了。审核完就会出现在这里")
       } catch (e) {
@@ -186,8 +212,18 @@ function CommentForm({
   })
   const shape = commentInput.shape
 
+  // 展开时把光标放到第一个要填的地方：记住了名字和邮箱就直接进正文
+  const ref = useRef<HTMLFormElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    el?.querySelector<HTMLElement>(saved.author && saved.email ? "textarea" : "input")?.focus()
+    // 只在展开 / 换了回复对象时
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replyTo])
+
   return (
     <form
+      ref={ref}
       noValidate
       onSubmit={(e) => {
         e.preventDefault()
@@ -199,9 +235,6 @@ function CommentForm({
       {replyTo && (
         <p className="text-(length:--text-sm)">
           回复 <strong>{replyTo.author}</strong>
-          <Button type="button" variant="link" size="sm" onClick={onCancelReply}>
-            不回复了
-          </Button>
         </p>
       )}
       <div className="grid gap-(--space-4) sm:grid-cols-3">
@@ -278,7 +311,7 @@ function CommentForm({
             </Label>
             <Textarea
               id={`comment-${f.name}`}
-              rows={4}
+              rows={3}
               value={f.state.value}
               onBlur={f.handleBlur}
               onChange={(e) => change(f, e.target.value)}
@@ -294,9 +327,12 @@ function CommentForm({
       </form.Field>
       <form.Subscribe selector={(s) => s.isSubmitting}>
         {(submitting) => (
-          <div>
+          <div className="flex items-center gap-(--space-3)">
             <Button type="submit" variant="primary" aria-busy={submitting || undefined} disabled={submitting}>
               {submitting ? "在发了…" : "发表评论"}
+            </Button>
+            <Button type="button" variant="link" onClick={onClose}>
+              收起
             </Button>
           </div>
         )}
