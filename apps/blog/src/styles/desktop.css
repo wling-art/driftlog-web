@@ -1027,41 +1027,47 @@ a.pathbar-seg:hover {
   font: 400 var(--px-1)/1.5 var(--font-pixel);
   color: var(--text-muted);
 }
-/* 轨道：点点虚线是没读的，实线是读过的（长到当前这一节），像素小方块是「你在这」 */
+/* 轨道：点点虚线是没读的，细实线是读过的，粗的「视野条」是你现在看得见的那一段（连续地滑、连续地伸缩） */
 .toc-track {
-  --mark-y: 0px;
+  --band-top: 0px;
+  --band-h: 0px;
   position: relative;
   padding-left: 14px;
 }
-.toc-rail,
 .toc-track::before {
   content: "";
   position: absolute;
-  left: 4px;
+  left: 5px;
   top: 0;
-  width: 0;
+  bottom: 0;
   border-left: 2px dotted var(--border-frame);
 }
-.toc-track::before {
-  bottom: 0;
-}
-.toc-rail {
+.toc-read {
+  position: absolute;
   z-index: 1;
-  height: var(--mark-y);
-  border-left: 2px solid var(--accent);
-  transition: height calc(420ms * var(--motion-ok)) var(--ease-move);
+  left: 5px;
+  top: 0;
+  height: var(--band-top);
+  border-left: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
 }
-.toc-mark {
+/* 视野条：4px 宽的方头条，比轨道粗一圈，外面抠出一道窗口色的边，像浮在轨道上 */
+.toc-band {
   position: absolute;
   z-index: 2;
-  left: 1px;
+  left: 4px;
   top: 0;
-  width: 8px;
-  height: 8px;
+  width: 4px;
+  height: var(--band-h);
+  translate: 0 var(--band-top);
   background: var(--accent);
-  box-shadow: 0 0 0 2px var(--window); /* 在轨道上抠出一圈，像素块浮在线上 */
-  translate: 0 calc(var(--mark-y) - 4px);
-  transition: translate calc(420ms * var(--motion-ok)) var(--ease-pop);
+  box-shadow: 0 0 0 2px var(--window);
+  /* 每一帧都在更新：只给一点点缓冲，跟手但不生硬；减少动态时直接到位 */
+  transition:
+    translate calc(90ms * var(--motion-ok)) linear,
+    height calc(90ms * var(--motion-ok)) linear;
+}
+.toc-list > li[data-seen] > a {
+  color: var(--text);
 }
 .toc-list {
   display: grid;
