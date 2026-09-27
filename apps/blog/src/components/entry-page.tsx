@@ -102,7 +102,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
         }
       >
         {e.summary && (
-          <aside className="mb-(--space-5) max-w-(--measure) rounded-[4px] border border-border bg-surface p-(--space-4) text-(length:--text-sm)">
+          <aside className="mb-(--space-5) rounded-[4px] border border-border bg-surface p-(--space-4) text-(length:--text-sm)">
             <span className="pixel-1 muted mb-1 block">AI 摘要</span>
             {e.summary}
           </aside>
