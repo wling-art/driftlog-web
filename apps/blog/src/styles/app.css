@@ -577,6 +577,29 @@
   gap: var(--space-2);
   margin-top: var(--space-5);
 }
+/* 社交账号：一排 36px 的方形图标按钮，细线框、指上去反白（和标题栏小按钮一个脾气） */
+.hero-social {
+  display: grid;
+  place-items: center;
+  width: max(36px, var(--hit-min));
+  height: max(36px, var(--hit-min));
+  border: var(--line) solid var(--border-soft);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  transition:
+    background-color var(--duration) var(--ease-enter),
+    color var(--duration) var(--ease-enter);
+}
+.hero-social svg {
+  width: 17px;
+  height: 17px;
+}
+.hero-social:hover {
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--bg);
+}
 /* 头像：方形相框（窗口一样的细线 + 小圆角 + 一点投影），不用圆形 */
 .hero-avatar {
   padding: 6px;
