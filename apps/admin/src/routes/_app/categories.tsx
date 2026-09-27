@@ -228,7 +228,11 @@ function NewCategory() {
                     id={`cat-${name}`}
                     className={name === "slug" ? "font-mono" : undefined}
                     value={f.state.value}
-                    onChange={(e) => f.handleChange(e.target.value)}
+                    onChange={(e) => {
+                      f.handleChange(e.target.value)
+                      // 已经报错时边输边校验，改对就消失，免得失焦时错误行消失、按钮跳位点空
+                      if (!f.state.meta.isValid) void f.validate("blur")
+                    }}
                     aria-invalid={!f.state.meta.isValid}
                   />
                   {f.state.meta.errors[0] && (

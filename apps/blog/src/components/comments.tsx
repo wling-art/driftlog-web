@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react"
-import { useForm } from "@tanstack/react-form"
+import { revalidateLogic, useForm, type AnyFieldApi } from "@tanstack/react-form"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { motion } from "motion/react"
 import { toast } from "sonner"
@@ -126,6 +126,15 @@ function remembered() {
   }
 }
 
+/**
+ * 字段已经在报错时，每次输入都重新校验：改对的那一刻错误就消失。
+ * 不这样的话，错误要等失焦才消失——点「发表评论」时先失焦，错误那行一消失按钮就往上跳，这一下点空了。
+ */
+function change(f: AnyFieldApi, value: string) {
+  f.handleChange(value)
+  if (!f.state.meta.isValid) void f.validate("blur")
+}
+
 function FieldError({ errors }: { errors: unknown[] }) {
   const msg = errors
     .map((e) => (typeof e === "string" ? e : (e as { message?: string })?.message))
@@ -146,6 +155,8 @@ function CommentForm({
   const saved = typeof window === "undefined" ? {} : remembered()
   const form = useForm({
     defaultValues: { author: saved.author ?? "", email: saved.email ?? "", url: saved.url ?? "", body: "" },
+    // 失焦时校验；提交过一次之后每次输入都重新校验
+    validationLogic: revalidateLogic({ mode: "blur", modeAfterSubmission: "change" }),
     onSubmit: async ({ value, formApi }) => {
       try {
         const c = await unwrap(
@@ -194,7 +205,7 @@ function CommentForm({
         </p>
       )}
       <div className="grid gap-(--space-4) sm:grid-cols-3">
-        <form.Field name="author" validators={{ onBlur: shape.author, onSubmit: shape.author }}>
+        <form.Field name="author" validators={{ onDynamic: shape.author }}>
           {(f) => (
             <div>
               <Label htmlFor={`comment-${f.name}`} className="pixel-1 mb-1">
@@ -205,14 +216,14 @@ function CommentForm({
                 autoComplete="name"
                 value={f.state.value}
                 onBlur={f.handleBlur}
-                onChange={(e) => f.handleChange(e.target.value)}
+                onChange={(e) => change(f, e.target.value)}
                 aria-invalid={!f.state.meta.isValid}
               />
               <FieldError errors={f.state.meta.errors} />
             </div>
           )}
         </form.Field>
-        <form.Field name="email" validators={{ onBlur: shape.email, onSubmit: shape.email }}>
+        <form.Field name="email" validators={{ onDynamic: shape.email }}>
           {(f) => (
             <div>
               <Label htmlFor={`comment-${f.name}`} className="pixel-1 mb-1">
@@ -225,7 +236,7 @@ function CommentForm({
                 autoComplete="email"
                 value={f.state.value}
                 onBlur={f.handleBlur}
-                onChange={(e) => f.handleChange(e.target.value)}
+                onChange={(e) => change(f, e.target.value)}
                 aria-invalid={!f.state.meta.isValid}
               />
               <FieldError errors={f.state.meta.errors} />
@@ -251,7 +262,7 @@ function CommentForm({
                 autoComplete="url"
                 value={f.state.value}
                 onBlur={f.handleBlur}
-                onChange={(e) => f.handleChange(e.target.value)}
+                onChange={(e) => change(f, e.target.value)}
                 aria-invalid={!f.state.meta.isValid}
               />
               <FieldError errors={f.state.meta.errors} />
@@ -259,7 +270,7 @@ function CommentForm({
           )}
         </form.Field>
       </div>
-      <form.Field name="body" validators={{ onBlur: shape.body, onSubmit: shape.body }}>
+      <form.Field name="body" validators={{ onDynamic: shape.body }}>
         {(f) => (
           <div>
             <Label htmlFor={`comment-${f.name}`} className="pixel-1 mb-1">
@@ -270,7 +281,7 @@ function CommentForm({
               rows={4}
               value={f.state.value}
               onBlur={f.handleBlur}
-              onChange={(e) => f.handleChange(e.target.value)}
+              onChange={(e) => change(f, e.target.value)}
               aria-invalid={!f.state.meta.isValid}
               aria-describedby="comment-hint"
             />
