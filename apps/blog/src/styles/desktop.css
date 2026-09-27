@@ -330,7 +330,8 @@ body {
   html,
   body {
     height: 100%;
-    overflow: hidden;
+    /* clip 而不是 hidden：hidden 挡得住用户滚，挡不住锚点跳转这类程序滚动，整页会被偷偷滚走几像素 */
+    overflow: clip;
   }
   .screen {
     height: 100dvh;
@@ -342,11 +343,13 @@ body {
     overscroll-behavior: contain;
     /* 滚动条贴着屏幕边，滚轮在桌面任何地方都能用 */
     margin: -20px -20px 0;
-    padding: 20px 20px 0;
+    /* 下面也留 20px：桌面一直延伸到任务栏，滚动的内容贴着任务栏才被遮住，而不是在上面一截就被切掉 */
+    padding: 20px;
     scroll-padding: 16px 0 16px;
   }
   .taskbar {
     position: relative;
+    margin-top: 0;
   }
   .win-bar {
     cursor: grab;
@@ -462,4 +465,37 @@ body {
 /* 焦点描边画在格子里面：格子挨得紧，外扩的描边会压到隔壁 */
 .folder:focus-visible {
   outline-offset: -2px;
+}
+
+/* ── Driftlog 的改动：窗口像真正的窗口一样，自己滚 ──
+ * 宽屏下窗口最高 = 桌面可见高度减去上下留白；内容再多也不撑高窗口，而是在窗口里面滚，标题栏一直在顶上。
+ * 桌面区域是尺寸容器，窗口用 cqh（桌面高度的百分比）限高；桌面只在窗口一个接一个排不下时才滚。 */
+@media (min-width: 761px) {
+  .desktop-area {
+    container-type: size;
+    container-name: desktop;
+  }
+  .win {
+    display: flex;
+    flex-direction: column;
+    max-height: 100cqh; /* cqh 按桌面区域的内容框算：上下各 20px 的内边距已经扣掉了 */
+  }
+  .win-bar {
+    flex: none;
+  }
+  .win-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable; /* 滚动条出现时内容不左右跳 */
+  }
+  /* 最后一个窗口不留下外边距：只有一个窗口时桌面正好一屏高，不会被锚点跳转顺手滚动 */
+  :is(.wins, .wins-main, .wins-aside) > .win:last-child {
+    margin-bottom: 0;
+  }
+  /* 浮动窗口本来就自己滚 */
+  .win.is-floating {
+    max-height: min(72vh, calc(100dvh - 88px));
+  }
 }

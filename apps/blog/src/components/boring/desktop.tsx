@@ -94,6 +94,40 @@ export function Desktop({
 
   const value = React.useMemo(() => ({ hidden, register, open, close }), [hidden, register, open, close])
 
+  // 宽屏下整页不滚、窗口自己滚。焦点不在任何东西上时（刚打开页面、点了桌面空白处），
+  // 空格、PageUp / PageDown、Home / End、↑ ↓ 交给主窗口的内容区，键盘用户照样能读
+  React.useEffect(() => {
+    const keys: Record<string, (el: HTMLElement, shift: boolean) => ScrollToOptions> = {
+      " ": (el, shift) => ({ top: (shift ? -1 : 1) * el.clientHeight * 0.85 }),
+      PageDown: (el) => ({ top: el.clientHeight * 0.85 }),
+      PageUp: (el) => ({ top: -el.clientHeight * 0.85 }),
+      ArrowDown: () => ({ top: 48 }),
+      ArrowUp: () => ({ top: -48 }),
+      Home: (el) => ({ top: -el.scrollHeight }),
+      End: (el) => ({ top: el.scrollHeight }),
+    }
+    const onKey = (e: KeyboardEvent) => {
+      const by = keys[e.key]
+      if (!by || e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return
+      // 焦点在窗口内容里、输入框里、按钮上（空格是按按钮）时交给浏览器自己处理
+      const active = document.activeElement
+      if (
+        active?.closest(
+          ".win-body, [role=dialog], input, textarea, select, [contenteditable], button, summary, [role=button]",
+        )
+      )
+        return
+      const body = document.querySelector<HTMLElement>(
+        ".wins-main > .win:not([hidden]) > .win-body, .wins > .win:not([hidden]) > .win-body",
+      )
+      if (!body || body.scrollHeight <= body.clientHeight) return
+      e.preventDefault()
+      body.scrollBy({ ...by(body, e.shiftKey), behavior: "smooth" })
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
+
   return (
     <Ctx.Provider value={value}>
       <div data-slot="desktop" data-scene={scene} className={cn("screen", className)} {...props}>

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react"
-import { Link, useRouter } from "@tanstack/react-router"
+import { Link, useLocation, useRouter } from "@tanstack/react-router"
 import { Desktop, DesktopArea, Folders, Taskbar, TaskbarButton, Window, Windows } from "@/components/boring"
 import { Button } from "@/components/ui/button"
 import { useUI } from "@/lib/store"
@@ -29,6 +29,7 @@ export function SiteShell({
   aside?: ReactNode
   children: ReactNode
 }) {
+  const pathname = useLocation({ select: (l) => l.pathname })
   const online = useUI((s) => s.online)
   const setSearchOpen = useUI((s) => s.setSearchOpen)
   return (
@@ -36,7 +37,10 @@ export function SiteShell({
       <DesktopArea>
         <Folders>{folders}</Folders>
         <Windows className={aside ? "has-aside" : undefined}>
-          <main className="wins-main">{children}</main>
+          {/* 按地址换 key：换页时窗口重新挂载，里面的滚动位置回到顶部（同一个窗口换了内容也一样） */}
+          <main key={pathname} className="wins-main">
+            {children}
+          </main>
           {aside && (
             <aside className="wins-aside" aria-label="相关">
               {aside}
