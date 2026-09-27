@@ -7,8 +7,8 @@
  */
 
 /* ── 正文 ── */
+/* 行宽由窗口决定：阅读窗口默认正好是 --measure 宽（desktop.css），拖大窗口正文就跟着变宽 */
 .prose {
-  max-width: var(--measure);
   overflow-wrap: anywhere;
 }
 .prose > * + * {
@@ -1065,10 +1065,58 @@ a.win-btn:hover {
   fill: currentColor;
 }
 
-.article-copyright {
-  margin-top: var(--space-6);
+/* 版权声明：第三层灰的卡片，细线框；字都小一号，标题和链接深一点 */
+.copyright {
+  display: grid;
+  margin-top: var(--space-7);
+  padding: var(--space-4) var(--space-5);
+  border: var(--line) solid var(--border-soft);
+  border-radius: var(--radius-card);
+  background: var(--surface);
   font-size: var(--text-sm);
+  line-height: 1.7;
   color: var(--text-muted);
+}
+.copyright-text {
+  display: grid;
+  gap: var(--space-1);
+}
+.copyright-title {
+  font-size: var(--text-md);
+  color: var(--text);
+}
+.copyright-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-3);
+}
+.copyright-link a {
+  min-width: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.copyright-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-4);
+}
+.copyright-meta div {
+  display: flex;
+  gap: var(--space-1);
+}
+.copyright-meta dd {
+  color: var(--text);
+}
+.copyright-license {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: var(--line) dashed var(--border-soft);
+}
+.copyright-license a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ── 正文末尾：喜欢 / 评论两个按钮，下面一行去哪。安静，不抢正文 ── */

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link, notFound, redirect } from "@tanstack/react-router"
+import { toast } from "sonner"
 import type { QueryClient } from "@tanstack/react-query"
 import { unwrap } from "@driftlog/client"
 import { useQuery } from "@tanstack/react-query"
@@ -167,9 +168,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
           </p>
         )}
 
-        {e.copyright && e.type !== "page" && (
-          <p className="article-copyright">版权归 {info.owner.name} 所有，转载请注明出处。</p>
-        )}
+        {e.copyright && e.type !== "page" && <Copyright entry={e} author={info.owner.name} />}
 
         {/* 正文末尾：先是两个按钮（喜欢 / 评论），再一行去哪：接着读下一篇，或者回列表 */}
         <footer id="article-end" className="article-end">
@@ -280,4 +279,65 @@ export async function loadEntry(
     if (moved) throw redirect({ href: entryPath(type, moved.slug), statusCode: 301 })
     throw notFound()
   }
+}
+
+/**
+ * 版权声明（参考 Shiro）：一张小卡片写清楚这篇是谁的、在哪、什么时候写的、能怎么用。
+ * 链接能一键复制；协议是 CC BY-NC-SA 4.0
+ */
+function Copyright({ entry: e, author }: { entry: Entry; author: string }) {
+  const url = `${site.url}${entryPath(e.type, e.slug)}`
+  const published = e.publishedAt ?? e.createdAt
+  // 发布当天改的不算「更新」
+  const updated =
+    new Date(e.updatedAt).getTime() - new Date(published).getTime() > 86_400_000 ? e.updatedAt : null
+  return (
+    <aside className="copyright" aria-label="版权声明">
+      <div className="copyright-text">
+        <p className="copyright-title">{e.title}</p>
+        <p className="copyright-link">
+          <a href={url}>{decodeURI(url)}</a>
+          <button
+            type="button"
+            className="c-reply"
+            onClick={() =>
+              navigator.clipboard.writeText(url).then(
+                () => toast("链接复制好了"),
+                () => toast("没复制上，手动选一下吧"),
+              )
+            }
+          >
+            复制链接
+          </button>
+        </p>
+        <dl className="copyright-meta">
+          <div>
+            <dt>作者</dt>
+            <dd>{author}</dd>
+          </div>
+          <div>
+            <dt>发布于</dt>
+            <dd>{formatDate(published)}</dd>
+          </div>
+          {updated && (
+            <div>
+              <dt>更新于</dt>
+              <dd>{formatDate(updated)}</dd>
+            </div>
+          )}
+        </dl>
+        <p className="copyright-license">
+          按{" "}
+          <a
+            href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh-hans"
+            rel="license noopener"
+            target="_blank"
+          >
+            CC BY-NC-SA 4.0
+          </a>{" "}
+          授权：转载请署名并附上原文链接；不能用于商业用途（商用请先联系我）；改编后要用同样的协议分享。
+        </p>
+      </div>
+    </aside>
+  )
 }
