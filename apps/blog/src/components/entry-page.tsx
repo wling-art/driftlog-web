@@ -2,12 +2,11 @@ import { Link } from "@tanstack/react-router"
 import { Folder } from "@/components/boring"
 import { Article } from "@/components/article"
 import { Comments } from "@/components/comments"
+import { Nearby } from "@/components/nearby"
 import { SiteShell } from "@/components/site"
 import { Window } from "@/components/boring"
 import type { Entry } from "@/lib/api"
 import { entryPath, formatDate, readingMinutes, site } from "@/lib/site"
-
-const typeLabel = { post: "文章", note: "手记", page: "页面" } as const
 
 /** 文章 / 手记 / 页面的 head：标题、描述、OG 图、JSON-LD */
 export function entryHead(e: Entry | undefined) {
@@ -57,24 +56,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
       scene="read"
       aside={
         <>
-          {e.type !== "page" && (e.prev || e.next) && (
-            <Window id="nearby" name="nearby/" closable={false}>
-              <nav aria-label={`上一篇和下一篇${typeLabel[e.type]}`} className="nearby">
-                {e.prev && (
-                  <Link to={entryPath(e.type, e.prev.slug)} rel="prev" className="nearby-card">
-                    <span className="pixel-1">← 上一篇</span>
-                    <span className="t">{e.prev.title}</span>
-                  </Link>
-                )}
-                {e.next && (
-                  <Link to={entryPath(e.type, e.next.slug)} rel="next" className="nearby-card is-next">
-                    <span className="pixel-1">下一篇 →</span>
-                    <span className="t">{e.next.title}</span>
-                  </Link>
-                )}
-              </nav>
-            </Window>
-          )}
+          {e.type !== "page" && (e.prev || e.next) && <Nearby entry={e} />}
           <Comments entryId={e.id} />
         </>
       }
@@ -125,6 +107,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
           </p>
         )}
         <Article html={e.html} />
+        <div id="article-end" aria-hidden="true" />
         {e.tags.length > 0 && (
           <p className="mt-(--space-6) flex flex-wrap gap-(--space-2)">
             {e.tags.map((t) => (

@@ -1,354 +1,388 @@
-import { useEffect, useMemo, useRef, useState } from "react"
-import { revalidateLogic, useForm, type AnyFieldApi } from "@tanstack/react-form"
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react"
+import { revalidateLogic, useForm, useStore, type AnyFieldApi } from "@tanstack/react-form"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "motion/react"
 import { toast } from "sonner"
 import { commentInput, unwrap } from "@driftlog/client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Window } from "@/components/boring"
+import { Button } from "@/components/ui/button"
 import { api, commentsQuery, type Comment } from "@/lib/api"
-import { formatDate } from "@/lib/site"
 
-// 和 tokens.css 同一套曲线和时长：出现 240ms、离开 160ms（离开比出现短）
+/*
+ * 评论就是一份 comments.log：
+ * - 每条评论是日志里的一段：行号 · 像素字母头像 · 名字 @ 时间；回复用 └─ 连到上一条
+ * - 底下不是表单，是一行命令提示符：打字、回车就发。第一次发的时候像登录一样问「你叫什么」「邮箱」，之后记住你
+ * - 回车发送，Shift + 回车换行；输入法选字时的回车不算
+ * 没有 Gravatar：不往第三方发评论者的邮箱哈希，头像用名字的第一个字
+ */
+
+// 和 tokens.css 同一套曲线：出现 240ms、离开 160ms
 const easeEnter = [0.37, 0.42, 0.12, 0.85] as const
 const easeExit = [0.88, 0.15, 0.63, 0.58] as const
 const REMEMBER = "driftlog-commenter"
 
-type Node = Comment & { children: Node[] }
+type Node = Comment & { children: Node[]; line: number }
+type Line = Node & { depth: number }
+type Identity = { author: string; email: string }
 
 function buildTree(list: Comment[]) {
-  const map = new Map<number, Node>(list.map((c) => [c.id, { ...c, children: [] }]))
+  const map = new Map<number, Node>(list.map((c) => [c.id, { ...c, children: [], line: 0 }]))
   const roots: Node[] = []
   for (const n of map.values()) {
     const parent = n.parentId ? map.get(n.parentId) : undefined
     if (parent) parent.children.push(n)
     else roots.push(n)
   }
-  return roots
+  // 行号按显示顺序（深度优先）编
+  let line = 0
+  const number = (ns: Node[]) => ns.forEach((n) => ((n.line = ++line), number(n.children)))
+  number(roots)
+  const lines: Line[] = []
+  const flat = (ns: Node[], depth: number) =>
+    ns.forEach((n) => (lines.push({ ...n, depth }), flat(n.children, depth + 1)))
+  flat(roots, 0)
+  return lines
 }
 
-/**
- * 评论是文章的附属：一个安静的小窗口，不抢正文。
- * - 没有 36px 大标题，只有一行「N 条评论」和「写评论」
- * - 列表紧凑：小头像、小字号
- * - 表单默认收起，点「写评论」或某条下面的「回复」才展开，发完再收起
- */
+const stamp = (d: string | Date) => {
+  const t = new Date(d)
+  const p = (n: number) => String(n).padStart(2, "0")
+  return `${p(t.getMonth() + 1)}-${p(t.getDate())} ${p(t.getHours())}:${p(t.getMinutes())}`
+}
+const initial = (name: string) => [...name.trim()][0]?.toUpperCase() ?? "?"
+
+// 记住的身份：localStorage 当外部存储订阅，SSR 时是 null（不会水合不一致）
+const identityListeners = new Set<() => void>()
+const readIdentityRaw = () => {
+  try {
+    return localStorage.getItem(REMEMBER)
+  } catch {
+    return null
+  }
+}
+function saveIdentity(v: Identity | null) {
+  try {
+    if (v) localStorage.setItem(REMEMBER, JSON.stringify(v))
+    else localStorage.removeItem(REMEMBER)
+  } catch {}
+  identityListeners.forEach((l) => l())
+}
+function useIdentity(): Identity | null {
+  const raw = useSyncExternalStore(
+    (cb) => (identityListeners.add(cb), () => void identityListeners.delete(cb)),
+    readIdentityRaw,
+    () => null,
+  )
+  return useMemo(() => {
+    try {
+      const v = JSON.parse(raw ?? "null") as Partial<Identity> | null
+      return v?.author && v.email ? { author: v.author, email: v.email } : null
+    } catch {
+      return null
+    }
+  }, [raw])
+}
+
 export function Comments({ entryId }: { entryId: number }) {
   const { data, isPending, isError, refetch } = useQuery(commentsQuery(entryId))
-  const tree = useMemo(() => buildTree(data ?? []), [data])
+  const lines = useMemo(() => buildTree(data ?? []), [data])
   const [replyTo, setReplyTo] = useState<Comment | null>(null)
-  const [writing, setWriting] = useState(false)
-  const open = (to: Comment | null) => {
-    setReplyTo(to)
-    setWriting(true)
-  }
-  const close = () => {
-    setReplyTo(null)
-    setWriting(false)
+  const promptRef = useRef<HTMLTextAreaElement>(null)
+
+  const reply = (c: Comment) => {
+    setReplyTo(c)
+    promptRef.current?.focus()
   }
 
   return (
     <Window id="comments" name="comments.log" aria-label="评论" closable={false} className="comments">
-      <div className="flex flex-wrap items-center justify-between gap-(--space-3)">
-        <p className="pixel-1 muted">
-          {isPending ? "在翻评论…" : data?.length ? `${data.length} 条评论` : "还没人说话"}
-        </p>
-        {!writing && (
-          <Button size="sm" onClick={() => open(null)}>
-            写评论
-          </Button>
-        )}
-      </div>
-      {isError && (
-        <p className="mt-(--space-2) text-(length:--text-sm) text-danger">
-          ✕ 评论没加载出来。
-          <Button variant="link" size="sm" onClick={() => refetch()}>
+      <p className="log-head">
+        {isPending
+          ? "# 在翻日志…"
+          : isError
+            ? "# ✕ 日志没读出来"
+            : data?.length
+              ? `# ${data.length} 条评论 · 最后一条 ${stamp(data.at(-1)!.createdAt)}`
+              : "# 这份日志还是空的。敲下第一行吧"}
+        {isError && (
+          <button type="button" className="log-link" onClick={() => refetch()}>
             重试
-          </Button>
-        </p>
-      )}
-      {tree.length > 0 && (
-        <ol className="mt-(--space-4) grid gap-(--space-4)">
-          {tree.map((n) => (
-            <CommentNode key={n.id} node={n} onReply={open} />
+          </button>
+        )}
+      </p>
+      {lines.length > 0 && (
+        <ol className="log">
+          {lines.map((n) => (
+            <LogEntry key={n.id} line={n} onReply={reply} />
           ))}
         </ol>
       )}
-      {/* 表单展开 / 收起：高度和透明度一起走，外层 overflow 裁掉，里面不会被挤变形 */}
-      <AnimatePresence initial={false}>
-        {writing && (
-          <motion.div
-            key="form"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1, transition: { duration: 0.24, ease: easeEnter } }}
-            exit={{ height: 0, opacity: 0, transition: { duration: 0.16, ease: easeExit } }}
-            className="overflow-hidden"
-          >
-            <div className="mt-(--space-5) border-t border-border-soft pt-(--space-4)">
-              <CommentForm entryId={entryId} replyTo={replyTo} onClose={close} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Prompt
+        entryId={entryId}
+        replyTo={replyTo}
+        onCancelReply={() => setReplyTo(null)}
+        inputRef={promptRef}
+      />
     </Window>
   )
 }
 
-function CommentNode({ node, onReply }: { node: Node; onReply: (c: Comment) => void }) {
+function LogEntry({ line: n, onReply }: { line: Line; onReply: (c: Comment) => void }) {
   return (
     <motion.li
-      id={`comment-${node.id}`}
+      id={`comment-${n.id}`}
+      className="log-entry"
+      style={{ "--depth": Math.min(n.depth, 3) } as React.CSSProperties}
+      data-reply={n.depth > 0 || undefined}
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.24, ease: easeEnter }}
-      className="grid grid-cols-[28px_minmax(0,1fr)] gap-(--space-3) text-(length:--text-sm)"
     >
-      <img
-        src={node.avatar}
-        alt=""
-        width={28}
-        height={28}
-        loading="lazy"
-        className="mt-0.5 rounded-[3px] border border-border"
-      />
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-baseline gap-x-(--space-2)">
-          {node.url ? (
-            <a
-              href={node.url}
-              rel="nofollow noopener ugc"
-              target="_blank"
-              className="font-semibold text-primary underline underline-offset-3"
+      <span className="log-no" aria-hidden="true">
+        {n.line}
+      </span>
+      <div className="log-row">
+        <span className="log-avatar" aria-hidden="true">
+          {initial(n.author)}
+        </span>
+        <div className="min-w-0">
+          <p className="log-meta">
+            {n.url ? (
+              <a href={n.url} rel="nofollow noopener ugc" target="_blank" className="log-author is-link">
+                {n.author}
+              </a>
+            ) : (
+              <span className="log-author">{n.author}</span>
+            )}
+            <time dateTime={String(n.createdAt)}>@ {stamp(n.createdAt)}</time>
+            <button
+              type="button"
+              className="log-link"
+              onClick={() => onReply(n)}
+              aria-label={`回复 ${n.author}`}
             >
-              {node.author}
-            </a>
-          ) : (
-            <span className="font-semibold">{node.author}</span>
-          )}
-          <time className="pixel-1 muted" dateTime={String(node.createdAt)}>
-            {formatDate(node.createdAt)}
-          </time>
-          <button
-            type="button"
-            className="pixel-1 text-primary underline underline-offset-2 hover:bg-foreground hover:text-background"
-            onClick={() => onReply(node)}
-          >
-            回复
-          </button>
+              回复
+            </button>
+          </p>
+          <div className="comment-body" dangerouslySetInnerHTML={{ __html: n.html }} />
         </div>
-        <div className="comment-body" dangerouslySetInnerHTML={{ __html: node.html }} />
-        {node.children.length > 0 && (
-          <ol className="mt-(--space-3) grid gap-(--space-3) border-l border-border-soft pl-(--space-3)">
-            {node.children.map((c) => (
-              <CommentNode key={c.id} node={c} onReply={onReply} />
-            ))}
-          </ol>
-        )}
       </div>
     </motion.li>
   )
 }
 
-function remembered() {
-  try {
-    return JSON.parse(localStorage.getItem(REMEMBER) ?? "{}") as {
-      author?: string
-      email?: string
-      url?: string
-    }
-  } catch {
-    return {}
-  }
-}
+type Step = "body" | "author" | "email"
 
-/**
- * 字段已经在报错时，每次输入都重新校验：改对的那一刻错误就消失。
- * 不这样的话，错误要等失焦才消失——点「发表评论」时先失焦，错误那行一消失按钮就往上跳，这一下点空了。
- */
-function change(f: AnyFieldApi, value: string) {
-  f.handleChange(value)
-  if (!f.state.meta.isValid) void f.validate("blur")
-}
-
-function FieldError({ errors }: { errors: unknown[] }) {
-  const msg = errors
-    .map((e) => (typeof e === "string" ? e : (e as { message?: string })?.message))
-    .find(Boolean)
-  return msg ? <p className="mt-1 text-(length:--text-sm) text-danger">✕ {msg}</p> : null
-}
-
-function CommentForm({
+/** 命令提示符：正文 →（第一次）名字 → 邮箱 → 发出去 */
+function Prompt({
   entryId,
   replyTo,
-  onClose,
+  onCancelReply,
+  inputRef,
 }: {
   entryId: number
   replyTo: Comment | null
-  onClose: () => void
+  onCancelReply: () => void
+  inputRef: React.RefObject<HTMLTextAreaElement | null>
 }) {
   const qc = useQueryClient()
-  const saved = typeof window === "undefined" ? {} : remembered()
+  const identity = useIdentity()
+  const [step, setStep] = useState<Step>("body")
+  const stepRef = useRef<HTMLInputElement>(null)
+
   const form = useForm({
-    defaultValues: { author: saved.author ?? "", email: saved.email ?? "", url: saved.url ?? "", body: "" },
-    // 失焦时校验；提交过一次之后每次输入都重新校验
-    validationLogic: revalidateLogic({ mode: "blur", modeAfterSubmission: "change" }),
+    defaultValues: { author: "", email: "", body: "" },
+    validationLogic: revalidateLogic({ mode: "submit", modeAfterSubmission: "change" }),
     onSubmit: async ({ value, formApi }) => {
+      const who = identity ?? { author: value.author.trim(), email: value.email.trim() }
       try {
         const c = await unwrap(
           api.comments.post({
             entryId,
             parentId: replyTo?.id ?? null,
-            author: value.author,
-            email: value.email,
-            url: value.url || null,
+            author: who.author,
+            email: who.email,
+            url: null,
             body: value.body,
           }),
         )
-        try {
-          localStorage.setItem(
-            REMEMBER,
-            JSON.stringify({ author: value.author, email: value.email, url: value.url }),
-          )
-        } catch {}
-        formApi.reset({ ...value, body: "" })
-        onClose()
+        saveIdentity(who)
+        formApi.reset()
+        setStep("body")
+        onCancelReply()
         await qc.invalidateQueries({ queryKey: ["comments", entryId] })
-        toast(c.status === "approved" ? "评论发出去了 ✓" : "收到了。审核完就会出现在这里")
+        toast(c.status === "approved" ? "写进日志了 ✓" : "收到了。审核完就会出现在日志里")
       } catch (e) {
         toast.error(`没发出去：${(e as Error).message}。内容还在输入框里`)
       }
     },
   })
+  const busy = useStore(form.store, (s) => s.isSubmitting)
   const shape = commentInput.shape
 
-  // 展开时把光标放到第一个要填的地方：记住了名字和邮箱就直接进正文
-  const ref = useRef<HTMLFormElement>(null)
+  /** 校验当前这一步，过了就进下一步或者直接发 */
+  const advance = async () => {
+    const errors = await form.validateField(step, "submit")
+    if (errors.length) return
+    const next: Step | "send" =
+      step === "body" ? (identity ? "send" : "author") : step === "author" ? "email" : "send"
+    if (next === "send") return void form.handleSubmit()
+    setStep(next)
+  }
+
   useEffect(() => {
-    const el = ref.current
-    el?.querySelector<HTMLElement>(saved.author && saved.email ? "textarea" : "input")?.focus()
-    // 只在展开 / 换了回复对象时
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [replyTo])
+    if (step === "body") inputRef.current?.focus()
+    else stepRef.current?.focus()
+  }, [step, inputRef])
+
+  // 回车发送；Shift + 回车换行；输入法正在选字时的回车不算
+  const onEnter = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      if (step !== "body") setStep("body")
+      else if (replyTo) onCancelReply()
+      return
+    }
+    if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing || e.keyCode === 229) return
+    e.preventDefault()
+    if (!busy) void advance()
+  }
+
+  const who = identity?.author ?? "访客"
 
   return (
     <form
-      ref={ref}
       noValidate
+      className="prompt"
+      aria-label="写评论"
       onSubmit={(e) => {
         e.preventDefault()
-        void form.handleSubmit()
+        void advance()
       }}
-      className="grid gap-(--space-4)"
-      aria-label="写评论"
     >
-      {replyTo && (
-        <p className="text-(length:--text-sm)">
-          回复 <strong>{replyTo.author}</strong>
-        </p>
-      )}
-      <div className="grid gap-(--space-4) @lg:grid-cols-3">
-        <form.Field name="author" validators={{ onDynamic: shape.author }}>
-          {(f) => (
-            <div>
-              <Label htmlFor={`comment-${f.name}`} className="pixel-1 mb-1">
-                名字
-              </Label>
-              <Input
-                id={`comment-${f.name}`}
-                autoComplete="name"
-                value={f.state.value}
-                onBlur={f.handleBlur}
-                onChange={(e) => change(f, e.target.value)}
-                aria-invalid={!f.state.meta.isValid}
-              />
-              <FieldError errors={f.state.meta.errors} />
-            </div>
-          )}
-        </form.Field>
-        <form.Field name="email" validators={{ onDynamic: shape.email }}>
-          {(f) => (
-            <div>
-              <Label htmlFor={`comment-${f.name}`} className="pixel-1 mb-1">
-                邮箱（不公开）
-              </Label>
-              <Input
-                id={`comment-${f.name}`}
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                value={f.state.value}
-                onBlur={f.handleBlur}
-                onChange={(e) => change(f, e.target.value)}
-                aria-invalid={!f.state.meta.isValid}
-              />
-              <FieldError errors={f.state.meta.errors} />
-            </div>
-          )}
-        </form.Field>
-        <form.Field
-          name="url"
-          validators={{
-            onBlur: ({ value }) =>
-              value && !/^https?:\/\/\S+\.\S+/.test(value) ? "网址要以 http:// 或 https:// 开头" : undefined,
-          }}
-        >
-          {(f) => (
-            <div>
-              <Label htmlFor={`comment-${f.name}`} className="pixel-1 mb-1">
-                网站（可不填）
-              </Label>
-              <Input
-                id={`comment-${f.name}`}
-                type="url"
-                inputMode="url"
-                autoComplete="url"
-                value={f.state.value}
-                onBlur={f.handleBlur}
-                onChange={(e) => change(f, e.target.value)}
-                aria-invalid={!f.state.meta.isValid}
-              />
-              <FieldError errors={f.state.meta.errors} />
-            </div>
-          )}
-        </form.Field>
-      </div>
+      <AnimatePresence initial={false}>
+        {replyTo && (
+          <motion.p
+            key="reply"
+            className="prompt-note"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto", transition: { duration: 0.24, ease: easeEnter } }}
+            exit={{ opacity: 0, height: 0, transition: { duration: 0.16, ease: easeExit } }}
+          >
+            ↳ 回复 #{replyTo.author}
+            <button type="button" className="log-link" onClick={onCancelReply}>
+              不回了（Esc）
+            </button>
+          </motion.p>
+        )}
+      </AnimatePresence>
+
       <form.Field name="body" validators={{ onDynamic: shape.body }}>
         {(f) => (
-          <div>
-            <Label htmlFor={`comment-${f.name}`} className="pixel-1 mb-1">
-              评论
-            </Label>
-            <Textarea
-              id={`comment-${f.name}`}
-              rows={3}
+          <div className="prompt-line">
+            <label htmlFor="comment-body" className="prompt-ps1">
+              {who}@driftlog:~$
+            </label>
+            <textarea
+              ref={inputRef}
+              id="comment-body"
+              rows={1}
               value={f.state.value}
-              onBlur={f.handleBlur}
               onChange={(e) => change(f, e.target.value)}
+              onKeyDown={onEnter}
+              readOnly={step !== "body"}
               aria-invalid={!f.state.meta.isValid}
               aria-describedby="comment-hint"
+              placeholder={replyTo ? `回 ${replyTo.author} 点什么` : "说点什么，回车发送"}
+              className="prompt-input"
             />
-            <p id="comment-hint" className="muted mt-1 text-(length:--text-sm)">
-              支持 Markdown、||剧透||、==标记==。
-            </p>
-            <FieldError errors={f.state.meta.errors} />
+            <PromptError errors={f.state.meta.errors} />
           </div>
         )}
       </form.Field>
-      <form.Subscribe selector={(s) => s.isSubmitting}>
-        {(submitting) => (
-          <div className="flex items-center gap-(--space-3)">
-            <Button type="submit" variant="primary" aria-busy={submitting || undefined} disabled={submitting}>
-              {submitting ? "在发了…" : "发表评论"}
-            </Button>
-            <Button type="button" variant="link" onClick={onClose}>
-              收起
-            </Button>
-          </div>
+
+      {/* 第一次发：像登录一样一步步问，问过就记住 */}
+      <AnimatePresence initial={false}>
+        {!identity && step !== "body" && (
+          <motion.div
+            key="login"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto", transition: { duration: 0.24, ease: easeEnter } }}
+            exit={{ opacity: 0, height: 0, transition: { duration: 0.16, ease: easeExit } }}
+            className="overflow-hidden"
+          >
+            <p className="prompt-note">
+              第一次来？报个名，下次就不问了（第 {step === "author" ? 1 : 2} 步，共 2 步）
+            </p>
+            {(["author", "email"] as const).map((name) =>
+              step === name || (name === "author" && step === "email") ? (
+                <form.Field
+                  key={name}
+                  name={name}
+                  validators={{
+                    onDynamic: ({ value }) => shape[name].safeParse(value).error?.issues[0]?.message,
+                  }}
+                >
+                  {(f) => (
+                    <div className="prompt-line">
+                      <label htmlFor={`comment-${name}`} className="prompt-ps1">
+                        {name === "author" ? "? 你叫什么：" : "? 邮箱（不公开，有人回你时通知）："}
+                      </label>
+                      <input
+                        ref={step === name ? stepRef : undefined}
+                        id={`comment-${name}`}
+                        type={name === "email" ? "email" : "text"}
+                        inputMode={name === "email" ? "email" : undefined}
+                        autoComplete={name === "email" ? "email" : "name"}
+                        value={f.state.value}
+                        onChange={(e) => change(f, e.target.value)}
+                        onKeyDown={onEnter}
+                        readOnly={step !== name}
+                        aria-invalid={!f.state.meta.isValid}
+                        className="prompt-input"
+                      />
+                      <PromptError errors={f.state.meta.errors} />
+                    </div>
+                  )}
+                </form.Field>
+              ) : null,
+            )}
+          </motion.div>
         )}
-      </form.Subscribe>
+      </AnimatePresence>
+
+      <div className="prompt-foot">
+        <p id="comment-hint" className="prompt-hint">
+          {busy ? (
+            "在发了…"
+          ) : (
+            <>
+              回车发送 · Shift + 回车换行 · 支持 Markdown
+              {identity && (
+                <button type="button" className="log-link" onClick={() => saveIdentity(null)}>
+                  不是 {identity.author}？
+                </button>
+              )}
+            </>
+          )}
+        </p>
+        {/* 触屏键盘上回车常常就是换行：给一个看得见的按钮 */}
+        <Button type="submit" variant="primary" size="sm" disabled={busy} aria-busy={busy || undefined}>
+          {step === "body" ? "发送 ↵" : "下一步 ↵"}
+        </Button>
+      </div>
     </form>
   )
+}
+
+/** 已经在报错的字段边输边校验：改对的那一刻错误就消失（逐步校验不走整表提交，revalidateLogic 管不到这里） */
+function change(f: AnyFieldApi, value: string) {
+  f.handleChange(value)
+  if (!f.state.meta.isValid) void f.validate("submit")
+}
+
+function PromptError({ errors }: { errors: unknown[] }) {
+  const msg = errors
+    .map((e) => (typeof e === "string" ? e : (e as { message?: string })?.message))
+    .find(Boolean)
+  return msg ? <p className="prompt-error">✕ {msg}</p> : null
 }

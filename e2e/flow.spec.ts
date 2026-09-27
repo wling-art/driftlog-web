@@ -41,18 +41,22 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   await expect(page.locator('a.folder[href="#小标题"]')).toBeVisible()
   await expect(page.getByRole("link", { name: "文章" })).toHaveAttribute("aria-current", "page")
 
-  // 表单默认收起
-  await expect(page.getByRole("form", { name: "写评论" })).toHaveCount(0)
-  await page.getByRole("button", { name: "写评论" }).click()
-  await page.getByLabel("名字").fill("测试员")
-  await page.getByLabel("邮箱（不公开）").fill("bad")
-  await page.getByRole("textbox", { name: "评论" }).fill("好")
-  await page.getByRole("button", { name: "发表评论" }).click()
+  // 评论是一行命令提示符：打字、回车；第一次会一步步问名字和邮箱
+  const prompt = page.getByRole("textbox", { name: "访客@driftlog:~$" })
+  await prompt.fill("好")
+  await prompt.press("Enter")
+  await page.getByRole("textbox", { name: "? 你叫什么：" }).fill("测试员")
+  await page.getByRole("textbox", { name: "? 你叫什么：" }).press("Enter")
+  const emailBox = page.getByRole("textbox", { name: /邮箱/ })
+  await emailBox.fill("bad")
+  await emailBox.press("Enter")
   await expect(page.getByText("✕ 邮箱格式不对")).toBeVisible()
-  await page.getByLabel("邮箱（不公开）").fill("tester@example.com")
-  await page.getByRole("button", { name: "发表评论" }).click()
-  await expect(page.getByText(/评论发出去了|审核完就会出现/)).toBeVisible()
-  await expect(page.getByRole("form", { name: "写评论" })).toHaveCount(0) // 发完收起
+  await emailBox.fill("tester@example.com")
+  await expect(page.getByText("✕ 邮箱格式不对")).toBeHidden() // 改对就消失
+  await emailBox.press("Enter")
+  await expect(page.getByText(/写进日志了|审核完就会出现/)).toBeVisible()
+  // 记住了身份：提示符换成名字，下次一行就发
+  await expect(page.getByRole("textbox", { name: "测试员@driftlog:~$" })).toBeVisible()
 })
 
 test("博客：⌘K 搜索", async ({ page }) => {

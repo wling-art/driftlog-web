@@ -17,6 +17,13 @@ export const entryQuery = (type: EntryType, slug: string, lang?: string) =>
     queryFn: () => unwrap(api.entries.slug({ slug }).get({ query: { type, lang } })),
   })
 
+export const indexQuery = (type: EntryType) =>
+  queryOptions({
+    queryKey: ["index", type],
+    queryFn: () => unwrap(api.entries.index.get({ query: { type } })),
+    staleTime: 600_000,
+  })
+
 export const categoriesQuery = () =>
   queryOptions({ queryKey: ["categories"], queryFn: () => unwrap(api.categories.get()), staleTime: 600_000 })
 
