@@ -18,9 +18,12 @@ git submodule update --init
 bun install
 cp apps/blog/.env.example apps/blog/.env
 cp apps/admin/.env.example apps/admin/.env
-# 先按 core/README.md 把 API 跑起来（默认 :3900）
-bun run dev            # 博客 :5173 · 后台 :5174
+cp core/.env.example core/apps/server/.env
+bun --filter @driftlog/db migrate   # 第一次跑
+bun run dev            # API :3900 · 博客 :5173 · 后台 :5174，一个终端里一起起
 ```
+
+`bun run dev` 跑的是 `core/` 这个 submodule 里的 API。要改服务端，就直接在 `web/core` 里改、提交、推送（它本身是个完整的 git 仓库）。只想单独起某一个：`bun run dev:api` / `dev:blog` / `dev:admin`。
 
 ## 检查
 

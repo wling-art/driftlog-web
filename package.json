@@ -34,14 +34,15 @@
     }
   },
   "scripts": {
-    "dev": "bun --filter './apps/*' dev",
+    "dev": "bun --filter @driftlog/server --filter @driftlog/blog --filter @driftlog/admin dev",
     "dev:blog": "bun --filter @driftlog/blog dev",
     "dev:admin": "bun --filter @driftlog/admin dev",
     "build": "bun --filter './apps/*' build",
     "typecheck": "bun --filter './apps/*' typecheck",
     "lint": "oxlint apps",
     "fmt": "oxfmt apps",
-    "test": "playwright test"
+    "test": "playwright test",
+    "dev:api": "bun --filter @driftlog/server dev"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
