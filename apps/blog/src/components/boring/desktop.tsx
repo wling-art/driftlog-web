@@ -482,39 +482,62 @@ export function TaskbarButton({ className, ...props }: React.ComponentProps<"but
   return <button type="button" className={cn("tb-btn", className)} {...props} />
 }
 
-export type TaskbarItem = { href: string; label: string; exact?: boolean }
+export type TaskbarItem = {
+  href: string
+  label: string
+  exact?: boolean
+  /** 标签前的小图标（desktop.css 里画好的） */
+  icon?: "folder" | "doc"
+  /** 换了 key 标签就重新挂载，播一次升起动画（当前窗口换了） */
+  key?: string
+}
 
 /** 吸底任务栏。第一个导航标签放站点名，点了回首页 */
 export function Taskbar({
   items,
+  start,
+  themeToggle = true,
   className,
   children,
 }: {
   items: TaskbarItem[]
+  /** 最左边的「开始」按钮（开始菜单）；有它时导航标签一般只放当前打开的那一个 */
+  start?: React.ReactNode
+  /** 主题切换放在任务栏右边；放进开始菜单时关掉 */
+  themeToggle?: boolean
   className?: string
   children?: React.ReactNode
 }) {
   const { theme, toggle } = useTheme()
   return (
     <footer data-slot="taskbar" className={cn("taskbar", className)}>
-      <nav aria-label="主导航">
+      {start}
+      <nav aria-label={start ? "打开的窗口" : "主导航"}>
         {/* 用路由的 Link：客户端跳转，当前页自动带 aria-current="page"，标签升起来 */}
         {items.map((it) => (
-          <Link key={it.href + it.label} to={it.href} activeOptions={{ exact: it.exact ?? false }}>
-            {it.label}
+          <Link
+            key={it.key ?? it.href + it.label}
+            to={it.href}
+            activeOptions={{ exact: it.exact ?? false }}
+            data-icon={it.icon}
+            title={it.label}
+          >
+            <span className="tb-label">{it.label}</span>
           </Link>
         ))}
       </nav>
       <span className="spacer" />
       {children}
       {/* 窄屏只留「亮色 / 暗色」两个字，任务栏放得下 */}
-      <TaskbarButton onClick={toggle} aria-label={theme === "dark" ? "切到亮色" : "切到暗色"}>
-        {/* 包在一个 span 里：按钮是 inline-flex 带间距，分开写会在「切到」和「暗色」之间空出一块 */}
-        <span>
-          <span className="tb-long">切到</span>
-          {theme === "dark" ? "亮色" : "暗色"}
-        </span>
-      </TaskbarButton>
+      {themeToggle && (
+        <TaskbarButton onClick={toggle} aria-label={theme === "dark" ? "切到亮色" : "切到暗色"}>
+          {/* 包在一个 span 里：按钮是 inline-flex 带间距，分开写会在「切到」和「暗色」之间空出一块 */}
+          <span>
+            <span className="tb-long">切到</span>
+            {theme === "dark" ? "亮色" : "暗色"}
+          </span>
+        </TaskbarButton>
+      )}
       <Clock />
     </footer>
   )

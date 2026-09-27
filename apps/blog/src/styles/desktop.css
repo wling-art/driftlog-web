@@ -668,3 +668,242 @@ body {
     scrollbar-color: var(--border-frame) transparent;
   }
 }
+
+/* ── Driftlog 的改动：开始菜单 ──
+ * 任务栏最左边「开始」（站长头像 + 两个字），从下往上弹出一块两列的菜单；
+ * 导航标签只剩当前打开的那一个窗口，前面带小图标，换了窗口就从下面升起来。 */
+.tb-start {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  align-self: center;
+  margin-bottom: 6px;
+  min-height: max(28px, var(--hit-min));
+  padding: 0 10px 0 5px;
+  border: var(--line) solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font: 400 var(--px-1)/1 var(--font-pixel);
+  box-shadow: var(--shadow-1);
+}
+.tb-start img {
+  width: 18px;
+  height: 18px;
+  border: var(--line) solid var(--border-frame);
+  border-radius: 2px;
+  object-fit: cover;
+}
+.tb-start:hover,
+.tb-start[data-state="open"] {
+  background: var(--text);
+  color: var(--bg);
+}
+.tb-start[data-state="open"] {
+  translate: 1px 1px; /* 按下去了 */
+  box-shadow: none;
+}
+.taskbar nav a[data-icon]::before {
+  content: "";
+  flex: none;
+  width: 14px;
+  height: 12px;
+  margin-right: 6px;
+  background: currentColor;
+  mask: var(--icon-folder) center / contain no-repeat;
+}
+.taskbar nav a[data-icon="doc"]::before {
+  mask-image: var(--icon-doc);
+}
+.taskbar nav a[data-icon] {
+  max-width: min(22em, 40vw);
+  animation: tb-task-in var(--duration-move) var(--ease-move);
+}
+.tb-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@keyframes tb-task-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+.start-menu {
+  z-index: 50;
+  width: min(460px, calc(100vw - 16px));
+  padding: var(--space-3);
+  border: var(--line) solid var(--border-frame);
+  border-radius: var(--radius-window);
+  background: var(--window);
+  box-shadow: var(--shadow-3);
+  transform-origin: bottom left;
+  animation: start-in var(--duration-enter) var(--ease-enter);
+}
+.start-menu[data-state="closed"] {
+  animation: start-out var(--duration-exit, 120ms) var(--ease-exit) forwards;
+}
+@keyframes start-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+@keyframes start-out {
+  to {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+.start-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: var(--space-3);
+}
+/* 列宽钉死在可用宽度里：标题不换行，不钉的话 grid 会按整行标题的宽度把列撑出菜单 */
+.start-col,
+.start-list,
+.start-actions,
+.start-recent {
+  grid-template-columns: minmax(0, 1fr);
+}
+.start-col {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.start-side {
+  padding-left: var(--space-3);
+  border-left: var(--line) solid var(--border-soft);
+}
+.start-owner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2) var(--space-2);
+  border-bottom: var(--line) solid var(--border-soft);
+}
+.start-owner img {
+  width: 36px;
+  height: 36px;
+  border: var(--line) solid var(--border-frame);
+  border-radius: 3px;
+  object-fit: cover;
+}
+.start-owner-name {
+  font: 400 var(--px-2)/1.2 var(--font-pixel);
+}
+.start-owner-site {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+.start-list,
+.start-actions {
+  display: grid;
+}
+.start-heading {
+  padding: 0 var(--space-2);
+  font: 400 var(--px-1)/1.5 var(--font-pixel);
+  color: var(--text-muted);
+}
+.start-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: max(30px, var(--hit-min));
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: 3px;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+.start-item[data-icon]::before {
+  content: "";
+  flex: none;
+  width: 18px;
+  height: 15px;
+  background: currentColor;
+  mask: var(--icon-folder) center / contain no-repeat;
+}
+.start-item[data-icon="doc"]::before {
+  mask-image: var(--icon-doc);
+}
+.start-item-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.start-item-n {
+  font: 400 var(--px-1)/1 var(--font-pixel);
+  color: var(--text-muted);
+}
+.start-item:hover,
+.start-item:focus-visible,
+.start-item[aria-current="page"] {
+  background: var(--text);
+  color: var(--bg);
+}
+.start-item:hover .start-item-n,
+.start-item[aria-current="page"] .start-item-n {
+  color: inherit;
+}
+.start-recent {
+  display: grid;
+  margin-bottom: var(--space-2);
+}
+.start-recent-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: 5px var(--space-2);
+  border-radius: 3px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: var(--text-sm);
+}
+.start-recent-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.start-recent-item time {
+  font: 400 var(--px-1)/1 var(--font-pixel);
+  color: var(--text-muted);
+}
+.start-recent-item:hover,
+.start-recent-item:focus-visible {
+  background: var(--text);
+  color: var(--bg);
+}
+.start-recent-item:hover time {
+  color: inherit;
+}
+@media (max-width: 480px) {
+  .start-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .start-side {
+    padding-left: 0;
+    padding-top: var(--space-2);
+    border-left: 0;
+    border-top: var(--line) solid var(--border-soft);
+  }
+}
+@media (max-width: 760px) {
+  .tb-start {
+    margin-bottom: 4px;
+    padding-right: 7px;
+  }
+}

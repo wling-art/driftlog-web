@@ -15,19 +15,42 @@ import {
 import { Button } from "@/components/ui/button"
 import { useUI } from "@/lib/store"
 import { CommentsFloat, CommentsTaskItem } from "@/components/comments-dock"
-import { AccountTask } from "@/components/account"
+import { AccountDialog } from "@/components/account"
+import { StartMenu } from "@/components/start-menu"
 import { ChevronLeft } from "lucide-react"
 import { markDirection, takeDirection, useArrowNav } from "@/lib/keys"
 import { entryPath, formatDate } from "@/lib/site"
 import { useSite, type EntryCard } from "@/lib/api"
 
-const sections = [
-  { href: "/posts", label: "文章" },
-  { href: "/notes", label: "手记" },
-  { href: "/thinking", label: "动态" },
-  { href: "/friends", label: "友链" },
-  { href: "/about", label: "关于" },
-]
+// 栏目的中文名（任务栏上「当前打开的窗口」用）
+const sectionName: Record<string, string> = {
+  posts: "文章",
+  notes: "手记",
+  thinking: "动态",
+  projects: "项目",
+  says: "一言",
+  friends: "友链",
+}
+
+/**
+ * 任务栏上「当前打开的窗口」：列表页是栏目名（文件夹），详情页是标题（文档）。
+ * 详情页的标题从评论那边借（EntryPage 挂载时写进 store）
+ */
+function useCurrentTask() {
+  const pathname = useLocation({ select: (l) => l.pathname })
+  const { title } = useSite()
+  const entry = useUI((s) => s.comments?.title)
+  const [, first, second] = pathname.split("/")
+  if (!first) return { href: "/", label: title, icon: "folder" as const, key: "/" }
+  const section = sectionName[first]
+  if (section && !second) return { href: pathname, label: section, icon: "folder" as const, key: first }
+  return {
+    href: pathname,
+    label: entry ?? section ?? decodeURIComponent(first),
+    icon: "doc" as const,
+    key: pathname,
+  }
+}
 
 /**
  * 整个站点的外壳：全屏桌面 + 浮动的评论窗口 + 吸底任务栏。放在根布局里，只渲染一次：
@@ -36,19 +59,23 @@ const sections = [
  */
 export function AppShell({ children }: { children: ReactNode }) {
   useScrollKeys()
-  const { title } = useSite()
-  const nav = [{ href: "/", label: title, exact: true }, ...sections]
+  const task = useCurrentTask()
   const online = useUI((s) => s.online)
   const setSearchOpen = useUI((s) => s.setSearchOpen)
   return (
     <div data-slot="desktop" className="screen">
       {children}
       <CommentsFloat />
-      <Taskbar items={nav}>
+      <AccountDialog />
+      {/* 左边：开始菜单 + 当前打开的这一个窗口（换栏目时新标签从下面升起来）；主题和账号收进开始菜单 */}
+      <Taskbar
+        items={[{ href: task.href, label: task.label, exact: true, icon: task.icon, key: task.key }]}
+        start={<StartMenu />}
+        themeToggle={false}
+      >
         {/* 这一页关掉的窗口（ClosedTasks 从页面里传送过来） */}
         <span id="tb-closed" className="tb-closed" />
         <CommentsTaskItem />
-        <AccountTask />
         {online > 0 && (
           <span className="clock" title="现在在看这个站的人">
             {online} 人在看

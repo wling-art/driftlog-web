@@ -32,8 +32,12 @@ test("后台：登录、写一篇、实时预览、发布", async ({ page }) => 
 
 test("博客：首页、文章、目录、评论", async ({ page }) => {
   await page.goto(BLOG)
-  await expect(page.getByRole("navigation", { name: "主导航" })).toBeVisible()
   await expect(page.locator(".win").first()).toBeVisible()
+  // 开始菜单：点「开始」弹出，栏目能点进去，Esc 收起
+  await page.getByRole("button", { name: "开始菜单" }).click()
+  await expect(page.locator(".start-menu").getByRole("link", { name: /手记/ })).toBeVisible()
+  await page.keyboard.press("Escape")
+  await expect(page.locator(".start-menu")).toHaveCount(0)
   // 首页的桌面图标是快捷方式：点「文章」进文章栏目
   await page.getByRole("navigation", { name: "本页目录" }).getByRole("link", { name: "文章" }).click()
   await expect(page).toHaveURL(/\/posts$/)
@@ -43,7 +47,10 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   if (!email) return
   await expect(page.getByRole("heading", { level: 2, name: "端到端测试" })).toBeVisible()
   await expect(page.locator('a.folder[href="#小标题"]')).toBeVisible()
-  await expect(page.getByRole("link", { name: "文章", exact: true })).toHaveAttribute("aria-current", "page")
+  // 任务栏上是当前打开的这一篇
+  await expect(page.getByRole("navigation", { name: "打开的窗口" }).getByRole("link")).toContainText(
+    "端到端测试",
+  )
 
   // 评论平时最小化在任务栏：页面上没有评论，点任务栏的「评论」才升起来
   await expect(page.getByRole("textbox", { name: "写评论" })).toHaveCount(0)

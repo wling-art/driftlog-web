@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useForm } from "@tanstack/react-form"
 import { toast } from "sonner"
 import { z } from "zod"
-import { TaskbarButton } from "@/components/boring"
+import { useUI } from "@/lib/store"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -10,30 +10,25 @@ import { Label } from "@/components/ui/label"
 import { auth, authError } from "@/lib/auth"
 
 /*
- * 任务栏上的「登录」：读者登录后评论不用再填名字和邮箱。
+ * 账号窗口（从开始菜单打开）：读者登录后评论不用再填名字和邮箱。
  * 点开是一个小窗口：没登录时两个页签（登录 / 注册），登录了显示是谁 + 退出。
  * 后台只有站长进得去，这里的账号都是读者。
  */
-export function AccountTask() {
-  const { data, isPending } = auth.useSession()
-  const [open, setOpen] = useState(false)
+export function AccountDialog() {
+  const { data } = auth.useSession()
+  const open = useUI((s) => s.accountOpen)
+  const setOpen = useUI((s) => s.setAccountOpen)
   const user = data?.user
-  if (isPending) return null
   return (
-    <>
-      <TaskbarButton onClick={() => setOpen(true)} aria-haspopup="dialog">
-        {user ? user.name : "登录"}
-      </TaskbarButton>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent name={user ? "account.cfg" : "login.exe"} className="sm:max-w-sm">
-          {user ? (
-            <SignedIn name={user.name} email={user.email} onDone={() => setOpen(false)} />
-          ) : (
-            <SignIn onDone={() => setOpen(false)} />
-          )}
-        </DialogContent>
-      </Dialog>
-    </>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent name={user ? "account.cfg" : "login.exe"} className="sm:max-w-sm">
+        {user ? (
+          <SignedIn name={user.name} email={user.email} onDone={() => setOpen(false)} />
+        ) : (
+          <SignIn onDone={() => setOpen(false)} />
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }
 

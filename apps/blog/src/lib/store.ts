@@ -11,6 +11,9 @@ type UI = {
   setComments: (c: UI["comments"]) => void
   commentsOpen: boolean
   setCommentsOpen: (open: boolean) => void
+  /** 账号窗口（登录 / 注册 / 退出），从开始菜单打开 */
+  accountOpen: boolean
+  setAccountOpen: (open: boolean) => void
 }
 
 export const useUI = create<UI>((set) => ({
@@ -22,4 +25,6 @@ export const useUI = create<UI>((set) => ({
   setComments: (comments) => set(comments ? { comments } : { comments: null, commentsOpen: false }),
   commentsOpen: false,
   setCommentsOpen: (commentsOpen) => set({ commentsOpen }),
+  accountOpen: false,
+  setAccountOpen: (accountOpen) => set({ accountOpen }),
 }))
