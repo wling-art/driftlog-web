@@ -62,6 +62,11 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
               <span>{t.text}</span>
             </a>
           ))}
+          {e.type !== "page" && (e.prev || e.next) && (
+            <Folder target="nearby" icon="folder">
+              上下篇
+            </Folder>
+          )}
           <Folder target="comments" icon="folder">
             评论
           </Folder>
@@ -114,23 +119,22 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
       </Window>
 
       {e.type !== "page" && (e.prev || e.next) && (
-        <nav aria-label={`上一篇和下一篇${typeLabel[e.type]}`} className="win grid gap-px sm:grid-cols-2">
-          {[e.prev && { ...e.prev, label: "← 上一篇" }, e.next && { ...e.next, label: "下一篇 →" }].map(
-            (x, i) =>
-              x ? (
-                <Link
-                  key={x.slug}
-                  to={entryPath(e.type, x.slug)}
-                  className={`entry-row block p-(--space-4)! m-0! ${i ? "text-right" : ""}`}
-                >
-                  <span className="pixel-1 muted block">{x.label}</span>
-                  <span className="t">{x.title}</span>
-                </Link>
-              ) : (
-                <span key={i} />
-              ),
-          )}
-        </nav>
+        <Window id="nearby" name="nearby/" closable={false}>
+          <nav aria-label={`上一篇和下一篇${typeLabel[e.type]}`} className="nearby">
+            {e.prev && (
+              <Link to={entryPath(e.type, e.prev.slug)} rel="prev" className="nearby-card">
+                <span className="pixel-1">← 上一篇</span>
+                <span className="t">{e.prev.title}</span>
+              </Link>
+            )}
+            {e.next && (
+              <Link to={entryPath(e.type, e.next.slug)} rel="next" className="nearby-card is-next">
+                <span className="pixel-1">下一篇 →</span>
+                <span className="t">{e.next.title}</span>
+              </Link>
+            )}
+          </nav>
+        </Window>
       )}
 
       <Comments entryId={e.id} />
