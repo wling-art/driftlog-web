@@ -13,14 +13,19 @@ const nav = [
   { href: "/about", label: "关于" },
 ]
 
-/** 每一页的外壳：全屏桌面 + 左边一列文件夹（本页目录）+ 窗口 + 吸底任务栏 */
+/**
+ * 每一页的外壳：全屏桌面 + 左边一列文件夹（本页目录）+ 窗口 + 吸底任务栏。
+ * children 是主内容；aside 是附属窗口，宽屏时排到右边一栏，窄屏时排在主内容后面。
+ */
 export function SiteShell({
   folders,
   scene,
+  aside,
   children,
 }: {
   folders?: ReactNode
   scene?: "read" | "show"
+  aside?: ReactNode
   children: ReactNode
 }) {
   const online = useUI((s) => s.online)
@@ -29,8 +34,13 @@ export function SiteShell({
     <Desktop scene={scene}>
       <DesktopArea>
         <Folders>{folders}</Folders>
-        <Windows>
-          <main>{children}</main>
+        <Windows className={aside ? "has-aside" : undefined}>
+          <main className="wins-main">{children}</main>
+          {aside && (
+            <aside className="wins-aside" aria-label="相关">
+              {aside}
+            </aside>
+          )}
         </Windows>
       </DesktopArea>
       <Taskbar items={nav}>

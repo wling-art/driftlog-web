@@ -55,6 +55,29 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
   return (
     <SiteShell
       scene="read"
+      aside={
+        <>
+          {e.type !== "page" && (e.prev || e.next) && (
+            <Window id="nearby" name="nearby/" closable={false}>
+              <nav aria-label={`上一篇和下一篇${typeLabel[e.type]}`} className="nearby">
+                {e.prev && (
+                  <Link to={entryPath(e.type, e.prev.slug)} rel="prev" className="nearby-card">
+                    <span className="pixel-1">← 上一篇</span>
+                    <span className="t">{e.prev.title}</span>
+                  </Link>
+                )}
+                {e.next && (
+                  <Link to={entryPath(e.type, e.next.slug)} rel="next" className="nearby-card is-next">
+                    <span className="pixel-1">下一篇 →</span>
+                    <span className="t">{e.next.title}</span>
+                  </Link>
+                )}
+              </nav>
+            </Window>
+          )}
+          <Comments entryId={e.id} />
+        </>
+      }
       folders={
         <>
           {e.toc.slice(0, 12).map((t) => (
@@ -117,27 +140,6 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
           </p>
         )}
       </Window>
-
-      {e.type !== "page" && (e.prev || e.next) && (
-        <Window id="nearby" name="nearby/" closable={false}>
-          <nav aria-label={`上一篇和下一篇${typeLabel[e.type]}`} className="nearby">
-            {e.prev && (
-              <Link to={entryPath(e.type, e.prev.slug)} rel="prev" className="nearby-card">
-                <span className="pixel-1">← 上一篇</span>
-                <span className="t">{e.prev.title}</span>
-              </Link>
-            )}
-            {e.next && (
-              <Link to={entryPath(e.type, e.next.slug)} rel="next" className="nearby-card is-next">
-                <span className="pixel-1">下一篇 →</span>
-                <span className="t">{e.next.title}</span>
-              </Link>
-            )}
-          </nav>
-        </Window>
-      )}
-
-      <Comments entryId={e.id} />
     </SiteShell>
   )
 }

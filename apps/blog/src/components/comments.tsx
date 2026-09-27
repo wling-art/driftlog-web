@@ -249,7 +249,7 @@ function CommentForm({
           回复 <strong>{replyTo.author}</strong>
         </p>
       )}
-      <div className="grid gap-(--space-4) sm:grid-cols-3">
+      <div className="grid gap-(--space-4) @lg:grid-cols-3">
         <form.Field name="author" validators={{ onDynamic: shape.author }}>
           {(f) => (
             <div>

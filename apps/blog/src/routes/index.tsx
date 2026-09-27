@@ -35,6 +35,20 @@ function Home() {
   const { data: notes } = useSuspenseQuery(entriesQuery({ type: "note" }))
   return (
     <SiteShell
+      aside={
+        <Window id="latest-notes" name="notes/" title="最近的手记" rule="// 不成文的碎碎念">
+          {notes.items.length ? (
+            <EntryList items={notes.items.slice(0, 5)} />
+          ) : (
+            <Empty>今天也没什么想说的。</Empty>
+          )}
+          {notes.total > 5 && (
+            <Button asChild className="mt-(--space-4)">
+              <Link to="/notes">看全部手记</Link>
+            </Button>
+          )}
+        </Window>
+      }
       folders={
         <>
           <Folder target="readme" icon="doc">
@@ -61,19 +75,6 @@ function Home() {
         {posts.total > 6 && (
           <Button asChild className="mt-(--space-4)">
             <Link to="/posts">看全部文章</Link>
-          </Button>
-        )}
-      </Window>
-
-      <Window id="latest-notes" name="notes/" title="最近的手记" rule="// 不成文的碎碎念">
-        {notes.items.length ? (
-          <EntryList items={notes.items.slice(0, 5)} />
-        ) : (
-          <Empty>今天也没什么想说的。</Empty>
-        )}
-        {notes.total > 5 && (
-          <Button asChild className="mt-(--space-4)">
-            <Link to="/notes">看全部手记</Link>
           </Button>
         )}
       </Window>

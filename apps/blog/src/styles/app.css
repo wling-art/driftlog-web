@@ -432,7 +432,8 @@
   text-align: right;
   justify-items: end;
 }
-@media (max-width: 640px) {
+/* 按窗口宽度，不按屏幕：放进右栏时也会叠起来 */
+@container (max-width: 480px) {
   .nearby {
     grid-template-columns: minmax(0, 1fr);
   }

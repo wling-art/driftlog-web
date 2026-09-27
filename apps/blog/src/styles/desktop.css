@@ -112,15 +112,16 @@ body {
   background: var(--text);
   color: var(--bg);
 }
-/* 窗口一列最宽 1000px，在桌面上居中；左边缘取整到整像素，像素字才不糊 */
+/* 窗口一列最宽 1000px（有侧栏时更宽，见文件末尾），在桌面上居中；左边缘取整到整像素，像素字才不糊 */
 .wins {
+  --wins-max: 1000px;
   width: 100%;
-  max-width: 1000px;
+  max-width: var(--wins-max);
   margin: 0 auto;
 }
 @supports (margin-left: round(down, 1.5px, 1px)) {
   .wins {
-    margin-left: max(0px, round(down, (100% - 1000px) / 2, 1px));
+    margin-left: max(0px, round(down, (100% - var(--wins-max)) / 2, 1px));
     margin-right: 0;
   }
 }
@@ -360,5 +361,40 @@ body {
   }
   .win.is-dragging .win-bar {
     cursor: grabbing;
+  }
+}
+
+/* ── Driftlog 的改动：宽屏两栏 ──
+ * 屏幕够宽（≥ 1280px）时，附属窗口（评论、上下篇、手记…）排到右边一栏，不再全挤在一条里。
+ * 主内容优先：左栏吃掉剩下的宽度，右栏固定窄（300–360px），右栏窗口标题降一档到 24px。
+ * 不够宽时右栏的窗口按源码顺序排在主内容后面。 */
+.win-body {
+  container-type: inline-size;
+} /* 窗口里的排版按窗口宽度走（@container），不按屏幕宽度 */
+.wins-main,
+.wins-aside {
+  min-width: 0;
+}
+@media (min-width: 1280px) {
+  .wins.has-aside {
+    --wins-max: 1400px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+    column-gap: var(--space-4);
+    align-items: start;
+  }
+  /* 右栏再安静一点：标题降一档、内边距小一档、卡片标题用正文字号 */
+  .wins-aside .win-body {
+    padding: var(--space-4);
+  }
+  .wins-aside .win-body > h2 {
+    font-size: var(--px-2);
+  }
+  .wins-aside .nearby-card {
+    padding: var(--space-3);
+    gap: var(--space-1);
+  }
+  .wins-aside .nearby-card .t {
+    font-size: var(--text-md);
   }
 }
