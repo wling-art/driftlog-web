@@ -513,69 +513,174 @@
   margin-left: 0;
 }
 
-/* ── 上一篇 / 下一篇：两张卡片并排，上一篇贴左、下一篇贴右；只有一张时也待在自己那一边 ── */
-.nearby {
+/* ── 归档：按年份分组，一行一篇（日期 + 标题），不分页 ── */
+.archive {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
+  gap: var(--space-6);
 }
-.nearby-card {
+.archive-year {
+  font: 400 24px/1.3 var(--font-pixel);
+  margin-bottom: var(--space-2);
+}
+.archive-year .muted {
+  font: 400 var(--text-sm)/1 var(--font-sans);
+}
+.archive-list {
   display: grid;
-  align-content: start;
-  gap: var(--space-2);
-  min-width: 0;
-  padding: var(--space-4);
-  border: var(--line) solid var(--border);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
+}
+.archive-row {
+  display: grid;
+  grid-template-columns: 6ch minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  margin: 0 calc(var(--space-2) * -1);
+  border-radius: 3px;
   color: var(--text);
   text-decoration: none;
-  transition:
-    background-color var(--duration) var(--ease-enter),
-    color var(--duration) var(--ease-enter);
 }
-.nearby-card:hover {
+.archive-row:hover {
   background: var(--text);
   color: var(--bg);
 }
-.nearby-card:active {
-  translate: 1px 1px;
-  box-shadow: none;
-}
-.nearby-card .pixel-1 {
+.archive-row time {
+  font: 400 12px/1 var(--font-pixel);
   color: var(--text-muted);
 }
-.nearby-card:hover .pixel-1 {
+.archive-row:hover time {
   color: inherit;
   opacity: 0.75;
 }
-.nearby-card .t {
+.archive-row .t {
   font-size: var(--text-lg);
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.nearby-card.is-next {
-  grid-column: 2;
-  text-align: right;
-  justify-items: end;
-}
-/* 按窗口宽度，不按屏幕：放进右栏时也会叠起来 */
-@container (max-width: 480px) {
-  .nearby {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .nearby-card.is-next {
-    grid-column: auto;
-    text-align: left;
-    justify-items: start;
-  } /* 叠起来时都靠左，眼睛不用左右跳 */
+  line-height: 1.45;
 }
 
-/* 按输入方式给提示：有悬停和键盘的给「指一下 / ← →」，触屏给「点一下」 */
+/* ── 标题栏上的小按钮（‹ ›）：和 × 一样大，指上去反白 ── */
+.win-controls {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: auto;
+}
+.win-btn {
+  display: inline-grid;
+  place-items: center;
+  width: max(24px, var(--hit-min));
+  height: max(24px, var(--hit-min));
+  border-radius: 3px;
+  color: var(--text);
+  text-decoration: none;
+}
+.win-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.5;
+}
+a.win-btn:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+.win-btn[aria-disabled="true"] {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── 正文末尾一行：接着读 / 看评论。安静，不抢正文 ── */
+.article-end {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  max-width: var(--measure);
+  margin-top: var(--space-7);
+  padding-top: var(--space-4);
+  border-top: var(--line) solid var(--border-soft);
+  font-size: var(--text-sm);
+}
+.article-end-next {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.article-end-comments {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+:is(.article-end-next, .article-end-comments):hover {
+  background: var(--text);
+  color: var(--bg);
+  text-decoration: none;
+}
+
+/* ── 评论窗口：从任务栏升起来，浮在桌面右下角，自己滚 ── */
+.comments-float {
+  position: fixed;
+  z-index: 20;
+  right: 20px;
+  bottom: 56px;
+  display: flex;
+  flex-direction: column;
+  width: min(460px, calc(100vw - 24px));
+  max-height: min(72vh, calc(100dvh - 88px));
+  margin: 0;
+  box-shadow: var(--shadow-3);
+  transform-origin: bottom right;
+}
+.comments-float:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 2px;
+}
+.comments-float-body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (max-width: 760px) {
+  .comments-float {
+    left: 12px;
+    right: 12px;
+    width: auto;
+    bottom: 52px;
+  }
+}
+
+/* 任务栏上的「评论 N」：数字是一个小徽标；新评论来时跳一下（和「叫到前面」同一条回弹） */
+.comments-task[aria-expanded="true"] {
+  background: var(--text);
+  color: var(--bg);
+}
+.task-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--text);
+  color: var(--bg);
+  font: 400 12px/1 var(--font-pixel);
+}
+.comments-task[aria-expanded="true"] .task-count,
+.comments-task:hover .task-count {
+  background: var(--bg);
+  color: var(--text);
+}
+.task-count.is-bumped {
+  animation: count-pop var(--duration-pop) var(--ease-pop);
+}
+@keyframes count-pop {
+  from {
+    scale: 1.5;
+  }
+}
+
+/* 按输入方式给提示：有键盘的给「⌘ + 回车」，触屏不给 */
 .only-touch {
   display: none;
 }
@@ -586,70 +691,6 @@
   .only-touch {
     display: inline;
   }
-}
-
-/* 读完之后，「下一篇」被推荐：青色边框 + 大一档投影（它能点，青色用得起） */
-.nearby-card.is-suggested {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-2);
-}
-
-/* ── 翻页：两头按钮，中间页码是文件夹标签，当前页升起来 ── */
-.pager {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-top: var(--space-6);
-}
-.page-tabs {
-  display: flex;
-  align-items: flex-end;
-  gap: 4px;
-  min-height: 36px;
-  padding: 0 4px;
-  border-bottom: var(--line) solid var(--border);
-  /* 和任务栏一样：没选中的标签往下沉，沉下去的部分被底线裁掉 */
-  overflow: hidden;
-  /* 焦点描边在标签外面 2px，被裁掉就看不见了：键盘聚焦时让它升起来，描边改画在里面 */
-}
-.page-tab:focus-visible {
-  translate: 0 0;
-  outline-offset: -3px;
-}
-.page-tab {
-  display: grid;
-  place-items: center;
-  min-width: 36px;
-  height: 30px;
-  padding: 0 8px;
-  border: var(--line) solid var(--border);
-  border-bottom: 0;
-  border-radius: 4px 4px 0 0;
-  background: var(--window-bar);
-  color: var(--text);
-  text-decoration: none;
-  font: 400 12px/1 var(--font-pixel);
-  translate: 0 5px;
-  transition:
-    translate var(--duration-move) var(--ease-move),
-    background-color var(--duration) var(--ease-enter);
-}
-.page-tab:hover {
-  translate: 0 0;
-  background: var(--surface);
-}
-.page-tab[aria-current="page"] {
-  translate: 0 0;
-  height: 34px;
-  background: var(--surface);
-  box-shadow: var(--shadow-1);
-}
-.page-gap {
-  align-self: center;
-  padding: 0 2px;
-  color: var(--text-muted);
 }
 
 /* 翻页方向：下一页从右边滑进来、上一页从左边；位移用「移动」曲线 */

@@ -39,10 +39,18 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   if (!email) return
   await expect(page.getByRole("heading", { level: 2, name: "端到端测试" })).toBeVisible()
   await expect(page.locator('a.folder[href="#小标题"]')).toBeVisible()
-  await expect(page.getByRole("link", { name: "文章" })).toHaveAttribute("aria-current", "page")
+  await expect(page.getByRole("link", { name: "文章", exact: true })).toHaveAttribute("aria-current", "page")
+
+  // 评论平时最小化在任务栏：页面上没有评论，点任务栏的「评论」才升起来
+  await expect(page.getByRole("textbox", { name: "写评论" })).toHaveCount(0)
+  await expect(page.locator("time.clock")).toBeVisible()
+  const task = page.locator("#comments-task")
+  await task.click()
+  const float = page.getByRole("dialog", { name: /^评论：/ })
+  await expect(float).toBeVisible()
 
   // 写评论：开始写才出现名字和邮箱；⌘ / Ctrl + 回车或按钮发送
-  const box = page.getByRole("textbox", { name: "写评论" })
+  const box = float.getByRole("textbox", { name: "写评论" })
   await expect(page.getByRole("textbox", { name: "名字" })).toHaveCount(0)
   await box.fill("好")
   await page.getByRole("textbox", { name: "名字" }).fill("测试员")
@@ -58,6 +66,12 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   await expect(page.getByText("以 测试员 的身份")).toBeVisible()
   await box.fill("再来一条")
   await expect(page.getByRole("textbox", { name: "名字" })).toHaveCount(0)
+  await expect(task).toContainText("1")
+
+  // Esc 收回任务栏，焦点回到任务栏标签
+  await box.press("Escape")
+  await expect(float).toBeHidden()
+  await expect(task).toBeFocused()
 })
 
 test("博客：⌘K 搜索", async ({ page }) => {
@@ -72,19 +86,22 @@ test("博客：⌘K 搜索", async ({ page }) => {
   await expect(dialog).toBeHidden()
 })
 
-test("博客：翻页按钮、方向键、分类里翻页不丢筛选", async ({ page }) => {
+test("博客：归档不分页；文章标题栏 ‹ › 和方向键翻篇", async ({ page }) => {
   await page.goto(`${BLOG}/posts`)
   await expect(page.locator("time.clock")).toBeVisible()
-  const pager = page.getByRole("navigation", { name: "翻页" })
-  test.skip((await pager.count()) === 0, "文章不够两页")
-  await expect(pager.getByRole("button", { name: "← 上一页" })).toBeDisabled() // 第一页：置灰但还在
-  await expect(pager.getByRole("link", { name: "第 1 页" })).toHaveAttribute("aria-current", "page")
-  await pager.getByRole("link", { name: "下一页 →" }).click()
-  await expect(page).toHaveURL(/page=2/)
-  // 等第 2 页真的渲染出来：Link 会按地址栏先把页码标成当前，那时内容可能还是第 1 页
-  await expect(pager.getByRole("link", { name: "← 上一页" })).toBeVisible()
-  await page.keyboard.press("ArrowLeft")
-  await expect(page).toHaveURL(/page=1/)
+  await expect(page.getByRole("navigation", { name: "翻页" })).toHaveCount(0)
+  await expect(page.locator(".archive-year").first()).toHaveText(/^\d{4}/)
+  const rows = page.locator(".archive-row")
+  test.skip((await rows.count()) < 3, "文章太少")
+
+  // 打开中间一篇：标题栏上有 ‹ ›，→ 键去下一篇（归档新的在前，下一篇 = 列表里上面那一行）
+  const newer = await rows.nth(0).getAttribute("href")
+  await rows.nth(1).click()
+  await expect(page.locator("time.clock")).toBeVisible()
+  await expect(page.getByRole("link", { name: /^上一篇文章：/ })).toBeVisible()
+  await expect(page.getByRole("link", { name: /^下一篇文章：/ })).toHaveAttribute("href", newer!)
+  await page.keyboard.press("ArrowRight")
+  await expect(page).toHaveURL(new RegExp(`${newer}$`))
 })
 
 test("博客：404 有出路", async ({ page }) => {

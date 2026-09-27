@@ -3,7 +3,7 @@ import { Link, useRouter } from "@tanstack/react-router"
 import { Desktop, DesktopArea, Folders, Taskbar, TaskbarButton, Window, Windows } from "@/components/boring"
 import { Button } from "@/components/ui/button"
 import { useUI } from "@/lib/store"
-import { back, forward, useArrowNav } from "@/lib/keys"
+import { CommentsFloat, CommentsTaskItem } from "@/components/comments-dock"
 import { entryPath, formatDate, site } from "@/lib/site"
 import type { EntryCard } from "@/lib/api"
 
@@ -44,14 +44,16 @@ export function SiteShell({
           )}
         </Windows>
       </DesktopArea>
+      <CommentsFloat />
       <Taskbar items={nav}>
+        <CommentsTaskItem />
         {online > 0 && (
           <span className="clock" title="现在在看这个站的人">
             {online} 人在看
           </span>
         )}
         <TaskbarButton onClick={() => setSearchOpen(true)} aria-keyshortcuts="Meta+K Control+K">
-          搜索 <kbd className="font-mono">⌘K</kbd>
+          搜索 <kbd className="only-fine font-mono">⌘K</kbd>
         </TaskbarButton>
       </Taskbar>
     </Desktop>
@@ -84,87 +86,39 @@ export function EntryList({ items }: { items: EntryCard[] }) {
   )
 }
 
-/** 要显示哪些页码：首页、末页、当前页前后各一页，中间断开的用 … */
-function pageList(page: number, pages: number): (number | "gap")[] {
-  const keep = new Set([1, pages, page - 1, page, page + 1].filter((p) => p >= 1 && p <= pages))
-  const out: (number | "gap")[] = []
-  let last = 0
-  for (const p of [...keep].sort((a, b) => a - b)) {
-    if (p - last > 1) out.push("gap")
-    out.push(p)
-    last = p
-  }
-  return out
-}
+type ArchiveItem = { slug: string; title: string; publishedAt: string | Date | null }
 
 /**
- * 翻页：两头是「← 上一页」「下一页 →」按钮，中间一排页码做成文件夹标签，
- * 当前页的标签升起来（和任务栏的标签同一个动作）。
- * 按钮位置固定：第一页时「上一页」置灰但还在，翻页时手不用重新找按钮。
- * 翻页时内容往对应方向滑（下一页从右边进来），← → 键也能翻。
- * search 用函数合并：在分类、标签里翻页不会把筛选丢掉。
+ * 归档：不分页，按年份分组，一行一篇（日期 + 标题）。
+ * 个人博客几十到几百篇，一页放得下，翻页按钮也就不需要了。
  */
-export function Pager({
-  page,
-  total,
-  size,
-  to,
-}: {
-  page: number
-  total: number
-  size: number
-  to: "/posts" | "/notes"
-}) {
-  const pages = Math.ceil(total / size)
-  const go = (p: number) => ({ to, search: (prev: object) => ({ ...prev, page: p }) })
-  useArrowNav(page > 1 ? go(page - 1) : null, page < pages ? go(page + 1) : null)
-  if (pages <= 1) return null
+export function Archive({ items, type }: { items: ArchiveItem[]; type: "post" | "note" }) {
+  const years = new Map<number, ArchiveItem[]>()
+  for (const it of items) {
+    const y = new Date(it.publishedAt ?? 0).getFullYear()
+    years.set(y, [...(years.get(y) ?? []), it])
+  }
   return (
-    <nav aria-label="翻页" className="pager">
-      {page > 1 ? (
-        <Button asChild>
-          <Link {...go(page - 1)} rel="prev" viewTransition={back}>
-            ← 上一页
-          </Link>
-        </Button>
-      ) : (
-        <Button disabled title="已经是第一页了">
-          ← 上一页
-        </Button>
-      )}
-      <ol className="page-tabs">
-        {pageList(page, pages).map((p, i) =>
-          p === "gap" ? (
-            <li key={`gap-${i}`} className="page-gap" aria-hidden="true">
-              …
-            </li>
-          ) : (
-            <li key={p}>
-              <Link
-                {...go(p)}
-                viewTransition={p > page ? forward : back}
-                aria-label={`第 ${p} 页`}
-                aria-current={p === page ? "page" : undefined}
-                className="page-tab"
-              >
-                {p}
-              </Link>
-            </li>
-          ),
-        )}
-      </ol>
-      {page < pages ? (
-        <Button asChild>
-          <Link {...go(page + 1)} rel="next" viewTransition={forward}>
-            下一页 →
-          </Link>
-        </Button>
-      ) : (
-        <Button disabled title="已经是最后一页了">
-          下一页 →
-        </Button>
-      )}
-    </nav>
+    <div className="archive">
+      {[...years].map(([year, list]) => (
+        <section key={year} aria-labelledby={`y-${year}`}>
+          <h3 id={`y-${year}`} className="archive-year">
+            {year}
+            <span className="muted"> · {list.length} 篇</span>
+          </h3>
+          <ul className="archive-list">
+            {list.map((it) => (
+              <li key={it.slug}>
+                <Link to={entryPath(type, it.slug)} className="archive-row">
+                  <time dateTime={String(it.publishedAt)}>{formatDate(it.publishedAt).slice(5)}</time>
+                  <span className="t">{it.title}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
   )
 }
 

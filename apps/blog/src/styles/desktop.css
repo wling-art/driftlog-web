@@ -383,15 +383,26 @@ body {
     column-gap: var(--space-4);
     align-items: start;
   }
-  /* 右栏安静一点：标题降一档、卡片标题用正文字号（内边距和左栏一样，不挤） */
+  /* 右栏安静一点：窗口标题降一档 */
   .wins-aside .win-body > h2 {
     font-size: var(--px-2);
   }
-  .wins-aside .nearby-card {
-    padding: var(--space-3);
-    gap: var(--space-1);
+}
+
+/* ── Driftlog 的改动：任务栏在窄屏上放得下 ──
+ * 标签和按钮都不换行；窄屏收短文字（「切到暗色」→「暗色」），导航标签可以横向滑动而不是被挤成竖排 */
+.taskbar nav a,
+.taskbar .tb-btn {
+  white-space: nowrap;
+  flex: none;
+}
+@media (max-width: 760px) {
+  .tb-long {
+    display: none;
   }
-  .wins-aside .nearby-card .t {
-    font-size: var(--text-md);
+  .taskbar nav {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
 }

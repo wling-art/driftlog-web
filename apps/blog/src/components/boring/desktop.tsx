@@ -158,6 +158,7 @@ export function Window({
   title,
   rule,
   closable = true,
+  controls,
   className,
   children,
   ...props
@@ -167,6 +168,8 @@ export function Window({
   title?: React.ReactNode
   rule?: React.ReactNode
   closable?: boolean
+  /** 标题栏右边、× 左边的小控件（比如上一篇 / 下一篇） */
+  controls?: React.ReactNode
 }) {
   const ctx = React.useContext(Ctx)
   const ref = React.useRef<HTMLElement>(null)
@@ -201,6 +204,7 @@ export function Window({
         onDoubleClick={drag.reset}
       >
         <span className="name">{name}</span>
+        {controls && <span className="win-controls">{controls}</span>}
         {closable && ctx && (
           <button
             ref={closeRef}
@@ -231,7 +235,7 @@ export function Window({
 let topZ = 1
 const canDrag = () => window.matchMedia("(min-width: 761px)").matches
 
-function useWindowDrag(ref: React.RefObject<HTMLElement | null>) {
+export function useWindowDrag(ref: React.RefObject<HTMLElement | null>) {
   const offset = React.useRef({ x: 0, y: 0 })
 
   const apply = (x: number, y: number) => {
@@ -246,9 +250,17 @@ function useWindowDrag(ref: React.RefObject<HTMLElement | null>) {
   /** 把 (x, y) 限制在桌面里：标题栏至少露出 64px 宽、整条高 */
   const clamp = (x: number, y: number) => {
     const el = ref.current
-    const area = el?.closest(".desktop-area")
-    if (!el || !area) return { x, y }
-    const a = area.getBoundingClientRect()
+    if (!el) return { x, y }
+    // 在桌面里的窗口限制在桌面区域；浮在外面的（比如评论窗口）限制在屏幕里、任务栏上面
+    const area = el.closest(".desktop-area")
+    const a = area
+      ? area.getBoundingClientRect()
+      : {
+          left: 0,
+          top: 0,
+          right: innerWidth,
+          bottom: document.querySelector(".taskbar")?.getBoundingClientRect().top ?? innerHeight,
+        }
     const r = el.getBoundingClientRect()
     const baseLeft = r.left - offset.current.x
     const baseTop = r.top - offset.current.y
@@ -365,7 +377,11 @@ export function Taskbar({
       </nav>
       <span className="spacer" />
       {children}
-      <TaskbarButton onClick={toggle}>{theme === "dark" ? "切到亮色" : "切到暗色"}</TaskbarButton>
+      {/* 窄屏只留「亮色 / 暗色」两个字，任务栏放得下 */}
+      <TaskbarButton onClick={toggle} aria-label={theme === "dark" ? "切到亮色" : "切到暗色"}>
+        <span className="tb-long">切到</span>
+        {theme === "dark" ? "亮色" : "暗色"}
+      </TaskbarButton>
       <Clock />
     </footer>
   )

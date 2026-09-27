@@ -8,6 +8,7 @@ export {
   Taskbar,
   TaskbarButton,
   bringFront,
+  useWindowDrag,
   type TaskbarItem,
 } from "./desktop"
 export { TaskButton } from "./task-button"

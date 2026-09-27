@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { AnimatePresence, motion } from "motion/react"
 import { toast } from "sonner"
 import { commentInput, unwrap } from "@driftlog/client"
-import { Window } from "@/components/boring"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,7 +12,7 @@ import { api, commentsQuery, type Comment } from "@/lib/api"
 import { fullTime, timeAgo } from "@/lib/site"
 
 /*
- * 评论（comments.log）
+ * 评论（comments.log，平时最小化在任务栏，见 comments-dock.tsx）
  * - 一个话题一张卡片（第 3 层：底色 + 细线 + 一点投影，和别的卡片同一个样子）
  *   卡片头一行：头像 · 名字 · 时间 ……… 回复；正文和名字左对齐
  * - 回复收在原话题的卡片里，淡线隔开、头像小一号；回复的不是楼主时写明「回复 某某」
@@ -92,6 +91,7 @@ function useIdentity(): Identity | null {
   }, [raw])
 }
 
+/** 评论内容本身（列表 + 写评论）。外面的窗口由 CommentsDock 提供 */
 export function Comments({ entryId }: { entryId: number }) {
   const { data, isPending, isError, refetch } = useQuery(commentsQuery(entryId))
   const threads = useMemo(() => toThreads(data ?? []), [data])
@@ -104,7 +104,7 @@ export function Comments({ entryId }: { entryId: number }) {
   }
 
   return (
-    <Window id="comments" name="comments.log" aria-label="评论" closable={false}>
+    <>
       <p className="c-count pixel-1">
         {isPending
           ? "在翻评论…"
@@ -152,7 +152,7 @@ export function Comments({ entryId }: { entryId: number }) {
         boxRef={boxRef}
         empty={data?.length === 0}
       />
-    </Window>
+    </>
   )
 }
 
