@@ -419,7 +419,9 @@ body {
  * 整列离屏幕边 8px（桌面四周的 20px 留白只给窗口）。图标太多放不下时这一列自己滚。 */
 :root {
   --icon-cell-w: 76px;
-  --icon-cell-h: 84px;
+  /* 格子高 = 上留白 6 + 图标 34 + 间距 6 + 两行标签 2×16 + 下留白 4 = 82；格子之间再空 6 */
+  --icon-cell-h: 82px;
+  --icon-gap: 6px;
   --icon-edge: 8px;
 }
 .desktop-area {
@@ -430,7 +432,7 @@ body {
   top: calc(var(--icon-edge) - 20px);
   margin: calc(var(--icon-edge) - 20px) 0 0 calc(var(--icon-edge) - 20px);
   padding-top: 0;
-  gap: 2px;
+  gap: var(--icon-gap);
   grid-auto-rows: var(--icon-cell-h);
   justify-items: stretch;
   align-content: start;
@@ -438,20 +440,24 @@ body {
   overflow-y: auto;
   scrollbar-width: none;
 }
+/* 图标和标签的位置在格子里是固定的：标签只有一行也照样预留两行，空隙就只和格子有关、和字数无关 */
 .folder {
   width: var(--icon-cell-w);
   height: var(--icon-cell-h);
-  grid-template-rows: 34px auto;
+  grid-template-rows: 34px 32px;
+  row-gap: 6px;
   align-content: start;
   padding: 6px 3px 4px;
   overflow: hidden;
 }
 .folder > span {
+  align-self: start;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   overflow-wrap: anywhere;
+  line-height: 16px; /* 整数行高：12px 像素字的第二行也落在整像素上，不糊 */
 }
 /* 焦点描边画在格子里面：格子挨得紧，外扩的描边会压到隔壁 */
 .folder:focus-visible {
