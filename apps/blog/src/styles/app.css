@@ -349,77 +349,100 @@
   color: var(--text-muted);
 }
 
-/* ── 评论：一条一段，留足空隙；时间写人话；回复缩进一层 ── */
-.c-head {
+/* ── 评论：一个话题一张卡片，回复收在卡片里 ── */
+.c-count {
   display: flex;
+  align-items: center;
   gap: var(--space-2);
-  align-items: baseline;
-  font: 400 12px/1.5 var(--font-pixel);
   color: var(--text-muted);
 }
-.c-list {
+.c-threads {
   display: grid;
-  gap: var(--space-5);
-  margin-top: var(--space-4);
+  gap: var(--space-3);
+  margin-top: var(--space-3);
 }
-.c-entry {
-  display: grid;
-  grid-template-columns: 32px minmax(0, 1fr);
-  column-gap: var(--space-3);
-  margin-left: calc(var(--depth, 0) * 44px);
+.c-card {
+  padding: var(--space-4);
+  background: var(--surface);
+  border: var(--line) solid var(--border-frame);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-1);
 }
-.c-entry[data-reply] {
-  padding-left: var(--space-3);
-  border-left: 2px solid var(--border-soft);
+.c-item {
+  --av: 28px;
+}
+.c-item.is-small {
+  --av: 22px;
+}
+.c-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
 }
 .c-avatar {
   display: grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
+  flex: none;
+  width: var(--av);
+  height: var(--av);
   background: var(--window-bar);
   border: var(--line) solid var(--border-frame);
   border-radius: 4px;
   font: 400 12px/1 var(--font-pixel);
   color: var(--text);
 }
-.c-meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 2px var(--space-2);
-  line-height: 1.5;
-}
-.c-author {
+.c-name {
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
-.c-author.is-link {
+.c-name.is-link {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-.c-muted {
+.c-meta {
   font-size: var(--text-sm);
   color: var(--text-muted);
+  white-space: nowrap;
 }
-.c-link {
-  margin-top: 4px;
-  padding: 0;
+/* 「回复」：一行里最右边的小文字按钮；青色 + 下划线 = 能点 */
+.c-reply {
+  margin-left: auto;
+  flex: none;
+  padding: 2px 4px;
   border: 0;
+  border-radius: 3px;
   background: none;
   cursor: pointer;
-  font-size: var(--text-sm);
+  font: 400 12px/1.2 var(--font-pixel);
   color: var(--accent);
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: 2px;
 }
-.c-link:hover {
+.c-reply:hover {
   background: var(--text);
   color: var(--bg);
   text-decoration: none;
 }
+/* 正文和名字左对齐 */
+.c-item .comment-body {
+  margin-top: 6px;
+  padding-left: calc(var(--av) + var(--space-2));
+}
+.c-replies {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: var(--line) solid var(--border-soft);
+  /* 回复整体往里收一个头像的宽度：看得出是这条话题里的 */
+  padding-left: calc(28px + var(--space-2));
+}
 .comment-body {
-  margin-top: 4px;
   max-width: var(--measure);
   line-height: 1.75;
   overflow-wrap: anywhere;
@@ -433,7 +456,7 @@
 }
 .comment-body :not(pre) > code {
   font-family: var(--font-mono);
-  background: var(--surface);
+  background: var(--window);
   padding: 0 0.3em;
   border-radius: 3px;
 }
@@ -446,80 +469,48 @@
   background: color-mix(in oklch, var(--warning) 22%, transparent);
   color: inherit;
 }
+/* 窄（右栏、手机）：回复不再往里收，正文顶格，省出宽度 */
 @container (max-width: 420px) {
-  .c-entry {
-    margin-left: calc(var(--depth, 0) * 16px);
+  .c-replies {
+    padding-left: 0;
+  }
+  .c-item .comment-body {
+    padding-left: 0;
   }
 }
 
-/* 写评论：标签在上方；输入框只留一条底线，聚焦时变青（焦点必须看得见） */
-.prompt {
+/* 写评论 */
+.c-composer {
   display: grid;
-  gap: var(--space-2);
-  margin-top: var(--space-6);
-  padding-top: var(--space-5);
-  border-top: var(--line) solid var(--border-soft);
+  gap: var(--space-3);
+  margin-top: var(--space-5);
 }
-.prompt-line {
-  display: grid;
-  gap: 4px;
-}
-.prompt-label {
-  font-weight: 600;
-  font-size: var(--text-sm);
-}
-.prompt-input {
-  width: 100%;
-  max-height: 40vh;
-  padding: 6px 0;
-  border: 0;
-  outline: none;
-  resize: none;
-  background: transparent;
-  box-shadow: inset 0 -1px 0 var(--border);
-  font: 400 16px/1.7 var(--font-sans);
-  color: var(--text); /* ≥ 16px：iOS 不自动放大 */
-  caret-color: var(--accent);
-  field-sizing: content;
-}
-.prompt-input:focus {
-  box-shadow: inset 0 -2px 0 var(--accent);
-}
-.prompt-input::placeholder {
-  color: var(--text-muted);
-  opacity: 0.8;
-}
-.prompt-input:read-only {
-  color: var(--text-muted);
-}
-.prompt-note {
+.c-composer-head {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--space-2);
-  align-items: baseline;
-  overflow: hidden;
-  font-size: var(--text-sm);
-  color: var(--text-muted);
+  min-height: 24px;
 }
-.prompt-error {
-  font-size: var(--text-sm);
-  color: var(--danger);
+.c-identity {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  padding-top: 2px;
 }
-.prompt-foot {
+.c-composer-foot {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-2) var(--space-3);
-  margin-top: var(--space-2);
 }
-.prompt-hint {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: baseline;
+.c-hint {
   font-size: var(--text-sm);
   color: var(--text-muted);
+}
+.c-hint .c-reply {
+  margin-left: 0;
 }
 
 /* ── 上一篇 / 下一篇：两张卡片并排，上一篇贴左、下一篇贴右；只有一张时也待在自己那一边 ── */
