@@ -78,7 +78,7 @@ export function Hero({ info, say }: { info: SiteSettings; say: Say }) {
                       href={s.href(v)}
                       target={k === "email" ? undefined : "_blank"}
                       rel="noopener me"
-                      className="hero-social"
+                      className="icon-link"
                       aria-label={s.label}
                       title={k === "email" ? v : s.label}
                     >

@@ -46,5 +46,5 @@ E2E_EMAIL=… E2E_PASSWORD=… bun run test   # Playwright; admin cases skip wit
 
 ## Design sources
 
-- Blog: the boring-ui skill (`~/.claude/skills/boring-ui`); `src/styles/{tokens,desktop}.css` and `src/components/boring` are vendored copies. Keep them in sync with the skill, and record design changes in the skill's `CHANGELOG.md`.
+- Blog: the boring-ui skill (`~/.claude/skills/boring-ui`); `src/styles/{tokens,desktop,patterns}.css` and `src/components/boring` are vendored copies (the content widgets `.icon-link`, `.archive`, `.folder-intro`, `.lang-switch`, `.copyright`, `.article-end` live in `patterns.css`, not `app.css`). `boring/desktop.tsx` differs from the skill only in using the router's `Link` in `Taskbar` and rendering closed windows through its own portal; `toc.tsx` and `start-menu.tsx` are the blog's versions of the skill's `Toc*`/`StartMenu`. Keep them in sync with the skill, and record design changes in the skill's `CHANGELOG.md`.
 - Admin: its own theme in `apps/admin/src/index.css` (Geist, neutral grays, blue only for links and focus). Content area is full width, with multiple columns on wide screens.

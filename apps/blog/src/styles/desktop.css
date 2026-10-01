@@ -1108,3 +1108,78 @@ a.pathbar-seg:hover {
   box-shadow: var(--shadow-3);
   animation: start-in var(--duration-enter) var(--ease-enter);
 }
+
+/* ── 标题栏上的小按钮（‹ ›）：和 × 一样大，指上去反白 ── */
+.win-controls {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: auto;
+}
+.win-btn {
+  display: inline-grid;
+  place-items: center;
+  width: max(24px, var(--hit-min));
+  height: max(24px, var(--hit-min));
+  border-radius: 3px;
+  color: var(--text);
+  text-decoration: none;
+}
+.win-btn svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.5;
+}
+a.win-btn:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+.win-btn[aria-disabled="true"] {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ── 标题栏左边的「‹ 手记」：回上一级。和 ‹ › 一样指上去反白 ── */
+.win-lead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  margin-left: -4px;
+}
+.win-back {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  height: max(24px, var(--hit-min));
+  padding: 0 6px 0 2px;
+  border-radius: 3px;
+  font: 400 var(--px-1)/1 var(--font-pixel);
+  color: var(--text);
+  text-decoration: none;
+}
+.win-back svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 1.5;
+}
+.win-back:hover {
+  background: var(--text);
+  color: var(--bg);
+}
+/* 返回和文件名之间一道竖线，像路径分隔 */
+.win-lead .name {
+  padding-left: var(--space-2);
+  border-left: var(--line) solid var(--border-frame);
+  color: var(--text-muted);
+}
+
+/* 列表自己的默认外边距和圆点去掉：静态 HTML 没有 Tailwind 的重置，不写的话地址栏会被默认的 ol 外边距撑到 60px 高。
+ * 用 :where（优先级 0），不会盖掉上面各自写的 padding */
+:where(.pathbar ol, .toc-list, .start-list, .start-actions, .start-recent) {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+:where(.start-menu, .toc-pop, .toc-panel) :where(p) {
+  margin: 0;
+}

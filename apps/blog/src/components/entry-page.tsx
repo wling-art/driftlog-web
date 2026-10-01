@@ -139,7 +139,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
             {[null, ...e.languages].map((l) => {
               const on = (e.lang ?? null) === l
               return (
-                <Button key={l ?? "orig"} size="sm" asChild>
+                <Button key={l ?? "orig"} asChild>
                   <Link
                     to="."
                     search={l ? { lang: l } : {}}
@@ -302,7 +302,6 @@ function Copyright({ entry: e, author }: { entry: Entry; author: string }) {
           <a href={url}>{decodeURI(url)}</a>
           <button
             type="button"
-            className="c-reply"
             onClick={() =>
               navigator.clipboard.writeText(url).then(
                 () => toast("链接复制好了"),

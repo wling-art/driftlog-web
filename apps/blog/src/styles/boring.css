@@ -14,6 +14,7 @@
 @import "@vp-tw/cjk-web-fonts-fusion-pixel-font/dist/12px/proportional/zh_hans/Fusion-Pixel-12px-Proportional-Simplified-Chinese.css";
 @import "./tokens.css";
 @import "./desktop.css";
+@import "./patterns.css";
 
 /* 暗色：没选主题时跟系统；data-theme 强制 */
 @custom-variant dark {
