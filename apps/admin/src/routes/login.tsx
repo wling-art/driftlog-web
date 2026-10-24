@@ -21,7 +21,7 @@ function Login() {
   const navigate = useNavigate()
   const { redirect } = Route.useSearch()
   const [error, setError] = useState<string | null>(null)
-  // 后台只认站长：登录成功后问一下 /admin/me，不是站长就退出并说清楚（不然会被默默弹回登录页）
+  // 登录后查 /admin/me，不是站长就退出并提示
   const done = async () => {
     const { error } = await api.admin.me.get()
     if (error?.status === 403) {

@@ -8,13 +8,6 @@ import { auth } from "@/lib/auth"
 import { entryPath, formatDate } from "@/lib/site"
 import { useUI } from "@/lib/store"
 
-/*
- * 开始菜单：任务栏最左边的「开始」，从下往上弹出（像 Windows 的开始菜单）。
- *   左列：站长 + 所有栏目（带篇数），点了就去
- *   右列：最近写的几篇；下面是常用操作：搜索、换主题、账号、订阅
- * 任务栏上只剩「开始」和当前打开的那一个窗口，桌面比喻完整。
- */
-
 const sections = [
   { to: "/", label: "首页", home: true },
   { to: "/posts", label: "文章", count: "post" as const },
@@ -27,6 +20,7 @@ const sections = [
   { to: "/message", label: "留言板", doc: true },
 ]
 
+/** 开始菜单：左列站长和栏目，右列最近文章和常用操作 */
 export function StartMenu() {
   const [open, setOpen] = useState(false)
   const info = useSite()
@@ -60,9 +54,9 @@ function MenuBody({ close }: { close: () => void }) {
   const user = auth.useSession().data?.user
   const setSearchOpen = useUI((s) => s.setSearchOpen)
   const setAccountOpen = useUI((s) => s.setAccountOpen)
-  // 和首页同一份缓存：首页来过就不再请求
-  const posts = useQuery(entriesQuery({ type: "post" })).data
-  const notes = useQuery(entriesQuery({ type: "note" })).data
+  // 与首页共用缓存
+  const posts = useQuery(entriesQuery("post")).data
+  const notes = useQuery(entriesQuery("note")).data
   const counts = { post: posts?.total, note: notes?.total }
   const recent = [...(posts?.items ?? []), ...(notes?.items ?? [])]
     .sort((a, b) => new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime())
@@ -104,7 +98,7 @@ function MenuBody({ close }: { close: () => void }) {
             <li key={e.type + e.slug}>
               <Link to={entryPath(e.type, e.slug)} onClick={close} className="start-recent-item">
                 <span className="start-recent-title">{e.title}</span>
-                <time dateTime={String(e.publishedAt)}>{formatDate(e.publishedAt).slice(5)}</time>
+                <time dateTime={formatDate(e.publishedAt)}>{formatDate(e.publishedAt).slice(5)}</time>
               </Link>
             </li>
           ))}

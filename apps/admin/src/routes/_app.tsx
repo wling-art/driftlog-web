@@ -18,6 +18,7 @@ import {
   Link2,
   Quote,
   Zap,
+  type LucideIcon,
 } from "lucide-react"
 import {
   Sidebar,
@@ -56,28 +57,56 @@ export const Route = createFileRoute("/_app")({
   component: Layout,
 })
 
-const content = [
-  { to: "/entries", search: { type: "post" as const }, label: "文章", icon: FileText },
-  { to: "/entries", search: { type: "note" as const }, label: "手记", icon: NotebookPen },
-  { to: "/entries", search: { type: "page" as const }, label: "页面", icon: StickyNote },
-]
-
-// mx-space 带过来的栏目
-const extras = [
-  { to: "/topics", label: "手记专栏", icon: Library },
-  { to: "/thoughts", label: "动态", icon: Zap },
-  { to: "/says", label: "一言", icon: Quote },
-  { to: "/projects", label: "项目", icon: Boxes },
-] as const
+const nav = [
+  { items: [{ to: "/", label: "概览", icon: LayoutDashboard, exact: true }] },
+  {
+    label: "内容",
+    items: [
+      { to: "/entries", search: { type: "post" }, label: "文章", icon: FileText },
+      { to: "/entries", search: { type: "note" }, label: "手记", icon: NotebookPen },
+      { to: "/entries", search: { type: "page" }, label: "页面", icon: StickyNote },
+      { to: "/categories", label: "分类", icon: FolderTree },
+    ],
+  },
+  {
+    label: "栏目",
+    items: [
+      { to: "/topics", label: "手记专栏", icon: Library },
+      { to: "/thoughts", label: "动态", icon: Zap },
+      { to: "/says", label: "一言", icon: Quote },
+      { to: "/projects", label: "项目", icon: Boxes },
+    ],
+  },
+  {
+    label: "互动与资源",
+    items: [
+      { to: "/links", label: "友链", icon: Link2, badge: "links" },
+      { to: "/comments", label: "评论", icon: MessageSquare, badge: "comments" },
+      { to: "/files", label: "文件", icon: Image },
+      { to: "/settings", label: "设置", icon: Settings },
+    ],
+  },
+] as const satisfies {
+  label?: string
+  items: {
+    to: string
+    search?: { type: string }
+    label: string
+    icon: LucideIcon
+    exact?: boolean
+    badge?: "links" | "comments"
+  }[]
+}[]
 
 function Layout() {
   const { data: me } = useSuspenseQuery(meQuery)
   const { data: stats } = useQuery(statsQuery)
   const { data: links } = useQuery({
-    queryKey: ["admin-links-pending"],
+    queryKey: ["admin-links", "pending"],
     queryFn: () => unwrap(api.admin.links.get()),
     staleTime: 60_000,
   })
+  const badges = { links: links?.pending, comments: stats?.pendingComments }
   const { theme, toggle } = useTheme()
   const navigate = useNavigate()
 
@@ -97,94 +126,31 @@ function Layout() {
           </SidebarMenu>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="概览">
-                  <Link to="/" activeOptions={{ exact: true }} activeProps={{ "data-active": true }}>
-                    <LayoutDashboard /> 概览
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>内容</SidebarGroupLabel>
-            <SidebarMenu>
-              {content.map((c) => (
-                <SidebarMenuItem key={c.label}>
-                  <SidebarMenuButton asChild tooltip={c.label}>
-                    <Link
-                      to={c.to}
-                      search={c.search}
-                      activeOptions={{ includeSearch: true }}
-                      activeProps={{ "data-active": true }}
-                    >
-                      <c.icon /> {c.label}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="分类">
-                  <Link to="/categories" activeProps={{ "data-active": true }}>
-                    <FolderTree /> 分类
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>栏目</SidebarGroupLabel>
-            <SidebarMenu>
-              {extras.map((c) => (
-                <SidebarMenuItem key={c.to}>
-                  <SidebarMenuButton asChild tooltip={c.label}>
-                    <Link to={c.to} activeProps={{ "data-active": true }}>
-                      <c.icon /> {c.label}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>互动与资源</SidebarGroupLabel>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="友链">
-                  <Link to="/links" activeProps={{ "data-active": true }}>
-                    <Link2 /> 友链
-                  </Link>
-                </SidebarMenuButton>
-                {!!links?.pending && <SidebarMenuBadge className="tabular">{links.pending}</SidebarMenuBadge>}
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="评论">
-                  <Link to="/comments" activeProps={{ "data-active": true }}>
-                    <MessageSquare /> 评论
-                  </Link>
-                </SidebarMenuButton>
-                {!!stats?.pendingComments && (
-                  <SidebarMenuBadge className="tabular">{stats.pendingComments}</SidebarMenuBadge>
-                )}
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="文件">
-                  <Link to="/files" activeProps={{ "data-active": true }}>
-                    <Image /> 文件
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="设置">
-                  <Link to="/settings" activeProps={{ "data-active": true }}>
-                    <Settings /> 设置
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroup>
+          {nav.map((g, i) => (
+            <SidebarGroup key={i}>
+              {"label" in g && <SidebarGroupLabel>{g.label}</SidebarGroupLabel>}
+              <SidebarMenu>
+                {g.items.map((c) => {
+                  const badge = "badge" in c ? badges[c.badge] : undefined
+                  return (
+                    <SidebarMenuItem key={c.label}>
+                      <SidebarMenuButton asChild tooltip={c.label}>
+                        <Link
+                          to={c.to}
+                          search={"search" in c ? c.search : undefined}
+                          activeOptions={{ exact: "exact" in c }}
+                          activeProps={{ "data-active": true }}
+                        >
+                          <c.icon /> {c.label}
+                        </Link>
+                      </SidebarMenuButton>
+                      {!!badge && <SidebarMenuBadge className="tabular">{badge}</SidebarMenuBadge>}
+                    </SidebarMenuItem>
+                  )
+                })}
+              </SidebarMenu>
+            </SidebarGroup>
+          ))}
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu>
@@ -230,7 +196,7 @@ function Layout() {
   )
 }
 
-/** 每页顶部：标题、说明、右侧操作。内容区铺满宽度 */
+/** 页头：标题、说明、右侧操作 */
 export function PageHeader({
   title,
   description,

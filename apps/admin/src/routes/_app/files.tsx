@@ -78,7 +78,10 @@ function Files() {
               multiple
               hidden
               accept="image/*,video/mp4,video/webm,application/pdf"
-              onChange={(e) => e.target.files && upload.mutate([...e.target.files])}
+              onChange={(e) => {
+                if (e.target.files) upload.mutate([...e.target.files])
+                e.target.value = ""
+              }}
             />
           </>
         }

@@ -15,10 +15,7 @@ const base = EditorView.theme({
   "&.cm-focused": { outline: "none" },
 })
 
-/**
- * Markdown 源码编辑（CodeMirror 6）。粘贴 / 拖进来的图片交给 onUpload，传完插入 ![](url)。
- * 非受控：外部 value 变化（比如切换文章）时才整体替换。
- */
+/** Markdown 编辑器（CodeMirror 6）。粘贴 / 拖入的图片和视频经 onUpload 上传后插入；外部 value 变化时整体替换 */
 export function MarkdownEditor({
   value,
   onChange,
@@ -96,7 +93,7 @@ export function MarkdownEditor({
       }),
     })
     return () => view.current?.destroy()
-    // 只在挂载时建一次编辑器
+    // 编辑器只在挂载时创建一次
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 

@@ -7,11 +7,7 @@ import { auth } from "@/lib/auth"
 import { useSite } from "@/lib/api"
 import { BrandIcon } from "@/components/brand-icons"
 
-/*
- * 账号窗口（从开始菜单打开）：读者用 GitHub / Google 登录，评论不用再填名字和邮箱。
- * 没登录时是第三方登录按钮，登录了显示是谁 + 退出。
- * 后台只有站长进得去，这里的账号都是读者。
- */
+/** 读者账号弹窗：未登录显示第三方登录，已登录显示账号和退出 */
 export function AccountDialog() {
   const { data } = auth.useSession()
   const open = useUI((s) => s.accountOpen)
@@ -44,13 +40,13 @@ function SignedIn({ name, email, onDone }: { name: string; email: string; onDone
   )
 }
 
-/** 没登录：和 mx-space 一样只有第三方登录（第一次登录就是注册），站长在后台配了哪些就显示哪些 */
+/** 第三方登录按钮，按服务端已配置的 provider 显示 */
 function SignIn() {
   const { oauth } = useSite()
   const [busy, setBusy] = useState<string | null>(null)
   const go = async (provider: "github" | "google") => {
     setBusy(provider)
-    // 登录完回到现在这一页
+    // 登录后回到当前页
     const r = await auth.signIn.social({ provider, callbackURL: location.href })
     if (r.error) {
       setBusy(null)

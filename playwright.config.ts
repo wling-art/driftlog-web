@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test"
 
-// 需要先把 core 的 API 跑起来（默认 http://localhost:3900）；博客和后台由这里启动或复用
+// 需要已在运行的 API（默认 :3900）；博客和后台由这里启动或复用
 export default defineConfig({
   testDir: "e2e",
   fullyParallel: false,
@@ -9,7 +9,7 @@ export default defineConfig({
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } } },
   ],
-  // 给了 E2E_BLOG / E2E_ADMIN 就用那一套，不自己起服务
+  // 设了 E2E_BLOG 时不启动服务
   webServer: process.env.E2E_BLOG
     ? undefined
     : [

@@ -46,16 +46,15 @@ function Comments() {
     qc.invalidateQueries({ queryKey: ["admin-comments"] })
     qc.invalidateQueries({ queryKey: ["stats"] })
   }
-  const setStatus = useMutation({
+  const { mutate: setStatus } = useMutation({
     mutationFn: ({ id, status }: { id: number; status: Status }) =>
       unwrap(api.admin.comments({ id }).patch({ status })),
     onSuccess: (_, v) => {
       toast.success(v.status === "approved" ? "已通过" : "已标为垃圾")
       refresh()
     },
-    onError: (e) => toast.error(e.message),
   })
-  const remove = useMutation({
+  const { mutate: remove } = useMutation({
     mutationFn: (id: number) => unwrap(api.admin.comments({ id }).delete()),
     onSuccess: () => {
       toast.success("已删除")
@@ -133,7 +132,7 @@ function Comments() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setStatus.mutate({ id: r.id, status: "approved" })}
+                    onClick={() => setStatus({ id: r.id, status: "approved" })}
                   >
                     <Check /> 通过
                   </Button>
@@ -144,7 +143,7 @@ function Comments() {
                     variant="ghost"
                     className="size-8"
                     aria-label="标为垃圾"
-                    onClick={() => setStatus.mutate({ id: r.id, status: "spam" })}
+                    onClick={() => setStatus({ id: r.id, status: "spam" })}
                   >
                     <ShieldAlert />
                   </Button>
@@ -154,7 +153,7 @@ function Comments() {
                   variant="ghost"
                   className="size-8 text-destructive"
                   aria-label="删除"
-                  onClick={() => remove.mutate(r.id)}
+                  onClick={() => remove(r.id)}
                 >
                   <Trash2 />
                 </Button>

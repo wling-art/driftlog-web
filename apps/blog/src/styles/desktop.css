@@ -1,23 +1,21 @@
 /*
- * Boring UI · 桌面外壳（静态 HTML 和 React 共用这一份）
- * 全屏桌面、文件夹、窗口、任务栏、加载圆点。依赖 tokens.css。
+ * Boring UI 桌面外壳：全屏桌面、文件夹、窗口、任务栏、加载圆点。依赖 tokens.css。
  * 结构：.screen > .desktop-area > (.folders > .folder…) + (.wins > .win > .win-bar + .win-body)，后面跟 .taskbar
- * 规则见 references/visual.md「窗口与任务栏」。
  */
 
 [hidden] {
   display: none !important;
-} /* 组件自己的 display 不能盖过 hidden */
+}
 html {
   scroll-padding-top: 16px;
   scroll-padding-bottom: 72px;
-} /* 吸底任务栏不能挡住焦点和锚点 */
+} /* 给吸底任务栏留出位置 */
 html {
   cursor:
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='24' viewBox='0 0 16 24' shape-rendering='crispEdges'%3E%3Cpath d='M1 1v18l4-4 3 7 3-1-3-7h6z' fill='%23fff' stroke='%23141414' stroke-width='1.4'/%3E%3C/svg%3E")
       1 1,
     auto;
-} /* 像素箭头光标；能点的地方仍然是手形 */
+} /* 像素箭头光标 */
 body {
   margin: 0;
   background: var(--bg);
@@ -29,7 +27,7 @@ body {
   outline: var(--focus-outline);
   outline-offset: 2px;
 }
-/* 图标：只在这里画一次（细线，1.3px），用 mask 染成当前文字色。标记里只写 data-icon */
+/* 图标：mask 染成文字色，标记里写 data-icon */
 :root {
   --icon-folder: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 34%27 fill=%27none%27 stroke=%27black%27 stroke-width=%271.3%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M2 5 H14 L17.5 8.5 H38 V32 H2 Z%27/%3E%3Cpath d=%27M2 12 H38%27/%3E%3C/svg%3E");
   --icon-doc: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 34%27 fill=%27none%27 stroke=%27black%27 stroke-width=%271.3%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M11 1.5 H25 L30 6.5 V32.5 H11 Z M25 1.5 V6.5 H30%27/%3E%3Cpath d=%27M15 13 H26 M15 18 H26 M15 23 H23%27/%3E%3C/svg%3E");
@@ -55,7 +53,7 @@ body {
   mask-image: var(--icon-close);
 }
 
-/* ── 全屏桌面：整页就是屏幕，不画显示器外壳 ── */
+/* ── 全屏桌面 ── */
 .screen {
   position: relative;
   isolation: isolate;
@@ -80,7 +78,7 @@ body {
   }
 }
 
-/* ── 桌面：左边一列文件夹，点了就把对应的窗口叫到前面 ── */
+/* ── 桌面区域：左边文件夹列 + 窗口列 ── */
 .desktop-area {
   flex: 1;
   display: grid;
@@ -112,7 +110,7 @@ body {
   background: var(--text);
   color: var(--bg);
 }
-/* 窗口一列最宽 1000px（有侧栏时更宽，见文件末尾），在桌面上居中；左边缘取整到整像素，像素字才不糊 */
+/* 窗口列：最宽 1000px（有侧栏时更宽），居中 */
 .wins {
   --wins-max: 1000px;
   width: 100%;
@@ -141,7 +139,7 @@ body {
   border: var(--line) solid var(--border-frame);
   border-radius: var(--radius-window);
   overflow: clip;
-  margin: 0 0 var(--space-4); /* 和两栏之间的间距一样：窗口之间别隔太远 */
+  margin: 0 0 var(--space-4);
   min-width: 0;
 }
 .win-bar {
@@ -161,7 +159,7 @@ body {
   white-space: nowrap;
 }
 .win-ctl {
-  /* 细线 ×：关窗口（关掉能撤销） */
+  /* 关闭按钮 × */
   display: inline-grid;
   place-items: center;
   width: max(24px, var(--hit-min));
@@ -177,7 +175,7 @@ body {
   background: var(--text);
   color: var(--bg);
 }
-/* 叫到前面：位置和大小用轻回弹，透明度用「出现」曲线，两条分开走 */
+/* 叫到前面：位移缩放用回弹曲线，透明度用出现曲线 */
 .win.is-front {
   animation:
     pop var(--duration-pop) var(--ease-pop),
@@ -194,7 +192,7 @@ body {
     opacity: 0;
   }
 }
-/* 窗口内边距：宽屏两边留得宽一点（参考 Shiro），窗口看起来不局促；窄屏收回来给正文 */
+/* 窗口内边距：宽屏宽、窄屏窄 */
 .win {
   --win-pad-x: var(--space-7);
   --win-pad-y: var(--space-6);
@@ -216,9 +214,9 @@ body {
   font-size: var(--text-sm);
   color: var(--text-muted);
   margin-bottom: var(--space-5);
-} /* 整句话用无衬线 */
+} /* 副标题用无衬线 */
 
-/* ── 任务栏：左边导航是贴着底边的标签，指上去升起来；右边是主题和带秒的时钟 ── */
+/* ── 任务栏：左边导航标签，右边主题切换和时钟 ── */
 .taskbar {
   position: sticky;
   bottom: 0;
@@ -269,13 +267,13 @@ body {
   text-decoration: none;
   font: 400 var(--px-1)/1 var(--font-pixel);
   transform: translateY(5px);
-  transition: transform var(--duration-move) var(--ease-move); /* 升起、落下都是「移动」：慢进慢出 */
+  transition: transform var(--duration-move) var(--ease-move);
 }
 .taskbar nav:not(.pathbar) a:hover,
 .taskbar nav:not(.pathbar) a[aria-current="page"] {
   transform: translateY(0);
   background: var(--surface);
-} /* 你在这里：标签升起来 */
+} /* 当前页标签升起 */
 .taskbar .spacer {
   flex: 1;
 }
@@ -309,7 +307,7 @@ body {
   }
 }
 
-/* 加载：一个圆点闪烁，不转圈。放在 position: relative 的按钮里；颜色默认跟文字走，按钮文字隐藏时用 --spin 指定 */
+/* 加载：闪烁的圆点，放在 position: relative 的按钮里；颜色可用 --spin 指定 */
 .spinner {
   position: absolute;
   inset: 0;
@@ -331,9 +329,7 @@ body {
   }
 }
 
-/* ── Driftlog 的改动：桌面固定在屏幕上 + 窗口能拖（宽屏）──
- * 整页不滚：.screen 正好一屏高，任务栏钉在底部；只有桌面区域（窗口那一列）自己滚，文件夹列跟着 sticky。
- * 窄屏（≤ 760px）保持普通的整页滚动：手机上内嵌滚动会和地址栏收起、回弹打架。 */
+/* ── Driftlog：宽屏整页不滚，.screen 一屏高，桌面区域自己滚；窄屏（≤ 760px）整页滚动 ── */
 .win {
   position: relative;
 }
@@ -341,7 +337,7 @@ body {
   html,
   body {
     height: 100%;
-    /* clip 而不是 hidden：hidden 挡得住用户滚，挡不住锚点跳转这类程序滚动，整页会被偷偷滚走几像素 */
+    /* 用 clip：hidden 仍可被锚点跳转滚动 */
     overflow: clip;
   }
   .screen {
@@ -352,9 +348,7 @@ body {
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    /* 滚动条贴着屏幕边，滚轮在桌面任何地方都能用 */
     margin: -20px -20px 0;
-    /* 下面也留 20px：桌面一直延伸到任务栏，滚动的内容贴着任务栏才被遮住，而不是在上面一截就被切掉 */
     padding: 20px;
     scroll-padding: 16px 0 16px;
   }
@@ -378,13 +372,10 @@ body {
   }
 }
 
-/* ── Driftlog 的改动：宽屏两栏 ──
- * 屏幕够宽（≥ 1280px）时，附属窗口（评论、上下篇、手记…）排到右边一栏，不再全挤在一条里。
- * 主内容优先：左栏吃掉剩下的宽度，右栏固定窄（300–360px），右栏窗口标题降一档到 24px。
- * 不够宽时右栏的窗口按源码顺序排在主内容后面。 */
+/* ── Driftlog：≥ 1280px 时附属窗口排到右栏（300–360px），否则排在主内容后面 ── */
 .win-body {
   container-type: inline-size;
-} /* 窗口里的排版按窗口宽度走（@container），不按屏幕宽度 */
+} /* 窗口内排版按窗口宽度（@container） */
 .wins-main,
 .wins-aside {
   min-width: 0;
@@ -397,19 +388,18 @@ body {
     column-gap: var(--space-4);
     align-items: start;
   }
-  /* 右栏窄：内边距回到小号，不然正文被挤成一小条 */
+  /* 右栏：小号内边距 */
   .wins-aside .win {
     --win-pad-x: var(--space-5);
     --win-pad-y: var(--space-5);
   }
-  /* 右栏安静一点：窗口标题降一档 */
+  /* 右栏：窗口标题降一档 */
   .wins-aside .win-body > h2 {
     font-size: var(--px-2);
   }
 }
 
-/* ── Driftlog 的改动：任务栏在窄屏上放得下 ──
- * 标签和按钮都不换行；窄屏收短文字（「切到暗色」→「暗色」），导航标签可以横向滑动而不是被挤成竖排 */
+/* ── Driftlog：窄屏任务栏：不换行、收短文字，导航标签可横向滚动 ── */
 .taskbar nav:not(.pathbar) a,
 .taskbar .tb-btn {
   white-space: nowrap;
@@ -426,31 +416,27 @@ body {
   }
 }
 
-/* ── Driftlog 的改动：阅读页的窗口正好包住正文 ──
- * 正文有最佳行宽（阅读场景 40em，约 40 个汉字，WCAG 对中文的上限），窗口再宽只会在右边留一块空白，
- * 看起来像内容被限制住了。所以阅读页（没有右栏时）窗口宽 = 行宽 + 两边内边距 + 边框，在桌面上居中。 */
+/* ── Driftlog：阅读页（无右栏）窗口宽 = 行宽 + 内边距 + 边框 ── */
 [data-scene="read"] .wins:not(.has-aside) {
   --wins-max: calc(var(--measure) + 2 * var(--space-7) + 2 * var(--line));
 }
 
-/* ── Driftlog 的改动：桌面图标像 Windows 一样排在格子里，贴着屏幕左上角 ──
- * 每个图标占一个一样大的格子（图标在上、标签最多两行），标签多长格子都不变高，所以永远对齐；
- * 整列离屏幕边 8px（桌面四周的 20px 留白只给窗口）。图标太多放不下时这一列自己滚。 */
+/* ── Driftlog：桌面图标排在固定大小的格子里（标签最多两行），离屏幕边 8px，放不下时自己滚 ── */
 :root {
   --icon-cell-w: 76px;
-  /* 格子高 = 上留白 6 + 图标 34 + 间距 6 + 两行标签 2×16 + 下留白 4 = 82；格子之间再空 6 */
+  /* 格子高 82 = 6 + 图标 34 + 6 + 两行标签 2×16 + 4；格子间距 6 */
   --icon-cell-h: 82px;
   --icon-gap: 6px;
   --icon-edge: 8px;
 }
-/* 只在有图标列的宽屏上改列宽：窄屏图标列收起、窗口要占满整行（写在外面会盖掉窄屏那条「收成一列」） */
+/* 宽屏图标列宽 */
 @media (min-width: 761px) {
   .desktop-area {
     grid-template-columns: var(--icon-cell-w) minmax(0, 1fr);
   }
 }
 .folders {
-  /* 粘性定位的 top 从桌面区域的内边距（20px）里面算起，所以也要减掉这 20px */
+  /* sticky 的 top 从桌面区域 20px 内边距内算起 */
   top: calc(var(--icon-edge) - 20px);
   margin: calc(var(--icon-edge) - 20px) 0 0 calc(var(--icon-edge) - 20px);
   padding-top: 0;
@@ -462,7 +448,7 @@ body {
   overflow-y: auto;
   scrollbar-width: none;
 }
-/* 图标和标签的位置在格子里是固定的：标签只有一行也照样预留两行，空隙就只和格子有关、和字数无关 */
+/* 格子内图标和标签位置固定，标签预留两行 */
 .folder {
   width: var(--icon-cell-w);
   height: var(--icon-cell-h);
@@ -479,16 +465,14 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
   overflow-wrap: anywhere;
-  line-height: 16px; /* 整数行高：12px 像素字的第二行也落在整像素上，不糊 */
+  line-height: 16px; /* 整数行高 */
 }
-/* 焦点描边画在格子里面：格子挨得紧，外扩的描边会压到隔壁 */
+/* 焦点描边画在格子内侧 */
 .folder:focus-visible {
   outline-offset: -2px;
 }
 
-/* ── Driftlog 的改动：窗口像真正的窗口一样，自己滚 ──
- * 宽屏下窗口最高 = 桌面可见高度减去上下留白；内容再多也不撑高窗口，而是在窗口里面滚，标题栏一直在顶上。
- * 桌面区域是尺寸容器，窗口用 cqh（桌面高度的百分比）限高；桌面只在窗口一个接一个排不下时才滚。 */
+/* ── Driftlog：宽屏窗口限高为桌面区域高度（cqh），内容在 .win-body 里滚 ── */
 @media (min-width: 761px) {
   .desktop-area {
     container-type: size;
@@ -497,7 +481,7 @@ body {
   .win {
     display: flex;
     flex-direction: column;
-    max-height: 100cqh; /* cqh 按桌面区域的内容框算：上下各 20px 的内边距已经扣掉了 */
+    max-height: 100cqh;
   }
   .win-bar {
     flex: none;
@@ -507,23 +491,15 @@ body {
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    scrollbar-gutter: stable; /* 滚动条出现时内容不左右跳 */
+    scrollbar-gutter: stable;
   }
-  /* 最后一个窗口不留下外边距：只有一个窗口时桌面正好一屏高，不会被锚点跳转顺手滚动 */
+  /* 最后一个窗口不留下外边距 */
   :is(.wins, .wins-main, .wins-aside) > .win:last-child {
     margin-bottom: 0;
   }
-  /* 浮动窗口本来就自己滚 */
-  .win.is-floating {
-    max-height: min(72vh, calc(100dvh - 88px));
-  }
 }
 
-/* ── Driftlog 的改动：换页时窗口列入场 ──
- * 不用浏览器的 View Transitions（新旧两页各拍一张截图叠着淡入淡出，窗口内滚、固定桌面时截图对不上、会重影）。
- * 桌面、任务栏、文件夹不动；窗口那一列按地址换 key，重新挂载时用「出现」曲线升上来一次。
- * 旧页面直接换掉，不做离开动画：离开的东西别占注意力，两页叠在一起就是重影。
- * 有方向的翻页（上一篇 / 下一篇、← →）从对应一侧进来，位移用「移动」曲线。 */
+/* ── Driftlog：换页时窗口列入场；默认从下升起，data-enter 指定方向时从侧面滑入 ── */
 .wins {
   --enter-from: 0 8px;
   animation:
@@ -547,11 +523,7 @@ body {
   }
 }
 
-/* ── Driftlog 的改动：一栏最多一屏高 ──
- * 两栏时主栏、右栏各自是一列，最多一屏高：窗口按内容定高，放不下时后面的窗口压缩、在自己里面滚，
- * 桌面本身不再因为窗口叠得太高而滚动（不会出现「窗口在滚、桌面也在滚」的两层滚动）。
- * 不想被压缩的窗口（比如首页头部）加 .win-fixed。 */
-/* 只在真有两栏时生效：一栏（右栏掉到下面）时窗口按内容定高、桌面照常滚，不然窗口会被压到很小 */
+/* ── Driftlog：两栏时每栏最多一屏高，放不下时窗口压缩、各自滚动；.win-fixed 不压缩 ── */
 @media (min-width: 1280px) {
   .wins-main,
   .wins-aside {
@@ -568,9 +540,7 @@ body {
   }
 }
 
-/* ── Driftlog 的改动：窗口能改大小、关掉的窗口留在任务栏 ──
- * 右下角 14px 的斜纹把手（宽屏才有），拖着改大小；双击复位。
- * 关掉的窗口在任务栏上是虚线框的按钮（像最小化的程序），点一下回来；换页就清空。 */
+/* ── Driftlog：右下角改大小把手（宽屏）；任务栏上的已关闭窗口按钮 ── */
 .win-resize {
   display: none;
 }
@@ -634,7 +604,7 @@ body {
     max-width: 6em;
   }
 }
-/* 关掉的窗口：宽屏上位置还留着（像真的桌面，关一个窗口别的不会挪），窄屏一列排下来时直接收起 */
+/* 关掉的窗口：宽屏保留占位，窄屏收起 */
 .win[data-closed] {
   visibility: hidden;
 }
@@ -644,9 +614,7 @@ body {
   }
 }
 
-/* ── Driftlog 的改动：窗口里的滚动条 ──
- * 细细一条圆头的灰条，悬在窗口边上：平时是框线的灰，指上去深一点；轨道透明。
- * Chrome / Safari 用 ::-webkit-scrollbar（能留内边距、做圆头）；Firefox 只认 scrollbar-color，给个细的 */
+/* ── Driftlog：窗口滚动条：细、圆头、轨道透明 ── */
 .win-body::-webkit-scrollbar {
   width: 12px;
 }
@@ -669,9 +637,7 @@ body {
   }
 }
 
-/* ── Driftlog 的改动：开始菜单 ──
- * 任务栏最左边「开始」（站长头像 + 两个字），从下往上弹出一块两列的菜单；
- * 导航标签只剩当前打开的那一个窗口，前面带小图标，换了窗口就从下面升起来。 */
+/* ── Driftlog：开始按钮和两列的开始菜单 ── */
 .tb-start {
   display: inline-flex;
   flex: none;
@@ -702,7 +668,7 @@ body {
   color: var(--bg);
 }
 .tb-start[data-state="open"] {
-  translate: 1px 1px; /* 按下去了 */
+  translate: 1px 1px;
   box-shadow: none;
 }
 .taskbar nav:not(.pathbar) a[data-icon]::before {
@@ -762,7 +728,7 @@ body {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
   gap: var(--space-3);
 }
-/* 列宽钉死在可用宽度里：标题不换行，不钉的话 grid 会按整行标题的宽度把列撑出菜单 */
+/* 限制列宽，标题单行省略 */
 .start-col,
 .start-list,
 .start-actions,
@@ -908,9 +874,7 @@ body {
   }
 }
 
-/* ── Driftlog 的改动：任务栏上的地址栏 ──
- * 开始按钮右边一个往里凹的框（和输入框一样的凹陷），像文件管理器的地址栏：⌂ › 手记 › 随想 › 走个面儿。
- * 所有段同一个字号、同一条基线；能点的指上去反白，当前页字深一点。窄屏中间收起，只留 ⌂ 和当前页 */
+/* ── Driftlog：任务栏地址栏（⌂ › 栏目 › 标题）；窄屏只留 ⌂ 和当前页 ── */
 :root {
   --icon-home: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 34%27 fill=%27none%27 stroke=%27black%27 stroke-width=%271.3%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M5 16 L20 3 L35 16%27/%3E%3Cpath d=%27M9 13 V32 H31 V13%27/%3E%3Cpath d=%27M17 32 V22 H23 V32%27/%3E%3C/svg%3E");
 }
@@ -993,9 +957,7 @@ a.pathbar-seg:hover {
   }
 }
 
-/* ── Driftlog 的改动：文章目录 ──
- * 宽屏（≥ 1100px）左边一列 220px 的文字清单，按层级缩进，当前这一节左边一道竖线 + 深色字；
- * 放不下时收起，标题栏上的「目录」按钮点开同一张清单 */
+/* ── Driftlog：文章目录；≥ 1100px 时在左边一列，否则从标题栏按钮弹出 ── */
 .toc-panel {
   display: none;
 }
@@ -1027,7 +989,7 @@ a.pathbar-seg:hover {
   font: 400 var(--px-1)/1.5 var(--font-pixel);
   color: var(--text-muted);
 }
-/* 轨道：点点虚线是没读的，细实线是读过的，粗的「视野条」是你现在看得见的那一段（连续地滑、连续地伸缩） */
+/* 轨道：虚线未读，实线已读，视野条是当前可见范围 */
 .toc-track {
   --band-top: 0px;
   --band-h: 0px;
@@ -1050,7 +1012,7 @@ a.pathbar-seg:hover {
   height: var(--band-top);
   border-left: 2px solid color-mix(in srgb, var(--accent) 45%, transparent);
 }
-/* 视野条：4px 宽的方头条，比轨道粗一圈，外面抠出一道窗口色的边，像浮在轨道上 */
+/* 视野条 */
 .toc-band {
   position: absolute;
   z-index: 2;
@@ -1061,7 +1023,6 @@ a.pathbar-seg:hover {
   translate: 0 var(--band-top);
   background: var(--accent);
   box-shadow: 0 0 0 2px var(--window);
-  /* 每一帧都在更新：只给一点点缓冲，跟手但不生硬；减少动态时直接到位 */
   transition:
     translate calc(90ms * var(--motion-ok)) linear,
     height calc(90ms * var(--motion-ok)) linear;
@@ -1091,7 +1052,7 @@ a.pathbar-seg:hover {
 .toc-list a[aria-current="location"] {
   color: var(--text);
 }
-/* 反白写在「当前」后面：当前这一节指上去也要看得见字 */
+/* 悬停反白（写在当前项之后） */
 .toc-list a:hover {
   background: var(--text);
   color: var(--bg);
@@ -1109,7 +1070,7 @@ a.pathbar-seg:hover {
   animation: start-in var(--duration-enter) var(--ease-enter);
 }
 
-/* ── 标题栏上的小按钮（‹ ›）：和 × 一样大，指上去反白 ── */
+/* ── 标题栏小按钮（‹ ›） ── */
 .win-controls {
   display: inline-flex;
   gap: 2px;
@@ -1138,7 +1099,7 @@ a.win-btn:hover {
   cursor: not-allowed;
 }
 
-/* ── 标题栏左边的「‹ 手记」：回上一级。和 ‹ › 一样指上去反白 ── */
+/* ── 标题栏左边的返回链接 ── */
 .win-lead {
   display: flex;
   align-items: center;
@@ -1166,15 +1127,14 @@ a.win-btn:hover {
   background: var(--text);
   color: var(--bg);
 }
-/* 返回和文件名之间一道竖线，像路径分隔 */
+/* 返回链接和文件名之间的竖线 */
 .win-lead .name {
   padding-left: var(--space-2);
   border-left: var(--line) solid var(--border-frame);
   color: var(--text-muted);
 }
 
-/* 列表自己的默认外边距和圆点去掉：静态 HTML 没有 Tailwind 的重置，不写的话地址栏会被默认的 ol 外边距撑到 60px 高。
- * 用 :where（优先级 0），不会盖掉上面各自写的 padding */
+/* 重置外壳里列表的默认样式 */
 :where(.pathbar ol, .toc-list, .start-list, .start-actions, .start-recent) {
   margin: 0;
   padding: 0;

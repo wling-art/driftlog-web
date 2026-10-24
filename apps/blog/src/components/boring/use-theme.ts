@@ -1,9 +1,6 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react"
 
-/*
- * 主题：默认跟随系统；用户点过之后记住（localStorage），写到 <html data-theme>。
- * tokens.css 和 Tailwind 的 dark: 变体都认 data-theme，不认 .dark。
- */
+// 主题：默认跟随系统，切换后存进 localStorage 并写到 <html data-theme>
 type Theme = "light" | "dark"
 const KEY = "boring-theme"
 const media = () => window.matchMedia("(prefers-color-scheme: dark)")
@@ -47,9 +44,7 @@ export function useTheme() {
     document.documentElement.dataset.theme = next
     try {
       localStorage.setItem(KEY, next)
-    } catch {
-      /* 隐私模式等情况存不了，就只在这次生效 */
-    }
+    } catch {}
     emit()
   }, [])
   return { theme, toggle }

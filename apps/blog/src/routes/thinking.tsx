@@ -6,9 +6,8 @@ import { unwrap } from "@driftlog/client"
 import { Window } from "@/components/boring"
 import { BackLink, Empty, SiteShell } from "@/components/site"
 import { api, thoughtsQuery } from "@/lib/api"
-import { fullTime, siteOf, timeAgo } from "@/lib/site"
+import { formatDate, fullTime, siteOf, timeAgo, useHydrated } from "@/lib/site"
 
-// 动态：比手记更短的碎片。路径和 Shiro 一样（/thinking），旧链接直接能打开
 export const Route = createFileRoute("/thinking")({
   loader: ({ context }) => context.queryClient.ensureQueryData(thoughtsQuery()),
   head: ({ matches }) => ({ meta: [{ title: `动态 · ${siteOf(matches).title}` }] }),
@@ -45,6 +44,7 @@ type T = { id: number; html: string; up: number; down: number; createdAt: string
 function Thought({ t }: { t: T }) {
   const qc = useQueryClient()
   const [voted, setVoted] = useState<"up" | "down" | null>(null)
+  const hydrated = useHydrated()
   const react = async (kind: "up" | "down") => {
     try {
       const r = await unwrap(api.thoughts({ id: t.id }).react.post({ kind }))
@@ -61,8 +61,12 @@ function Thought({ t }: { t: T }) {
     <li className="thought">
       <div className="prose" dangerouslySetInnerHTML={{ __html: t.html }} />
       <div className="thought-meta">
-        <time dateTime={String(t.createdAt)} title={fullTime(t.createdAt)}>
-          {timeAgo(t.createdAt)}
+        {/* 服务器上显示日期，水合后显示相对时间 */}
+        <time
+          dateTime={new Date(t.createdAt).toISOString()}
+          title={hydrated ? fullTime(t.createdAt) : undefined}
+        >
+          {hydrated ? timeAgo(t.createdAt) : formatDate(t.createdAt)}
         </time>
         <button
           type="button"

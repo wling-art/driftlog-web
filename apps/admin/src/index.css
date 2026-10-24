@@ -3,10 +3,7 @@
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
 
-/*
- * 后台主题：参考 Vercel 控制台（Geist 灰阶）。和博客的 boring-ui token 完全独立。
- * 黑白为主，蓝色只给链接和焦点；圆角 6px；1px 细线分区，几乎不用投影。
- */
+/* 后台主题：Geist 灰阶，蓝色只用于链接和焦点 */
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -145,7 +142,7 @@
   }
 }
 
-/* 编辑器预览：和博客同一条渲染管线的输出，这里只给一套朴素排版 */
+/* 编辑器预览的排版 */
 .md-preview {
   line-height: 1.75;
   overflow-wrap: anywhere;

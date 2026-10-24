@@ -110,7 +110,7 @@ const socialKeys = [
   { key: "email", label: "公开邮箱" },
 ] as const
 
-/** 站点设置：站名、简介、站长资料。博客的标题、首页、订阅源都读这里 */
+/** 站点设置：站名、简介、站长资料 */
 function SiteCard() {
   const qc = useQueryClient()
   const { data } = useQuery({ queryKey: ["site"], queryFn: () => unwrap(api.site.get()) })

@@ -1,32 +1,22 @@
 /*
- * Boring UI · 无聊主义设计变量
- * 结构用惯例，细节有态度。视觉：低饱桌面——整页就是一块全屏的电脑桌面。
- * 参考：ichimaru103.com（单色平涂、1px 线 + 4px 圆角的窗口、像素字、任务栏），但不画显示器：整页就是屏幕。
- *
- * 规则 1：--accent（桌面青）只用于可交互元素；指上去的东西反白（墨底 + 屏幕色字）。
- * 规则 2：组件只用「派生变量」，场景只调「旋钮」。
- *         <main data-scene="read | tool | touch | show"> 即可切换，可嵌套。
- * 规则 3：线都是 1px 灰线：控件用 --border（≥ 3:1），窗口、卡片这些容器用更淡的 --border-frame；焦点用 --focus-outline。
- * 规则 5：单色平涂，三层由深到浅（桌面 → 窗口 → 卡片），加一点只往下落的柔和投影；1px 灰线 + 4px 圆角，屏幕上一层很淡的颗粒。
- * 规则 4：像素字只用 12 / 24 / 36 / 48px（原生 12px 的整数倍），长段正文用无衬线。
+ * Boring UI 设计变量：颜色、字体、动效曲线、场景旋钮和派生变量。
+ * 组件只用派生变量；场景用 data-scene="read | tool | touch | show" 切换旋钮。
  */
 
-/* ── 1. 颜色：墨、三层灰、桌面青。全部单色平涂 ────────────
- * 饱和度上限（OKLCH 色度）：中性色 ≤ 0.01，桌面青 ≤ 0.06，状态色 ≤ 0.1 */
+/* ── 1. 颜色 ── */
 
 :root {
   color-scheme: light dark;
 
-  /* 三层，越往上越浅：桌面 → 窗口 → 卡片 / 控件 */
   --bg: #cfd3d7; /* 桌面（屏幕） */
   --window: #e1e4e7; /* 窗口内容区 */
-  --window-bar: #d7dade; /* 标题栏、任务栏：比窗口深一点，一眼分出「把手」 */
+  --window-bar: #d7dade; /* 标题栏、任务栏 */
   --surface: #eceef0; /* 卡片、按钮、输入框 */
   --surface-hover: #dcdfe2;
-  --text: #373737; /* 墨：正文 */
+  --text: #373737; /* 正文 */
   --text-muted: #54575a;
-  --border: #74787d; /* 控件的线：按钮、输入框、标签。灰，不用墨；在窗口和卡片上 ≥ 3:1 */
-  --border-frame: #9a9ea3; /* 容器的线：窗口、卡片、表格。更淡，层次交给底色和投影 */
+  --border: #74787d; /* 控件边框 */
+  --border-frame: #9a9ea3; /* 容器边框：窗口、卡片、表格 */
   --border-soft: #b4b8bb; /* 装饰性分割线 */
   --accent: #255e65; /* 桌面青 */
   --accent-hover: #104d53;
@@ -36,12 +26,11 @@
   --warning: #6b531a;
   --focus-outline: 2px solid var(--accent);
 
-  /* 层次：柔和的投影，只往下落，不发光、不描白边 */
   --shadow-1: 0 1px 2px rgb(40 44 48 / 0.1); /* 卡片、按钮 */
   --shadow-2: 0 1px 2px rgb(40 44 48 / 0.08), 0 10px 24px -12px rgb(40 44 48 / 0.3); /* 窗口 */
   --shadow-3:
     0 2px 4px rgb(40 44 48 / 0.1), 0 18px 40px -14px rgb(40 44 48 / 0.4); /* Toast、弹窗、最前面的窗口 */
-  --shadow-inset: inset 0 1px 2px rgb(40 44 48 / 0.12); /* 输入框：往里凹 */
+  --shadow-inset: inset 0 1px 2px rgb(40 44 48 / 0.12); /* 输入框 */
 
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
 }
@@ -96,10 +85,10 @@
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
 }
 
-/* ── 2. 字体与常量 ─────────────────────────────────────────── */
+/* ── 2. 字体与常量 ── */
 
 :root {
-  /* 像素字：Fusion Pixel Font（SIL OFL 1.1），原生 12px */
+  /* 像素字：Fusion Pixel Font，原生 12px */
   --font-pixel:
     "Fusion Pixel 12px Proportional Simplified Chinese", -apple-system, BlinkMacSystemFont, "PingFang SC",
     "Microsoft YaHei", sans-serif;
@@ -112,25 +101,24 @@
   --px-3: 36px; /* 大标题 */
   --px-4: 48px; /* 首屏 */
   --radius-pill: 999px;
-  --line: 1px; /* 界面线条：窗口、卡片、按钮、输入框，1px 灰线（--border） */
-  /* 超过这个时间才显示加载指示，更快的操作不闪转圈（Doherty 阈值） */
+  --line: 1px; /* 界面线宽 */
+  /* 超过这个时间才显示加载指示 */
   --indicator-delay: 400ms;
 
-  /* 动效曲线：不用现成的 ease，每条都从一个运动模型推出来，再拟合成三次贝塞尔。
-   * 括号里是和模型的最大误差（纵轴 0–1）；推导和论文见 references/motion.md。 */
-  /* 移动（A 点到 B 点）：最小加加速度轨迹，人伸手时的速度曲线（Flash & Hogan 1985），慢进慢出（0.9%） */
+  /* 动效曲线 */
+  /* 移动：慢进慢出 */
   --ease-move: cubic-bezier(0.5, 0, 0.5, 1);
-  /* 出现：临界阻尼弹簧，不回弹；一下起步、长长地收尾（2.5%） */
+  /* 出现：快起步、长收尾 */
   --ease-enter: cubic-bezier(0.37, 0.42, 0.12, 0.85);
-  /* 离开：把「出现」倒过来放，慢慢起步、干脆离场（2.5%） */
+  /* 离开：「出现」的倒放 */
   --ease-exit: cubic-bezier(0.88, 0.15, 0.63, 0.58);
-  /* 叫到前面：轻回弹弹簧，bounce 0.2，只过冲 1.5%（2.6%）；支持 linear() 的浏览器用精确采样 */
+  /* 叫到前面：轻回弹，过冲约 1.5% */
   --ease-pop: cubic-bezier(0.29, 0.45, 0.07, 1.14);
 }
 
 @supports (transition-timing-function: linear(0, 1)) {
   :root {
-    /* 弹簧的精确曲线：每 1/28 采一个点（误差 0.8%） */
+    /* 回弹曲线的采样版 */
     --ease-pop: linear(
       0,
       0.0352 3.6%,
@@ -165,29 +153,29 @@
   }
 }
 
-/* ── 3. 旋钮：场景只改这一组（这里是「通用」默认值） ───────── */
+/* ── 3. 旋钮：场景只改这一组（默认值） ── */
 
 :root {
   --density: 1; /* 间距倍率 */
   --font-base: 16px; /* 正文字号（无衬线） */
   --leading: 1.6; /* 正文行高 */
-  --ui-scale: 1; /* 控件尺寸：1 = 小号（12px 字 / 32px 高），2 = 大号（24px 字 / 48px 高） */
+  --ui-scale: 1; /* 控件尺寸：1 = 12px 字 / 32px 高，2 = 24px 字 / 48px 高 */
   --roundness: 1; /* 控件圆角倍率 */
   --motion: 1; /* 动效时长倍率 */
   --measure: 38em; /* 最大行宽，约 38 个汉字 */
 
-  /* 环境开关：由设备和系统设置决定，场景不能改 */
-  --hit-min: 0px; /* 系统外壳（任务栏、标题栏）的最小高度 */
+  /* 环境开关：由设备和系统设置决定 */
+  --hit-min: 0px; /* 任务栏、标题栏的最小高度 */
   --ui-min: 1; /* 内容控件的最小尺寸档 */
   --motion-ok: 1;
-  --grain-opacity: 0.06; /* 屏幕颗粒，和参考站一样很淡 */
+  --grain-opacity: 0.06; /* 屏幕颗粒 */
 }
 
 @media (pointer: coarse) {
   :root {
     --hit-min: 44px;
     --ui-min: 2;
-  } /* 触屏设备：内容控件一律大号，外壳不小于 44px */
+  } /* 触屏：控件大号，外壳不小于 44px */
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -202,8 +190,7 @@
   }
 }
 
-/* ── 4. 派生变量：组件只用这些 ───────────────────────────────
- * 必须在每个场景边界重新计算，所以选择器同时匹配 [data-scene]。 */
+/* ── 4. 派生变量：组件只用这些；在每个 [data-scene] 上重新计算 ── */
 
 :root,
 [data-scene] {
@@ -220,30 +207,28 @@
   --text-md: var(--font-base);
   --text-lg: calc(var(--font-base) * 1.25);
 
-  /* 圆角照参考站：窗口和按钮都是 4px 小圆角 */
+  /* 圆角 */
   --radius-control: calc(4px * var(--roundness));
   --radius-card: 4px;
-  --radius-window: 4px; /* 参考站：窗口 1px 墨线 + 4px 圆角 */
-  /* 控件尺寸：字号、高度、内边距、最小宽度永远成套变化 */
+  --radius-window: 4px;
+  /* 控件尺寸：字号、高度、内边距、最小宽度 */
   --ui: max(var(--ui-scale), var(--ui-min));
   --ui-px: calc(12px * var(--ui));
   --control-h: calc(16px + 16px * var(--ui));
   --control-pad: calc(4px + 8px * var(--ui));
   --control-min-w: calc(16px + 48px * var(--ui));
   --hit-target: var(--control-h);
-  /* 时长：离开比出现短（约 2/3），东西走的时候别拖着人 */
+  /* 时长 */
   --duration: calc(160ms * var(--motion) * var(--motion-ok)); /* 反馈：颜色、反白 */
   --duration-move: calc(240ms * var(--motion) * var(--motion-ok)); /* 移动 */
   --duration-enter: calc(240ms * var(--motion) * var(--motion-ok)); /* 出现 */
   --duration-exit: calc(160ms * var(--motion) * var(--motion-ok)); /* 离开 */
-  --duration-pop: calc(
-    400ms * var(--motion) * var(--motion-ok)
-  ); /* 回弹：感知时长约 310ms，尾巴在 400ms 内停稳 */
+  --duration-pop: calc(400ms * var(--motion) * var(--motion-ok)); /* 回弹 */
 }
 
-/* ── 5. 场景预设 ─────────────────────────────────────────── */
+/* ── 5. 场景预设 ── */
 
-/* 阅读：博客、文章、文档正文 —— 一个最大化的文档窗口，读得舒服 */
+/* 阅读：文章、文档 */
 [data-scene="read"] {
   --density: 1.125;
   --font-base: 17px;
@@ -251,10 +236,10 @@
   --ui-scale: 1;
   --roundness: 1;
   --motion: 1;
-  --measure: 40em; /* Driftlog：每行约 40 个汉字 = WCAG 1.4.8 对中日韩文字的上限；26–46 字之间阅读速度无差别（Chan 等 2014） */
+  --measure: 40em; /* 每行约 40 个汉字 */
 }
 
-/* 工具：后台、开发者工具 —— 密度优先，一屏看更多 */
+/* 工具：后台、开发者工具，高密度 */
 [data-scene="tool"] {
   --density: 0.75;
   --font-base: 14px;
@@ -265,7 +250,7 @@
   --measure: none;
 }
 
-/* 触屏：移动 App、移动网页 —— 拿在手里的手机；拇指够得着，手指点得准 */
+/* 触屏：移动端 */
 [data-scene="touch"] {
   --density: 1;
   --font-base: 16px;
@@ -276,7 +261,7 @@
   --measure: none;
 }
 
-/* 展示：落地页、项目首页 —— 整张桌面：图标、叠在一起的窗口 */
+/* 展示：落地页、项目首页 */
 [data-scene="show"] {
   --density: 1.5;
   --font-base: 18px;
@@ -287,7 +272,7 @@
   --measure: 32em;
 }
 
-/* ── 6. 让正文跟着场景走 ─────────────────────────────────── */
+/* ── 6. 正文字号、行高跟随场景 ── */
 
 :root,
 [data-scene] {
@@ -295,14 +280,12 @@
   line-height: var(--leading);
 }
 
-/* 中英文之间自动留白的兜底（Chrome 140+、Safari 18.4+、Firefox 145+）。
- * 文案里照样手写空格；已有空格的地方不会重复加。 */
+/* 中英文之间自动留白 */
 :root {
   text-autospace: normal;
 }
 
-/* ── 7. 像素字：不合成粗体，字号只用 --px-*。
- * 别关字体平滑（font-smoothing: none）：Safari 会把落在半像素上的文字最左边一列像素切掉 */
+/* ── 7. 像素字：不合成粗体，字号只用 --px-* ── */
 
 .pixel {
   font-family: var(--font-pixel);

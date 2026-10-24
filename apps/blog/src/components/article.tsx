@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react"
 import { useTheme } from "@/components/boring"
 
-/** 服务端渲染好的正文。只在浏览器里补几件事：点开剧透、按需加载 Mermaid 和 Excalidraw 画图 */
+/** 正文 HTML；在浏览器里处理剧透，并按需渲染 Mermaid 和 Excalidraw */
 export function Article({ html }: { html: string }) {
   const ref = useRef<HTMLDivElement>(null)
   const { theme } = useTheme()
@@ -9,7 +9,7 @@ export function Article({ html }: { html: string }) {
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    // 剧透：触屏没有悬停，点一下展开；键盘能聚焦到
+    // 剧透：可聚焦，点击切换展开
     for (const s of el.querySelectorAll<HTMLElement>(".md-spoiler")) {
       s.tabIndex = 0
       s.setAttribute("role", "button")
@@ -25,7 +25,7 @@ export function Article({ html }: { html: string }) {
     const nodes = ref.current?.querySelectorAll<HTMLElement>("pre.mermaid")
     if (!nodes?.length) return
     let cancelled = false
-    // Mermaid 很大，只有页面里真有图时才加载
+    // 有图时才加载 Mermaid
     import("mermaid").then(({ default: mermaid }) => {
       if (cancelled) return
       mermaid.initialize({
@@ -48,14 +48,13 @@ export function Article({ html }: { html: string }) {
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    // Excalidraw 块：新文章是 pre.excalidraw；旧文章和翻译里是被 Shiki 高亮过的代码块，按内容认出来。
-    // 画过的（figure）换主题时按原文重画
+    // Excalidraw 块：pre.excalidraw，或内容是 Excalidraw JSON 的 Shiki 代码块；已画的 figure 换主题时重画
     const nodes = [
       ...el.querySelectorAll<HTMLElement>("pre.excalidraw, pre.shiki, figure.excalidraw-figure"),
     ].filter((n) => (n.dataset.src ?? n.textContent ?? "").trimStart().startsWith('{"type":"excalidraw'))
     if (!nodes.length) return
     let cancelled = false
-    // Excalidraw 很大（带 React 组件和字体），只有页面里真有图时才加载；只用它的 exportToSvg 画成静态 SVG
+    // 有图时才加载 Excalidraw，用 exportToSvg 画成静态 SVG
     void import("@excalidraw/excalidraw").then(async ({ exportToSvg }) => {
       for (const n of nodes) {
         n.dataset.src ??= n.textContent ?? ""
@@ -77,7 +76,7 @@ export function Article({ html }: { html: string }) {
           fig.append(svg)
           n.replaceWith(fig)
         } catch {
-          // 坏掉的 JSON 就留着原文
+          // JSON 无效：保留原文
         }
       }
     })

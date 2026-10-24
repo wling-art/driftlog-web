@@ -13,7 +13,7 @@ import { api, linksQuery, useSite } from "@/lib/api"
 import { site, siteOf } from "@/lib/site"
 
 export const Route = createFileRoute("/friends")({
-  // 每次进来都重新取：服务端每次给的顺序都是随机的
+  // 不用缓存：服务端每次随机排序
   loader: ({ context }) => context.queryClient.fetchQuery({ ...linksQuery(), staleTime: 0 }),
   head: ({ matches }) => ({ meta: [{ title: `友链 · ${siteOf(matches).title}` }] }),
   component: Friends,
@@ -39,7 +39,7 @@ function LinkCards({ items }: { items: L[] }) {
   )
 }
 
-/** 对方的头像可能不许别的网站引用（或者挂了）：加载失败就退回名字首字 */
+/** 头像加载失败时显示名字首字 */
 function Avatar({ src, name }: { src: string | null; name: string }) {
   const [broken, setBroken] = useState(false)
   if (!src || broken)
@@ -85,7 +85,7 @@ function Friends() {
   )
 }
 
-/** 申请友链：填完进后台待审核 */
+/** 申请友链表单 */
 function Apply() {
   const info = useSite()
   const form = useForm({

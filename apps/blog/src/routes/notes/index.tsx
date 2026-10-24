@@ -29,7 +29,6 @@ function Notes() {
       scene="read"
       crumbs={current ? [{ label: "手记", to: "/notes" }, { label: current.name }] : [{ label: "手记" }]}
       folders={
-        // 专栏就是文件夹（和文章页的分类一样）
         <>
           <Link to="/notes" search={{}} className="folder" activeOptions={{ includeSearch: true }}>
             <span>全部</span>
@@ -58,7 +57,6 @@ function Notes() {
       >
         {current && <FolderIntro lead={current.introduce} body={current.description} />}
         {data.length ? (
-          // 在某个专栏里就不用每篇再写一遍专栏名
           <Archive items={current ? data.map((d) => ({ ...d, topic: null })) : data} type="note" />
         ) : (
           <Empty>这里还很无聊，今天也没什么想说的。</Empty>

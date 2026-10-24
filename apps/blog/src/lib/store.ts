@@ -1,23 +1,22 @@
 import { create } from "zustand"
 
-/** 任务栏路径上的一段：点了去哪（最后一段是当前页，不用 to） */
+/** 任务栏路径的一段；最后一段是当前页，不带 to */
 export type Crumb = { label: string; to?: string; search?: Record<string, string> }
 
-// 跨组件的界面状态：搜索面板、在线人数、评论窗口、任务栏路径
+// 跨组件的界面状态
 type UI = {
-  /** 页面告诉任务栏「我在哪」：文章 / 分类 / 标题。没写就按地址猜 */
+  /** 页面给的任务栏路径；null 时按地址推断 */
   crumbs: Crumb[] | null
   setCrumbs: (c: Crumb[] | null) => void
   searchOpen: boolean
   setSearchOpen: (open: boolean) => void
   online: number
   setOnline: (n: number) => void
-  /** 当前页面有评论可看时（文章 / 手记 / 页面），任务栏上才出现「评论」 */
+  /** 当前页的评论对象；非 null 时任务栏显示「评论」 */
   comments: { entryId: number; title: string } | null
   setComments: (c: UI["comments"]) => void
   commentsOpen: boolean
   setCommentsOpen: (open: boolean) => void
-  /** 账号窗口（登录 / 注册 / 退出），从开始菜单打开 */
   accountOpen: boolean
   setAccountOpen: (open: boolean) => void
 }

@@ -5,31 +5,29 @@ import { Window } from "@/components/boring"
 import { Hero } from "@/components/hero"
 import { Button } from "@/components/ui/button"
 import { Empty, EntryList, SiteShell } from "@/components/site"
-import { entriesQuery, saysQuery, siteQuery, useSite } from "@/lib/api"
+import { entriesQuery, saysQuery, useSite } from "@/lib/api"
 import { site, siteOf } from "@/lib/site"
 
 export const Route = createFileRoute("/")({
   loader: ({ context }) =>
     Promise.all([
-      context.queryClient.ensureQueryData(entriesQuery({ type: "post" })),
-      context.queryClient.ensureQueryData(entriesQuery({ type: "note" })),
+      context.queryClient.ensureQueryData(entriesQuery("post")),
+      context.queryClient.ensureQueryData(entriesQuery("note")),
       context.queryClient.ensureQueryData(saysQuery()),
-      context.queryClient.ensureQueryData(siteQuery()),
     ]),
   head: ({ matches }) => {
     const s = siteOf(matches)
     return {
-      meta: [{ title: s.description ? `${s.title} · ${s.description}` : s.title }],
-      scripts: [
+      meta: [
+        { title: s.description ? `${s.title} · ${s.description}` : s.title },
         {
-          type: "application/ld+json",
-          children: JSON.stringify({
+          "script:ld+json": {
             "@context": "https://schema.org",
             "@type": "Blog",
             name: s.title,
             description: s.description,
             url: site.url,
-          }),
+          },
         },
       ],
     }
@@ -39,10 +37,10 @@ export const Route = createFileRoute("/")({
 
 function Home() {
   const info = useSite()
-  const { data: posts } = useSuspenseQuery(entriesQuery({ type: "post" }))
-  const { data: notes } = useSuspenseQuery(entriesQuery({ type: "note" }))
+  const { data: posts } = useSuspenseQuery(entriesQuery("post"))
+  const { data: notes } = useSuspenseQuery(entriesQuery("note"))
   const { data: says } = useSuspenseQuery(saysQuery())
-  // 一言：按日期挑一条，一天换一句（服务器和浏览器挑的一样，不会水合不一致）
+  // 一言：按 UTC 日期每天换一条
   const [day] = useState(() => Math.floor(Date.now() / 86_400_000))
   const say = says.length ? says[day % says.length] : null
 
@@ -63,7 +61,6 @@ function Home() {
         </Window>
       }
       folders={
-        // 首页的图标是快捷方式（像 Windows 桌面上的「文档」）：点了就进那个栏目
         <>
           <Link to="/posts" className="folder">
             <span>文章</span>
@@ -92,7 +89,7 @@ function Home() {
         </>
       }
     >
-      <Hero info={info} say={say ?? null} />
+      <Hero info={info} say={say} />
 
       <Window id="latest-posts" name="posts/" title="最近的文章" rule={`// 共 ${posts.total} 篇`}>
         {posts.items.length ? (

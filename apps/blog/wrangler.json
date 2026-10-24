@@ -1,0 +1,6 @@
+{
+  "name": "driftlog-blog",
+  "compatibility_date": "2026-10-01",
+  "routes": [{ "pattern": "ling.crashvibe.cn", "custom_domain": true }],
+  "observability": { "enabled": true }
+}

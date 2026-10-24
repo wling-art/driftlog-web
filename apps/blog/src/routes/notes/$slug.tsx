@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router"
 import { z } from "zod"
-import { EntryPage, entryHead, loadEntry, siteOf } from "@/components/entry-page"
+import { EntryPage, entryHead, loadEntry } from "@/components/entry-page"
+import { siteOf } from "@/lib/site"
 
 export const Route = createFileRoute("/notes/$slug")({
   validateSearch: z.object({ lang: z.string().optional() }),

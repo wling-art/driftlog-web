@@ -3,31 +3,25 @@ import { Popover } from "radix-ui"
 import { List } from "lucide-react"
 
 /*
- * 文章目录：一张按层级缩进的文字清单（不再是一排文件图标——图标标签截成两行、看不出层级，也不知道读到哪了）。
- *   宽屏：放在左边那一列；窄一点：标题栏上一个「目录」按钮，点开同一张清单
- * 「读到哪」按你眼睛看到的来（参考 Shiro：看得见的标题才算），而不是只算最后一个过了顶的标题：
- *   把正文每一节（这个标题到下一个标题）按比例对应到目录里这一项（这一项顶到下一项顶），
- *   屏幕上看得见的那一段正文就是目录轨道上一截粗的「视野条」，随滚动连续地滑、连续地伸缩（像编辑器的缩略图）；
- *   视野里的每一节都亮起来；视野条上面是读过的实线，下面是没读的点点虚线。
- * 滚动时直接改 DOM（CSS 变量、data 属性），不走 React 渲染，才跟得上每一帧。
- * 点一项：用「移动」曲线滑过去（280–720ms，读者一动就停），视野条跟着一路滑过去。
+ * 文章目录：宽屏放在左边一列（TocPanel），窄屏是标题栏按钮弹出（TocButton）。
+ * 视野条：正文每一节按比例映射到目录对应项，当前可见的正文范围显示为轨道上的一段；滚动时直接改 DOM。
  */
 
 const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches
 
-/** 滚动的是谁：宽屏是文章窗口的内容区，窄屏是整页 */
+/** 滚动容器：宽屏是文章窗口内容区，窄屏是整页 */
 function scrollerOf(): HTMLElement {
   const body = document.querySelector<HTMLElement>("#article .win-body")
   return body && body.scrollHeight > body.clientHeight ? body : (document.scrollingElement as HTMLElement)
 }
 
 let gliding: (() => void) | null = null
-/** 平滑滚到 el，结束（或被读者打断）时回调。再点别的会先停掉上一次 */
+/** 平滑滚到 el，结束或被打断时调用 done；新的滚动会先停掉上一次 */
 function glideTo(el: HTMLElement, done: () => void) {
   gliding?.()
   const box = scrollerOf()
   const page = box === document.scrollingElement
-  // 目标每一帧重新量：路上的懒加载图片一出来，下面的标题就往下挪，量一次会停错地方
+  // 每帧重新计算目标位置
   const target = () => {
     const top = page ? 0 : box.getBoundingClientRect().top
     const to = box.scrollTop + el.getBoundingClientRect().top - top - 16
@@ -42,9 +36,9 @@ function glideTo(el: HTMLElement, done: () => void) {
   const duration = Math.min(720, 280 + Math.sqrt(Math.abs(d0)) * 9)
   const start = performance.now()
   let frame = 0
-  // 最小加加速度曲线：起步和停下都很柔，和 --ease-move 同源
+  // 最小加加速度曲线，同 --ease-move
   const ease = (t: number) => t * t * t * (10 - 15 * t + 6 * t * t)
-  // 滑的时候关掉浏览器的滚动锚定，不然它和我们一起调位置会来回抖
+  // 滚动期间关闭滚动锚定
   const anchor = box.style.overflowAnchor
   box.style.overflowAnchor = "none"
   const stop = () => {
@@ -62,7 +56,7 @@ function glideTo(el: HTMLElement, done: () => void) {
     if (t < 1) frame = requestAnimationFrame(step)
     else stop()
   }
-  // 读者自己一动（滚轮、触摸、按键）就停，别跟人抢
+  // 滚轮、触摸、按键时停止
   addEventListener("wheel", stop, { passive: true, once: true })
   addEventListener("touchstart", stop, { passive: true, once: true })
   addEventListener("keydown", stop, { once: true })
@@ -72,10 +66,7 @@ function glideTo(el: HTMLElement, done: () => void) {
 
 export type TocItem = { depth: number; id: string; text: string }
 
-/**
- * 视野条：每一帧量一次标题位置和视野，按比例换算成目录上的纵坐标。
- * 返回「屏幕上半部分所在的那一节」给读屏（aria-current），只在换节时触发一次渲染
- */
+/** 每帧更新视野条和可见节；返回当前节 id（用于 aria-current），只在换节时重渲染 */
 function useViewportBand(items: TocItem[], wrap: React.RefObject<HTMLDivElement | null>) {
   const [current, setCurrent] = useState<string | null>(null)
   useLayoutEffect(() => {
@@ -100,7 +91,7 @@ function useViewportBand(items: TocItem[], wrap: React.RefObject<HTMLDivElement 
       const lis = [...track.querySelectorAll<HTMLElement>(".toc-list > li")]
       const tops = lis.map((li) => li.offsetTop)
       const tEnd = lis.length ? lis[lis.length - 1]!.offsetTop + lis[lis.length - 1]!.offsetHeight : 0
-      // 正文纵坐标 → 目录纵坐标：落在第 i 节里就按它在这一节里的比例，放到第 i 项和第 i+1 项之间
+      // 正文纵坐标按所在节的比例映射到目录纵坐标
       const map = (y: number) => {
         if (!(y > heads[0]!)) return tops[0] ?? 0
         for (let i = 0; i < heads.length; i++) {
@@ -118,7 +109,7 @@ function useViewportBand(items: TocItem[], wrap: React.RefObject<HTMLDivElement 
       const bandBottom = Math.max(bandTop + 6, map(vBottom))
       track.style.setProperty("--band-top", `${bandTop}px`)
       track.style.setProperty("--band-h", `${bandBottom - bandTop}px`)
-      // 视野里的每一节都亮
+      // 标记可见的节
       let now: string | null = null
       lis.forEach((li, i) => {
         const from = heads[i]!
@@ -131,7 +122,7 @@ function useViewportBand(items: TocItem[], wrap: React.RefObject<HTMLDivElement 
       if (now !== last) {
         last = now
         setCurrent(now)
-        // 当前项在目录自己的滚动区里也要看得见（只滚目录，不动页面）
+        // 把当前项滚进目录自身的可视区
         const pane = track.closest<HTMLElement>(".toc-panel, .toc-pop")
         const li = lis[items.findIndex((it) => it.id === now)]
         if (pane && li && pane.scrollHeight > pane.clientHeight) {
@@ -146,7 +137,7 @@ function useViewportBand(items: TocItem[], wrap: React.RefObject<HTMLDivElement 
     measure()
     target.addEventListener("scroll", onScroll, { passive: true })
     addEventListener("resize", onScroll)
-    // 图片加载完正文会变长：量一次
+    // 正文尺寸变化时重新计算
     const ro = new ResizeObserver(onScroll)
     const prose = document.querySelector("#article .prose")
     if (prose) ro.observe(prose)
@@ -179,7 +170,7 @@ function TocList({ items, onPick }: { items: TocItem[]; onPick?: () => void }) {
                 const el = document.getElementById(it.id)
                 if (!el) return
                 onPick?.()
-                // 地址栏的 #锚点等滑到了再写：先写的话路由会自己「跳」过去一帧，滑动前闪一下
+                // 滚动结束后再写入 #锚点
                 glideTo(el, () => history.replaceState(history.state, "", `#${it.id}`))
               }}
             >
@@ -192,7 +183,7 @@ function TocList({ items, onPick }: { items: TocItem[]; onPick?: () => void }) {
   )
 }
 
-/** 宽屏左边那一列 */
+/** 宽屏左边一列的目录 */
 export function TocPanel({ items }: { items: TocItem[] }) {
   return (
     <nav className="toc-panel" aria-label="文章目录">
@@ -202,7 +193,7 @@ export function TocPanel({ items }: { items: TocItem[] }) {
   )
 }
 
-/** 标题栏上的「目录」按钮（左边那一列放不下时才出现） */
+/** 标题栏上的目录按钮（窄屏显示） */
 export function TocButton({ items }: { items: TocItem[] }) {
   const [open, setOpen] = useState(false)
   return (

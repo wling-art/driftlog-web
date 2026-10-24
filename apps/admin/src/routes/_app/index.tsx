@@ -12,6 +12,13 @@ import { PageHeader, statsQuery } from "../_app"
 export const Route = createFileRoute("/_app/")({ component: Dashboard })
 
 const chartConfig = { n: { label: "评论", color: "var(--chart-1)" } } satisfies ChartConfig
+const jobLabel: Record<string, string> = {
+  active: "进行中",
+  waiting: "排队",
+  failed: "失败",
+  completed: "完成",
+  delayed: "延后",
+}
 
 function Dashboard() {
   const { data, isPending, isError } = useQuery(statsQuery)
@@ -21,7 +28,7 @@ function Dashboard() {
     refetchInterval: 10_000,
   })
 
-  // 30 天补齐：没有评论的日子也要有一个 0
+  // 最近 30 天，没有评论的日子补 0
   const [today] = useState(() => Date.now())
   const daily = useMemo(() => {
     const map = new Map(data?.daily.map((d) => [d.day, d.n]))
@@ -143,16 +150,7 @@ function Dashboard() {
                     variant={k === "failed" && v ? "destructive" : "secondary"}
                     className="tabular"
                   >
-                    {(
-                      {
-                        active: "进行中",
-                        waiting: "排队",
-                        failed: "失败",
-                        completed: "完成",
-                        delayed: "延后",
-                      } as Record<string, string>
-                    )[k] ?? k}{" "}
-                    {v}
+                    {jobLabel[k] ?? k} {v}
                   </Badge>
                 ))
               ) : (

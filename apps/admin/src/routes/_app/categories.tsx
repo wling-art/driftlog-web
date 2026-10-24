@@ -37,7 +37,7 @@ const fetchAll = () => unwrap(api.admin.categories.get())
 function Categories() {
   const qc = useQueryClient()
   const { data } = useQuery({ queryKey: ["admin-categories"], queryFn: fetchAll })
-  // 拖完先按本地顺序显示（乐观更新），服务端确认后回到查询结果
+  // 保存排序期间先按本地顺序显示
   const [order, setOrder] = useState<number[] | null>(null)
   const items = order ? order.flatMap((id) => data?.find((c) => c.id === id) ?? []) : (data ?? [])
 
@@ -145,7 +145,6 @@ function SortableRow({
           /{cat.slug} · {cat.count} 篇
         </div>
       </div>
-      {/* 拖拽只是快捷方式：上移 / 下移按钮一直在 */}
       <Button
         variant="ghost"
         size="icon"
@@ -230,7 +229,7 @@ function NewCategory() {
                     value={f.state.value}
                     onChange={(e) => {
                       f.handleChange(e.target.value)
-                      // 已经报错时边输边校验，改对就消失，免得失焦时错误行消失、按钮跳位点空
+                      // 已报错时边输边校验
                       if (!f.state.meta.isValid) void f.validate("blur")
                     }}
                     aria-invalid={!f.state.meta.isValid}

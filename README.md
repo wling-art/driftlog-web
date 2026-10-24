@@ -38,11 +38,11 @@ E2E_EMAIL=… E2E_PASSWORD=… bun run test   # Playwright；不给站长账号�
 
 - 设计：boring-ui 的 tokens.css / desktop.css 原样放在 `apps/blog/src/styles`，桌面组件在 `components/boring`，换过皮的 shadcn 在 `components/ui`。文章页是「阅读」场景，左边文件夹列就是目录；分类页的文件夹就是分类。
 - 数据：TanStack Router loader + TanStack Query（SSR 时预取、客户端复用）。
-- SEO：每页 head、JSON-LD、`/sitemap.xml`、`/feed.xml`（RSS）、`/atom.xml`、`/og/:type/:slug`（Satori + resvg，像素字用 `public/fonts` 里的 Fusion Pixel TTF，SIL OFL 1.1）。
+- SEO：每页 head、JSON-LD、`/sitemap.xml`、`/feed.xml`（RSS）、`/atom.xml`、`/og/:type/:slug`（`@cf-wasm/og`，像素字用 `public/fonts` 里的 Fusion Pixel TTF，SIL OFL 1.1）。
 - 实时：WebSocket 收在线人数、新评论、新文章。
 - 搜索：⌘K 面板（Radix Dialog + cmdk），后端是 Meilisearch。
-- 动效：Motion（新评论出现）+ View Transitions（路由切换），曲线都是 tokens 里那四条。没加 Lenis。
-- 部署：Vercel。`vercel.json` 的 `bunVersion` 让函数跑在 Bun 上；Nitro 的 routeRules 给页面、OG 图、字体设了 CDN 缓存头。
+- 动效：Motion（新评论出现）+ CSS 动画（路由切换），曲线都是 tokens 里那四条。
+- 部署：Cloudflare Workers。构建产物由 Nitro 的 `cloudflare_module` 预设生成，`apps/blog/wrangler.json` 合并进去；`VITE_SITE_URL`、`VITE_API_URL` 写在 `apps/blog/.env.production.local`，然后 `bun --filter @driftlog/blog deploy`。
 
 ## 管理后台
 

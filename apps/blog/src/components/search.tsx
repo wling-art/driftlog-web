@@ -5,12 +5,10 @@ import { useNavigate } from "@tanstack/react-router"
 import { unwrap } from "@driftlog/client"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { api } from "@/lib/api"
-import { entryPath, type EntryType } from "@/lib/site"
+import { entryPath, typeLabel, type EntryType } from "@/lib/site"
 import { useUI } from "@/lib/store"
 
-const typeLabel: Record<string, string> = { post: "文章", note: "手记", page: "页面" }
-
-/** ⌘K 搜索面板：Radix Dialog（焦点、Esc）+ cmdk（方向键、读屏）+ 服务端 Meilisearch */
+/** ⌘K 搜索面板：Dialog + cmdk，结果来自服务端搜索 */
 export function SearchPanel() {
   const open = useUI((s) => s.searchOpen)
   const setOpen = useUI((s) => s.setSearchOpen)
@@ -78,7 +76,7 @@ export function SearchPanel() {
                 className="grid cursor-pointer gap-1 rounded-[3px] px-(--space-2) py-(--space-2) data-[selected=true]:bg-foreground data-[selected=true]:text-background [&_mark]:bg-transparent [&_mark]:text-inherit [&_mark]:underline"
               >
                 <span className="flex items-baseline gap-2">
-                  <span className="pixel-1 opacity-70">{typeLabel[hit.type] ?? hit.type}</span>
+                  <span className="pixel-1 opacity-70">{typeLabel[hit.type as EntryType] ?? hit.type}</span>
                   <span dangerouslySetInnerHTML={{ __html: hit.title }} />
                 </span>
                 {hit.snippet && (

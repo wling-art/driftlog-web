@@ -1,1 +1,1 @@
-{ "printWidth": 110, "semi": false }
+{ "printWidth": 110, "semi": false, "ignorePatterns": ["apps/*/src/routeTree.gen.ts"] }

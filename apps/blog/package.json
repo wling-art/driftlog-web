@@ -5,13 +5,14 @@
   "scripts": {
     "dev": "bun --bun vite dev --port 5173",
     "build": "bun --bun vite build",
-    "start": "bun .output/server/index.mjs",
-    "typecheck": "tsgo --noEmit"
+    "typecheck": "tsgo --noEmit",
+    "preview": "wrangler dev",
+    "deploy": "bun run build && wrangler deploy"
   },
   "dependencies": {
+    "@cf-wasm/og": "^0.5.0",
     "@driftlog/client": "workspace:*",
     "@excalidraw/excalidraw": "^0.18.1",
-    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
@@ -32,7 +33,6 @@
     "radix-ui": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "satori": "^0.33.5",
     "shadcn": "^4.21.0",
     "sonner": "catalog:",
     "tailwindcss": "catalog:",
@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "@types/react": "catalog:",
-    "@types/react-dom": "catalog:"
+    "@types/react-dom": "catalog:",
+    "wrangler": "^4.152.0"
   }
 }

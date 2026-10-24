@@ -1,3 +1,4 @@
+import type { CSSProperties, ReactNode } from "react"
 import { Link } from "@tanstack/react-router"
 import { Mail } from "lucide-react"
 import { BrandIcon } from "@/components/brand-icons"
@@ -6,41 +7,25 @@ import { Window } from "@/components/boring"
 import { LikeButton } from "@/components/like-button"
 import { api, type SiteSettings } from "@/lib/api"
 
-/*
- * 首页头部（参考 Shiro 的 Hero，换成低饱桌面的样子）：
- *   左：48px 像素字「你好，我是 xx」逐字升起 → 站名 · 简介 → 介绍拆成的标签 → 社交账号按钮
- *   右：方形相框里的头像（和窗口一样的细线 + 小圆角，不用圆形）
- *   底：一言，两行为止，悬停看全文
- * 窗口窄了就头像在上、整体居中（@container）。
- * 不用「展示」场景：它把留白放大 1.5 倍，首页一屏里就放不下下面的文章了。
- */
-
-// 社交账号 → 链接、图标、名字。按钮只放图标（这几个标志一眼认得出），名字给读屏和悬停提示
-const socials: Record<string, { label: string; Icon: () => React.ReactNode; href: (v: string) => string }> = {
-  github: {
-    label: "GitHub",
-    Icon: () => <BrandIcon name="github" />,
-    href: (v) => `https://github.com/${v}`,
-  },
-  twitter: { label: "X", Icon: () => <BrandIcon name="x" />, href: (v) => `https://x.com/${v}` },
-  telegram: {
-    label: "Telegram",
-    Icon: () => <BrandIcon name="telegram" />,
-    href: (v) => `https://t.me/${v}`,
-  },
+// 社交账号：名字、图标、链接
+const socials: Record<string, { label: string; icon: ReactNode; href: (v: string) => string }> = {
+  github: { label: "GitHub", icon: <BrandIcon name="github" />, href: (v) => `https://github.com/${v}` },
+  twitter: { label: "X", icon: <BrandIcon name="x" />, href: (v) => `https://x.com/${v}` },
+  telegram: { label: "Telegram", icon: <BrandIcon name="telegram" />, href: (v) => `https://t.me/${v}` },
   bilibili: {
     label: "哔哩哔哩",
-    Icon: () => <BrandIcon name="bilibili" />,
+    icon: <BrandIcon name="bilibili" />,
     href: (v) => `https://space.bilibili.com/${v}`,
   },
-  email: { label: "邮件", Icon: () => <Mail aria-hidden="true" />, href: (v) => `mailto:${v}` },
+  email: { label: "邮件", icon: <Mail aria-hidden="true" />, href: (v) => `mailto:${v}` },
 }
 
 type Say = { text: string; author: string | null; source: string | null } | null
 
+/** 首页头部：问候、站名、标签、社交账号、头像、一言 */
 export function Hero({ info, say }: { info: SiteSettings; say: Say }) {
   const greeting = `你好，我是 ${info.owner.name}`
-  // 介绍按「｜」拆成标签；开头就是名字的那一段不要（标题里已经有了）
+  // 介绍按「｜」拆成标签，去掉和名字相同的一段
   const tags = info.owner.introduce
     .split(/[｜|]/)
     .map((t) => t.trim())
@@ -51,10 +36,10 @@ export function Hero({ info, say }: { info: SiteSettings; say: Say }) {
     <Window id="hello" name="about.me" className="hero-win win-fixed">
       <div className="hero">
         <div className="hero-text">
-          {/* 逐字升起：每个字晚 40ms，只在进页面时播一次；读屏读整句 */}
+          {/* 逐字动画；读屏读 aria-label 整句 */}
           <h1 className="hero-title" aria-label={greeting}>
             {[...greeting].map((ch, i) => (
-              <span key={i} aria-hidden="true" style={{ "--i": i } as React.CSSProperties}>
+              <span key={i} aria-hidden="true" style={{ "--i": i } as CSSProperties}>
                 {ch === " " ? " " : ch}
               </span>
             ))}
@@ -83,7 +68,7 @@ export function Hero({ info, say }: { info: SiteSettings; say: Say }) {
                     aria-label={s.label}
                     title={k === "email" ? v : s.label}
                   >
-                    <s.Icon />
+                    {s.icon}
                   </a>
                 </li>
               )

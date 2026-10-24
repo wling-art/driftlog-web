@@ -38,7 +38,7 @@ E2E_EMAIL=… E2E_PASSWORD=… bun run test   # Playwright; admin cases skip wit
 
 ## Traps
 
-- **OG images**: `satori` and `@resvg/resvg-js` are SSR externals, and Nitro must copy them whole: `traceDeps: ["satori*", "harfbuzzjs*", …]` in `apps/blog/vite.config.ts`. Without the `*`, `hb.wasm` is missing in production.
+- **Cloudflare Workers build**: `vite build` uses Nitro's `cloudflare_module` preset (dev stays a Node server). OG images use `@cf-wasm/og` (wasm, works in workerd and Bun); the font is read through the `ASSETS` binding (`globalThis.__env__`), because a Worker can't fetch its own domain. Mermaid and Excalidraw are aliased to an empty mock for the server bundle, or the Worker exceeds 3 MB. `wrangler.json` must stay plain JSON (Nitro's parser rejects jsonc trailing commas). Deploy: `bun --filter @driftlog/blog deploy` with `VITE_SITE_URL` / `VITE_API_URL` in `apps/blog/.env.production.local`.
 - **TanStack `Link` sets `aria-current` from the URL immediately**, before the new route's data loads. In tests, wait for new content, not for `aria-current`.
 - **shadcn `Table`** wraps the table in `overflow-x-auto`, which breaks `position: sticky` on the header (it shifted the header over the first row). Don't make that header sticky.
 - `useArrowNav` keeps targets in a ref updated in `useLayoutEffect`. Don't compare targets with `JSON.stringify`: `search` is often a function, which it drops.

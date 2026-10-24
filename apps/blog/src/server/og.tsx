@@ -1,14 +1,17 @@
-import satori from "satori"
-import { Resvg } from "@resvg/resvg-js"
+import { render } from "@cf-wasm/og"
 import { formatDate, site } from "@/lib/site"
 
-// Satori 不认 woff2，用上游的 TTF（public/fonts，SIL OFL 1.1）。每个实例只取一次
+// 像素字体 TTF（public/fonts），每个实例只取一次；Worker 里走 ASSETS 绑定
+type Assets = { fetch(url: string): Promise<Response> }
 let font: Promise<ArrayBuffer> | null = null
-const loadFont = (origin: string) =>
-  (font ??= fetch(`${origin}/fonts/fusion-pixel-12px-proportional-zh_hans.ttf`).then((r) => {
+const loadFont = (origin: string) => {
+  const url = `${origin}/fonts/fusion-pixel-12px-proportional-zh_hans.ttf`
+  const assets = (globalThis as { __env__?: { ASSETS?: Assets } }).__env__?.ASSETS
+  return (font ??= (assets ? assets.fetch(url) : fetch(url)).then((r) => {
     if (!r.ok) throw new Error(`字体没取到：${r.status}`)
     return r.arrayBuffer()
   }))
+}
 
 const c = {
   bg: "#CFD3D7",
@@ -20,13 +23,13 @@ const c = {
   accent: "#255E65",
 }
 
-/** OG 图：一块灰桌面上的一个窗口，和站点长得一样 */
+/** OG 图：灰桌面上的一个窗口 */
 export async function ogImage(
   origin: string,
   e: { title: string; slug: string; type: string; publishedAt: string | Date | null },
   siteTitle: string,
 ) {
-  const svg = await satori(
+  const { image } = await render(
     <div
       style={{
         width: 1200,
@@ -88,6 +91,6 @@ export async function ogImage(
       height: 630,
       fonts: [{ name: "Pixel", data: await loadFont(origin), weight: 400, style: "normal" }],
     },
-  )
-  return new Resvg(svg, { fitTo: { mode: "width", value: 1200 } }).render().asPng()
+  ).asPng()
+  return image
 }

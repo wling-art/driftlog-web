@@ -1,4 +1,6 @@
-// 部署相关的地址从环境变量来；站名、简介、站长这些内容从接口来（后台「站点设置」里改），见 useSite()
+import { useSyncExternalStore } from "react"
+
+// 站点地址和 API 地址；站名等内容用 useSite()
 export const site = {
   url: (import.meta.env.VITE_SITE_URL ?? "http://localhost:5173").replace(/\/$/, ""),
   api: (import.meta.env.VITE_API_URL ?? "http://localhost:3900").replace(/\/$/, ""),
@@ -6,24 +8,29 @@ export const site = {
 
 type SiteInfo = { title: string; description: string; owner: { name: string } }
 const fallback: SiteInfo = { title: "Driftlog", description: "", owner: { name: "" } }
-/** 在路由的 head() 里拿站点设置：根路由的 loader 已经取好了 */
+/** 在 head() 里取根路由加载的站点设置 */
 export const siteOf = (matches: { routeId: string; loaderData?: unknown }[]) =>
   (matches.find((m) => m.routeId === "__root__")?.loaderData as SiteInfo | undefined) ?? fallback
 
 export type EntryType = "post" | "note" | "page"
-/** 前台地址：文章 /posts/x，手记 /notes/x，页面 /x */
+export const typeLabel: Record<EntryType, string> = { post: "文章", note: "手记", page: "页面" }
+/** 前台地址：/posts/x、/notes/x、/x */
 export const entryPath = (type: EntryType, slug: string) =>
   type === "page" ? `/${slug}` : `/${type}s/${slug}`
 export const readingMinutes = (html: string) =>
   Math.max(1, Math.round(html.replace(/<[^>]+>/g, "").length / 400))
+
+/** 显示日期用的时区 */
+const timeZone = "Asia/Shanghai"
+/** 日期：2025-09-27 */
 export const formatDate = (d: string | Date | null | undefined) =>
   d
     ? new Date(d)
-        .toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" })
+        .toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", timeZone })
         .replaceAll("/", "-")
     : ""
 
-/** 一眼能懂的时间：刚刚 / 5 分钟前 / 3 小时前 / 昨天 14:20 / 9月27日 / 2025年9月27日 */
+/** 相对时间：刚刚 / 5 分钟前 / 3 小时前 / 昨天 14:20 / 9月27日 / 2025年9月27日。依赖本地时钟，只在浏览器里用 */
 export function timeAgo(d: string | Date, now = Date.now()) {
   const t = new Date(d)
   const diff = (now - t.getTime()) / 1000
@@ -37,7 +44,7 @@ export function timeAgo(d: string | Date, now = Date.now()) {
   if (t.getFullYear() === today.getFullYear()) return `${t.getMonth() + 1}月${t.getDate()}日`
   return `${t.getFullYear()}年${t.getMonth() + 1}月${t.getDate()}日`
 }
-/** 悬停时看的完整时间 */
+/** 完整时间（悬停提示） */
 export const fullTime = (d: string | Date) =>
   new Date(d).toLocaleString("zh-CN", {
     year: "numeric",
@@ -47,3 +54,12 @@ export const fullTime = (d: string | Date) =>
     minute: "2-digit",
     hour12: false,
   })
+
+const noSubscribe = () => () => {}
+/** 水合完成后为 true；服务器上和水合时为 false */
+export const useHydrated = () =>
+  useSyncExternalStore(
+    noSubscribe,
+    () => true,
+    () => false,
+  )

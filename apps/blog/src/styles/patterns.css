@@ -1,29 +1,27 @@
 /*
- * 内容里常用的几个小部件（Boring UI 的 patterns.css；静态 HTML 和 React 都引用它）：
- *   .icon-link      一排方形图标按钮（社交账号）
- *   .archive        按年份分组的归档；加 data-timeline 就是时间线（左边一根线 + 圆点，标题下一行小字）
- *   .folder-intro   分类 / 专栏简介：文件夹的「属性」卡片
- *   .lang-switch    一排小按钮当分段控件，当前的反白（data-on）
+ * 内容小部件：
+ *   .icon-link      方形图标按钮
+ *   .archive        按年份分组的归档；data-timeline 为时间线
+ *   .folder-intro   分类 / 专栏简介卡片
+ *   .lang-switch    语言切换按钮组，当前项 data-on
  *   .copyright      版权声明卡片
- *   .article-end    正文末尾：两个按钮（喜欢 / 评论）+ 一行去哪
- * 只用 tokens 里的变量；规则见 references/components.md。
+ *   .article-end    正文末尾的按钮和导航
  */
 
-/* 社交账号：一排 36px 的方形图标按钮，细线框、指上去反白（和标题栏小按钮一个脾气） */
-
-/* 列表、段落的默认外边距和圆点去掉：静态 HTML 没有 Tailwind 的重置。:where 优先级为 0，不会盖掉下面各自写的规则 */
+/* 重置小部件里列表、段落的默认样式 */
 :where(.archive, .folder-intro, .copyright, .lang-switch) :where(ul, ol, p, dl, dd, h3) {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/* 页面里常有全局的 p { margin; max-width }（静态 HTML 的 components.css 就有）：小部件里的段落自己写清楚 */
+/* 小部件里的段落不受全局 p 样式影响 */
 :is(.folder-intro-text, .copyright-text) p {
   margin: 0;
   max-width: none;
 }
 
+/* 社交账号：36px 方形图标按钮 */
 .icon-link {
   display: grid;
   place-items: center;
@@ -51,7 +49,7 @@
   color: var(--bg);
 }
 
-/* ── 归档：按年份分组，一行一篇（日期 + 标题），不分页 ── */
+/* ── 归档：按年份分组，一行一篇 ── */
 .archive {
   display: grid;
   gap: var(--space-6);
@@ -103,10 +101,7 @@
   opacity: 0.75;
 }
 
-/*
- * 手记时间线（参考 Shiro）：左边一根竖线，每篇一个圆点落在线上；
- * 一行里标题在左、日期在右（和首页列表一样），下面一行小字是专栏 · 心情 · 天气
- */
+/* 时间线：左边竖线 + 圆点，标题左、日期右，下一行是专栏 · 心情 · 天气 */
 .archive[data-timeline] .archive-list {
   position: relative;
 }
@@ -151,10 +146,7 @@
   background: var(--bg);
 }
 
-/*
- * 分类 / 专栏简介：文件夹的「属性」卡片，分量比标题和列表轻。
- * 第三层灰（卡片）、细线框、不加投影；左边 28px 的文件夹图标（和桌面上的同一个），字都是正文字号或小一号
- */
+/* 分类 / 专栏简介：卡片底色、细线框，左边 28px 文件夹图标 */
 .folder-intro {
   display: grid;
   grid-template-columns: 28px minmax(0, 1fr);
@@ -205,7 +197,7 @@
   display: none;
 }
 
-/* ── 语言：一排小按钮，正在看的反白 ── */
+/* ── 语言切换：当前项反白 ── */
 .lang-switch {
   display: flex;
   flex-wrap: wrap;
@@ -221,7 +213,7 @@
   fill: currentColor;
 }
 
-/* 版权声明：第三层灰的卡片，细线框；字都小一号，标题和链接深一点 */
+/* 版权声明卡片 */
 .copyright {
   display: grid;
   margin-top: var(--space-7);
@@ -252,7 +244,7 @@
   color: var(--text);
   overflow-wrap: anywhere;
 }
-/* 「复制链接」：一行里的小文字按钮，青色 + 下划线 = 能点 */
+/* 「复制链接」文字按钮 */
 .copyright-link button {
   margin-left: auto;
   flex: none;
@@ -294,7 +286,7 @@
   text-underline-offset: 3px;
 }
 
-/* ── 正文末尾：喜欢 / 评论两个按钮，下面一行去哪。安静，不抢正文 ── */
+/* ── 正文末尾：喜欢 / 评论按钮，下面一行导航 ── */
 .article-end {
   display: grid;
   gap: var(--space-5);

@@ -10,11 +10,10 @@ import { useRealtime } from "@/lib/realtime"
 import { siteQuery } from "@/lib/api"
 import css from "@/styles/app.css?url"
 
-// 主题在首帧前就定下来，免得先闪一下亮色（use-theme 用的同一个 key）
+// 首帧前套用记住的主题（key 同 use-theme）
 const themeScript = `try{var t=localStorage.getItem("boring-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  // 站点设置（站名、简介、站长）：每页都要，根路由取一次
   loader: ({ context }) => context.queryClient.ensureQueryData(siteQuery()),
   head: ({ loaderData }) => ({
     meta: [
@@ -60,7 +59,6 @@ function Document({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {/* 系统开了「减少动效」时，Motion 的动画也跟着关 */}
         <MotionConfig reducedMotion="user">
           <TooltipProvider delayDuration={400}>
             {children}

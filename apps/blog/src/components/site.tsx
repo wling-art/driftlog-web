@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { Link, useLocation, useRouter } from "@tanstack/react-router"
 import {
@@ -19,10 +19,9 @@ import { AccountDialog } from "@/components/account"
 import { StartMenu } from "@/components/start-menu"
 import { ChevronLeft } from "lucide-react"
 import { markDirection, takeDirection, useArrowNav } from "@/lib/keys"
-import { entryPath, formatDate } from "@/lib/site"
+import { entryPath, formatDate, useHydrated } from "@/lib/site"
 import type { EntryCard } from "@/lib/api"
 
-// 栏目的中文名（任务栏上「当前打开的窗口」用）
 const sectionName: Record<string, string> = {
   posts: "文章",
   notes: "手记",
@@ -32,7 +31,7 @@ const sectionName: Record<string, string> = {
   friends: "友链",
 }
 
-/** 没有页面给路径时，按地址猜：/notes → 手记，/posts/x → 文章 / x */
+/** 按地址推断路径：/notes → 手记，/posts/x → 文章 / x */
 function guessCrumbs(pathname: string): Crumb[] {
   const [, first, second] = pathname.split("/")
   if (!first) return [{ label: "首页" }]
@@ -43,11 +42,7 @@ function guessCrumbs(pathname: string): Crumb[] {
     : [{ label: section }]
 }
 
-/**
- * 任务栏上的地址栏（像文件管理器）：[⌂ › 手记 › 随想 › 走个面儿]
- * 一个往里凹的框，房子图标回首页，中间每一段都能点回那一级，最后一段是当前页（字深一点、不能点）。
- * 太长时从中间省略：窄屏只留房子和当前页
- */
+/** 任务栏上的地址栏：⌂ › 手记 › 专栏 › 标题，中间各段可点 */
 function PathBar() {
   const pathname = useLocation({ select: (l) => l.pathname })
   const given = useUI((s) => s.crumbs)
@@ -85,11 +80,7 @@ function PathBar() {
   )
 }
 
-/**
- * 整个站点的外壳：全屏桌面 + 浮动的评论窗口 + 吸底任务栏。放在根布局里，只渲染一次：
- * 换页时任务栏还是同一批元素，只有「当前页」在变，标签升起、落下的过渡才都看得见。
- * 每一页自己的部分（图标和窗口）是 children，见 SiteShell。
- */
+/** 站点外壳：桌面、评论浮窗、账号弹窗、任务栏。在根布局里渲染一次，页面内容是 children */
 export function AppShell({ children }: { children: ReactNode }) {
   useScrollKeys()
   const online = useUI((s) => s.online)
@@ -99,7 +90,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       {children}
       <CommentsFloat />
       <AccountDialog />
-      {/* 左边：开始菜单 + 你在哪（路径）；主题和账号收进开始菜单 */}
       <Taskbar
         items={[]}
         start={
@@ -110,7 +100,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         }
         themeToggle={false}
       >
-        {/* 这一页关掉的窗口（ClosedTasks 从页面里传送过来） */}
+        {/* 本页关掉的窗口，由 ClosedTasks 传送进来 */}
         <span id="tb-closed" className="tb-closed" />
         <CommentsTaskItem />
         {online > 0 && (
@@ -127,9 +117,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 /**
- * 每一页自己的桌面：左边一列图标（本页目录 / 栏目快捷方式 / 分类）+ 窗口。
- * children 是主内容；aside 是附属窗口，宽屏时排到右边一栏，窄屏时排在主内容后面。
- * 按地址换 key：换页时这一块重新挂载——窗口列播一次入场动画、滚动位置回到顶部、关掉的窗口也不会带到下一页。
+ * 每页的桌面区域：左边图标列（或目录）+ 窗口列。children 是主内容，aside 是右栏窗口。
+ * 按地址做 key，换页时重新挂载
  */
 export function SiteShell({
   folders,
@@ -140,11 +129,11 @@ export function SiteShell({
   children,
 }: {
   folders?: ReactNode
-  /** 左边那一列放文章目录（文字清单）而不是图标 */
+  /** 左边一列放目录而不是图标 */
   toc?: ReactNode
   scene?: "read" | "show"
   aside?: ReactNode
-  /** 任务栏上的路径（不含盘符）。不给就按地址猜 */
+  /** 任务栏路径；不给就按地址推断 */
   crumbs?: Crumb[]
   children: ReactNode
 }) {
@@ -166,10 +155,7 @@ export function SiteShell({
   )
 }
 
-/**
- * 窗口那一列：挂载时播一次入场动画（desktop.css 的 page-in；SiteShell 按地址换 key，所以每次换页都会重新挂载）。
- * 方向在挂载时读一次：上一篇 / 下一篇、← → 标过方向就从侧面滑进来，否则从下面升上来
- */
+/** 窗口列；挂载时读一次换页方向，给入场动画用 */
 function PageWindows({ aside, children }: { aside?: ReactNode; children: ReactNode }) {
   const [dir] = useState(takeDirection)
   return (
@@ -184,7 +170,7 @@ function PageWindows({ aside, children }: { aside?: ReactNode; children: ReactNo
   )
 }
 
-/** 文章 / 手记列表：整行能点，指上去反白 */
+/** 文章 / 手记列表，整行是链接 */
 export function EntryList({ items }: { items: EntryCard[] }) {
   return (
     <ul className="entry-list">
@@ -195,7 +181,7 @@ export function EntryList({ items }: { items: EntryCard[] }) {
               {e.pinned && <span className="pixel-1 mr-2">[置顶]</span>}
               {e.title}
             </span>
-            <time dateTime={String(e.publishedAt ?? e.createdAt)}>
+            <time dateTime={formatDate(e.publishedAt ?? e.createdAt)}>
               {formatDate(e.publishedAt ?? e.createdAt)}
             </time>
             {(e.summary || e.excerpt) && (
@@ -219,18 +205,16 @@ type ArchiveItem = {
   topic?: string | null
 }
 
-/**
- * 归档：不分页，按年份分组，一行一篇（日期 + 标题）。
- * 个人博客几十到几百篇，一页放得下，翻页按钮也就不需要了。
- */
+/** 归档：按年份分组，不分页；手记显示为时间线 */
 export function Archive({ items, type }: { items: ArchiveItem[]; type: "post" | "note" }) {
-  const years = new Map<number, ArchiveItem[]>()
+  const years = new Map<string, ArchiveItem[]>()
   for (const it of items) {
-    const y = new Date(it.publishedAt ?? 0).getFullYear()
-    years.set(y, [...(years.get(y) ?? []), it])
+    const y = formatDate(it.publishedAt).slice(0, 4)
+    const list = years.get(y)
+    if (list) list.push(it)
+    else years.set(y, [it])
   }
   return (
-    // 手记是时间线（竖线 + 圆点，标题下一行小字：专栏 · 心情 · 天气）；文章是普通年表
     <div className="archive" data-timeline={type === "note" || undefined}>
       {[...years].map(([year, list]) => (
         <section key={year} aria-labelledby={`y-${year}`}>
@@ -242,7 +226,7 @@ export function Archive({ items, type }: { items: ArchiveItem[]; type: "post" | 
             {list.map((it) => (
               <li key={it.slug}>
                 <Link to={entryPath(type, it.slug)} className="archive-row">
-                  <time dateTime={String(it.publishedAt)}>{formatDate(it.publishedAt).slice(5)}</time>
+                  <time dateTime={formatDate(it.publishedAt)}>{formatDate(it.publishedAt).slice(5)}</time>
                   <span className="t">{it.title}</span>
                   {type === "note" && (it.topic || it.mood || it.weather) && (
                     <span className="m">{[it.topic, it.mood, it.weather].filter(Boolean).join(" · ")}</span>
@@ -293,15 +277,12 @@ export function ErrorWindow({ error, reset }: { error: Error; reset: () => void 
   )
 }
 
-/** 空列表：说明为什么空 */
+/** 空列表提示 */
 export function Empty({ children }: { children: ReactNode }) {
   return <p className="muted py-(--space-4)">{children}</p>
 }
 
-/**
- * 标题栏左边的「‹ 上一级」：每个不是首页的窗口都有，Esc 同效。
- * 上一级由页面决定：栏目回首页，分类 / 专栏 / 标签回栏目，详情回列表
- */
+/** 标题栏左边的「‹ 上一级」链接，同时绑定 Esc */
 export function BackLink({
   to,
   search,
@@ -327,12 +308,7 @@ export function BackLink({
   )
 }
 
-/**
- * 分类 / 专栏的简介（参考 Shiro 的专栏页头）：像文件夹的「属性」卡片。
- * 左边一个小文件夹图标，右边一句话介绍、正文段落。分量比窗口标题和列表轻：字不放大、卡片不厚。
- * 篇数和最近一篇写在窗口的 // 副标题里，不在这里重复。
- * 正文长了只露第一段，剩下的收在「继续读」里（原生 details，不用 JS）
- */
+/** 分类 / 专栏简介卡片：一句话介绍 + 第一段，其余段落收进「继续读」 */
 export function FolderIntro({ lead, body }: { lead?: string; body?: string }) {
   const paras = (body ?? "")
     .split(/\n+/)
@@ -359,19 +335,11 @@ export function FolderIntro({ lead, body }: { lead?: string; body?: string }) {
   )
 }
 
-/**
- * 关掉的窗口留在任务栏上（像最小化的程序）：点一下就回来。
- * 窗口状态在每页自己的 DesktopProvider 里，任务栏在根布局里，所以用 portal 放进任务栏的空位
- */
-const noSubscribe = () => () => {}
+/** 本页关掉的窗口：portal 到任务栏的 #tb-closed，点击恢复 */
 function ClosedTasks() {
   const desk = useDesktop()
-  // 任务栏的空位：服务器上没有（null），浏览器里取一次
-  const slot = useSyncExternalStore(
-    noSubscribe,
-    () => document.getElementById("tb-closed"),
-    () => null,
-  )
+  const hydrated = useHydrated()
+  const slot = hydrated ? document.getElementById("tb-closed") : null
   if (!slot || !desk?.hidden.size) return null
   return createPortal(
     [...desk.hidden].map((id) => (

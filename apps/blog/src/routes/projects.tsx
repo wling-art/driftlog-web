@@ -11,7 +11,6 @@ export const Route = createFileRoute("/projects")({
   component: Projects,
 })
 
-/** 项目：一个项目一张卡片（标签 → 名字 → 一句话 → 链接），有详细介绍的可以展开 */
 function Projects() {
   const { data } = useSuspenseQuery(projectsQuery())
   return (

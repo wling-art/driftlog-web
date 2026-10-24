@@ -6,14 +6,9 @@ import { Comments } from "@/components/comments"
 import { commentsQuery } from "@/lib/api"
 import { useUI } from "@/lib/store"
 
-/*
- * 评论是次要的：平时最小化在任务栏，像一个缩小的程序。
- * - 任务栏上一个标签「评论 4」；有新评论时数字轻轻跳一下（外围提示，不打断阅读）
- * - 点开：comments.log 从任务栏升起来，浮在桌面上；能拖，× 或 Esc 收回任务栏，焦点回到任务栏标签
- * - 邮件里的 #comment-123 链接进来时自动打开，并滚到那一条
- */
+// 评论在任务栏上的按钮和可拖动的浮窗
 
-// 和 tokens.css 同一套：弹出用轻回弹（400ms），收起用「离开」（160ms）
+// 曲线同 tokens.css：弹出 400ms 轻回弹，收起 160ms
 const easePop = [0.29, 0.45, 0.07, 1.14] as const
 const easeExit = [0.88, 0.15, 0.63, 0.58] as const
 const easeEnter = [0.37, 0.42, 0.12, 0.85] as const
@@ -26,7 +21,7 @@ export function CommentsTaskItem() {
   const { data } = useQuery({ ...commentsQuery(target?.entryId ?? 0), enabled: !!target })
   const count = data?.length
 
-  // 新评论来了（窗口没开时）：数字跳一下
+  // 窗口没开时评论数变多，数字跳一下
   const last = useRef<number | undefined>(undefined)
   const [bump, setBump] = useState(0)
   useEffect(() => {
@@ -67,12 +62,12 @@ export function CommentsFloat() {
     document.getElementById("comments-task")?.focus()
   }
 
-  // 邮件链接 #comment-123 / #comments：进来就打开
+  // 地址带 #comment… 时自动打开
   useEffect(() => {
     if (target && /^#comment/.test(location.hash)) setOpen(true)
   }, [target, setOpen])
 
-  // 打开后：焦点放进窗口；有锚点就滚到那一条
+  // 打开后聚焦窗口，并滚到锚点指向的评论
   useEffect(() => {
     if (!open) return
     ref.current?.focus({ preventScroll: true })
@@ -82,7 +77,7 @@ export function CommentsFloat() {
     const find = () => {
       const el = document.getElementById(hash)
       if (el) el.scrollIntoView({ block: "center" })
-      else if (tries++ < 20) setTimeout(find, 100) // 评论可能还在加载
+      else if (tries++ < 20) setTimeout(find, 100) // 等评论加载，最多 2 秒
     }
     find()
   }, [open])

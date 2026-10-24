@@ -1,6 +1,6 @@
 import { useCallback, useSyncExternalStore } from "react"
 
-// 亮 / 暗：跟随系统，点过之后记住。index.html 里的内联脚本在首帧前就加好 .dark
+// 亮 / 暗主题：默认跟随系统，切换后存进 localStorage（首帧由 index.html 的内联脚本设置）
 type Theme = "light" | "dark"
 const listeners = new Set<() => void>()
 const current = (): Theme => (document.documentElement.classList.contains("dark") ? "dark" : "light")

@@ -5,10 +5,7 @@ import { wsEvent } from "@driftlog/client"
 import { site, entryPath } from "./site"
 import { useUI } from "./store"
 
-/**
- * 订阅服务端的 WebSocket：在线人数、新评论、新文章。断线后退避重连。
- * 放在根组件里挂一次。
- */
+/** 订阅服务端 WebSocket：在线人数、新评论、新文章；断线后指数退避重连 */
 export function useRealtime() {
   const qc = useQueryClient()
   const setOnline = useUI((s) => s.setOnline)

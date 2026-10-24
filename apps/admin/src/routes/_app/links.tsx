@@ -9,6 +9,9 @@ import { api, unwrap } from "@/lib/api"
 
 const stateLabel = { approved: "已通过", pending: "待审核", outdated: "失效", rejected: "拒绝" } as const
 const typeLabel = { friend: "友链", collection: "收藏" } as const
+const setState = (id: number, state: "approved" | "rejected") =>
+  unwrap(api.admin.links({ id }).patch({ state }))
+const showError = (e: Error) => toast.error(e.message)
 
 export const Route = createFileRoute("/_app/links")({
   component: () => (
@@ -71,11 +74,12 @@ export const Route = createFileRoute("/_app/links")({
             <Button
               size="sm"
               variant="outline"
-              onClick={async () => {
-                await unwrap(api.admin.links({ id: r.id }).patch({ state: "approved" }))
-                toast.success(`通过了「${r.name}」`)
-                refresh()
-              }}
+              onClick={() =>
+                setState(r.id, "approved").then(() => {
+                  toast.success(`通过了「${r.name}」`)
+                  refresh()
+                }, showError)
+              }
             >
               <Check /> 通过
             </Button>
@@ -84,10 +88,7 @@ export const Route = createFileRoute("/_app/links")({
               variant="ghost"
               className="size-8"
               aria-label="拒绝"
-              onClick={async () => {
-                await unwrap(api.admin.links({ id: r.id }).patch({ state: "rejected" }))
-                refresh()
-              }}
+              onClick={() => setState(r.id, "rejected").then(refresh, showError)}
             >
               <X />
             </Button>

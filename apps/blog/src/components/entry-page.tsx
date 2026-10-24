@@ -1,9 +1,8 @@
 import { useEffect } from "react"
 import { Link, notFound, redirect } from "@tanstack/react-router"
 import { toast } from "sonner"
-import type { QueryClient } from "@tanstack/react-query"
+import { useQuery, type QueryClient } from "@tanstack/react-query"
 import { unwrap } from "@driftlog/client"
-import { useQuery } from "@tanstack/react-query"
 import { ChevronLeft, ChevronRight, MessageSquare } from "lucide-react"
 import { Window } from "@/components/boring"
 import { Article } from "@/components/article"
@@ -15,10 +14,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { api, commentsQuery, entryQuery, isNotFound, useSite, type Entry } from "@/lib/api"
 import { markDirection, useArrowNav } from "@/lib/keys"
 import { useUI, type Crumb } from "@/lib/store"
-import { entryPath, formatDate, readingMinutes, site, siteOf } from "@/lib/site"
-export { siteOf }
+import { entryPath, formatDate, readingMinutes, site, typeLabel, type EntryType } from "@/lib/site"
 
-/** 文章 / 手记 / 页面的 head：标题、描述、OG 图、JSON-LD */
+/** 详情页的 head：标题、描述、OG 图、JSON-LD */
 export function entryHead(e: Entry | undefined, info: { title: string; owner: { name: string } }) {
   if (!e) return {}
   const url = `${site.url}${entryPath(e.type, e.slug)}`
@@ -46,21 +44,19 @@ export function entryHead(e: Entry | undefined, info: { title: string; owner: { 
       { property: "og:url", content: url },
       { property: "og:image", content: image },
       { name: "twitter:card", content: "summary_large_image" },
+      { "script:ld+json": ld },
     ],
     links: [{ rel: "canonical", href: url }],
-    scripts: [{ type: "application/ld+json", children: JSON.stringify(ld) }],
   }
 }
 
-/** 阅读场景：一个最大化的文档窗口 + 评论 + 上一篇 / 下一篇。左边文件夹列是目录 */
-const typeLabel = { post: "文章", note: "手记", page: "页面" } as const
-/** 上一级：文章 / 手记回到列表，页面回首页 */
+/** 上一级：文章、手记回列表，页面回首页 */
 const upOf = {
   post: { to: "/posts", label: "文章" },
   note: { to: "/notes", label: "手记" },
   page: { to: "/", label: "首页" },
 }
-// 语言代码 → 中文名（ja → 日语）；不认识的原样显示
+// 语言代码转中文名（ja → 日语），不认识的原样返回
 const langName = (l: string) => {
   try {
     return new Intl.DisplayNames(["zh-CN"], { type: "language" }).of(l) ?? l
@@ -69,14 +65,9 @@ const langName = (l: string) => {
   }
 }
 
-/**
- * 阅读场景：整页只有一个文章窗口，左边文件夹列是目录。
- * 次要的东西都退到外壳里：
- * - 上一篇 / 下一篇是标题栏右边的 ‹ ›（← → 键也能翻），正文末尾一行「下一篇：…」
- * - 评论最小化在任务栏（见 comments-dock.tsx），正文末尾一行「N 条评论 · 打开」
- */
+/** 文章 / 手记 / 页面详情：一个文章窗口，左边是目录 */
 export function EntryPage({ entry: e }: { entry: Entry }) {
-  const type = e.type as keyof typeof typeLabel
+  const type = e.type
   const meta = [
     e.type === "note" ? e.topic?.name : e.category?.name,
     e.type === "note" && [e.mood, e.weather].filter(Boolean).join(" · "),
@@ -85,7 +76,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
     e.views > 0 && `${e.views} 次阅读`,
   ].filter(Boolean)
 
-  // 告诉任务栏：这页有评论可看
+  // 在任务栏登记本页评论
   const setComments = useUI((s) => s.setComments)
   const setCommentsOpen = useUI((s) => s.setCommentsOpen)
   useEffect(() => {
@@ -112,7 +103,6 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
         name={`${e.slug}.md`}
         title={e.title}
         rule={e.type === "page" && e.subtitle ? `// ${e.subtitle}` : `// ${meta.join(" · ")}`}
-
         lead={<BackLink to={up.to} label={up.label} />}
         controls={
           (paged || e.toc.length > 1) && (
@@ -135,7 +125,6 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
           </aside>
         )}
         {e.languages.length > 0 && (
-          // 语言：一排按钮，正在看的那个反白（像分段控件），不用猜哪个是当前的
           <nav className="lang-switch" aria-label="换一种语言读">
             {[null, ...e.languages].map((l) => {
               const on = (e.lang ?? null) === l
@@ -174,7 +163,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
 
         {e.copyright && e.type !== "page" && <Copyright entry={e} author={info.owner.name} />}
 
-        {/* 正文末尾：先是两个按钮（喜欢 / 评论），再一行去哪：接着读下一篇，或者回列表 */}
+        {/* 正文末尾：喜欢、评论，以及下一篇或回列表 */}
         <footer id="article-end" className="article-end">
           <div className="article-end-actions">
             <LikeButton likes={e.likes} like={() => unwrap(api.entries({ id: e.id }).like.post())} />
@@ -201,7 +190,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
   )
 }
 
-/** 标题栏上的 ‹ ›：没有上一篇 / 下一篇时置灰但位置不变 */
+/** 标题栏上的 ‹ ›；没有目标时置灰占位 */
 function BarNav({
   dir,
   target,
@@ -241,15 +230,8 @@ function BarNav({
   )
 }
 
-/**
- * 详情页的 loader：找不到时查一下是不是改过名的旧 slug，是就 301 到新地址，否则 404
- */
-export async function loadEntry(
-  qc: QueryClient,
-  type: "post" | "note" | "page",
-  slug: string,
-  lang?: string,
-) {
+/** 详情页 loader：404 时查旧 slug，找到就 301 到新地址，否则 notFound */
+export async function loadEntry(qc: QueryClient, type: EntryType, slug: string, lang?: string) {
   try {
     return await qc.ensureQueryData(entryQuery(type, slug, lang))
   } catch (e) {
@@ -260,14 +242,11 @@ export async function loadEntry(
   }
 }
 
-/**
- * 版权声明（参考 Shiro）：一张小卡片写清楚这篇是谁的、在哪、什么时候写的、能怎么用。
- * 链接能一键复制；协议是 CC BY-NC-SA 4.0
- */
+/** 版权声明卡片：作者、链接、发布 / 更新日期、CC BY-NC-SA 4.0 */
 function Copyright({ entry: e, author }: { entry: Entry; author: string }) {
   const url = `${site.url}${entryPath(e.type, e.slug)}`
   const published = e.publishedAt ?? e.createdAt
-  // 发布当天改的不算「更新」
+  // 发布 24 小时后的修改才显示「更新于」
   const updated =
     new Date(e.updatedAt).getTime() - new Date(published).getTime() > 86_400_000 ? e.updatedAt : null
   return (
@@ -275,7 +254,7 @@ function Copyright({ entry: e, author }: { entry: Entry; author: string }) {
       <div className="copyright-text">
         <p className="copyright-title">{e.title}</p>
         <p className="copyright-link">
-          <a href={url}>{decodeURI(url)}</a>
+          <a href={url}>{url}</a>
           <button
             type="button"
             onClick={() =>
@@ -320,10 +299,10 @@ function Copyright({ entry: e, author }: { entry: Entry; author: string }) {
   )
 }
 
-/** 任务栏路径：文章 / 分类 / 标题，手记 / 专栏 / 标题，页面只有标题 */
+/** 任务栏路径：栏目 / 分类或专栏 / 标题；页面只有标题 */
 function crumbsOf(e: Entry): Crumb[] {
   if (e.type === "page") return [{ label: e.title }]
-  const up = upOf[e.type as "post" | "note"]
+  const up = upOf[e.type]
   const group: Crumb | null =
     e.type === "note"
       ? e.topic && { label: e.topic.name, to: "/notes", search: { topic: e.topic.slug } }

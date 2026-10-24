@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import "katex/dist/katex.min.css"
 
-/** 实时预览：和博客同一条渲染管线（@driftlog/markdown），在浏览器里跑。链接卡片要保存后由服务端抓 */
+/** Markdown 实时预览，用博客同一条渲染管线（@driftlog/markdown）。内容来自站长本人 */
 export function MarkdownPreview({ markdown }: { markdown: string }) {
   const [html, setHtml] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -10,7 +10,7 @@ export function MarkdownPreview({ markdown }: { markdown: string }) {
     let stale = false
     const t = setTimeout(async () => {
       try {
-        // 渲染管线带 Shiki，比较大：打开编辑器时才加载
+        // 按需加载渲染管线
         const { renderMarkdown } = await import("@driftlog/markdown")
         const r = await renderMarkdown(markdown)
         if (!stale) {

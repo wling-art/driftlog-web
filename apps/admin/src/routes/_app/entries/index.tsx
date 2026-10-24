@@ -60,6 +60,7 @@ function Entries() {
     onSuccess: () => {
       toast.success("已删除")
       qc.invalidateQueries({ queryKey: ["admin-entries"] })
+      qc.invalidateQueries({ queryKey: ["stats"] })
     },
     onError: (e) => toast.error(`删除失败：${e.message}`),
   })

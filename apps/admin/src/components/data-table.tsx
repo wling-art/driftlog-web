@@ -2,10 +2,9 @@ import { tableFeatures, useTable, type ColumnDef, type RowData } from "@tanstack
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 
-// 只用核心功能：排序、筛选、分页都在服务端做
 export const features = tableFeatures({})
 
-/** 表格 + 服务端分页。操作列在最右（表头不吸顶：shadcn Table 外层的 overflow-x-auto 会让 sticky 失效） */
+/** 表格 + 服务端分页 */
 export function DataTable<T extends RowData>({
   columns,
   data,

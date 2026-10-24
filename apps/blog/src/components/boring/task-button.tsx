@@ -3,12 +3,7 @@ import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
 
-/*
- * 反馈节奏（references/components.md「反馈时间」）：
- * - 0.1 秒内按钮变样（按下右下移、aria-busy）
- * - 400ms（--indicator-delay）内完成就不显示加载，直接出结果；更慢才出现闪烁圆点
- * - 加载时按钮宽度不变，文字不跳
- */
+/** 执行异步任务的按钮：超过 --indicator-delay 才显示加载圆点，加载时宽度不变 */
 export function TaskButton({
   task,
   doneText,
@@ -58,8 +53,7 @@ export function TaskButton({
       {...props}
     >
       <span className={cn(state === "slow" && "invisible")}>{state === "done" ? doneText : children}</span>
-      {state === "slow" && <span aria-hidden="true" className="spinner" />}{" "}
-      {/* 闪烁圆点的样式在 desktop.css */}
+      {state === "slow" && <span aria-hidden="true" className="spinner" />}
     </Button>
   )
 }

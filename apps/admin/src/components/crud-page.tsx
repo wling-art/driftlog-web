@@ -7,15 +7,13 @@ import { Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { PageHeader } from "@/routes/_app"
 
-/*
- * 专栏、一言、动态、友链、项目这五个管理页长得一样：左边表格，右边新建 / 编辑表单。
- * 字段和列用配置描述；可为空的字段在表单里是空字符串，提交时换成 null。
- */
+/** 通用管理页：左边表格，右边新建 / 编辑表单。nullable 字段的空字符串提交时换成 null */
 
 export type Field = {
   name: string
@@ -56,7 +54,7 @@ export function CrudPage<R extends Row>({
   columns: Column<R>[]
   rowActions?: (row: R, refresh: () => void) => ReactNode
   empty: string
-  /** 「新建一言」「编辑一言」里的名词 */
+  /** 按钮和标题里的名词，如「一言」 */
   noun: string
 }) {
   const qc = useQueryClient()
@@ -203,7 +201,7 @@ function EditorCard({
       try {
         await onSave(values)
         formApi.reset()
-        toast.success(editing ? "已保存" : `建好了`)
+        toast.success(editing ? "已保存" : "建好了")
       } catch (e) {
         toast.error(`没保存上：${(e as Error).message}`)
       }
@@ -231,13 +229,12 @@ function EditorCard({
                 <div className="grid gap-1.5">
                   <Label htmlFor={`crud-${fd.name}`}>{fd.label}</Label>
                   {fd.kind === "textarea" ? (
-                    <textarea
+                    <Textarea
                       id={`crud-${fd.name}`}
-                      rows={5}
                       value={String(f.state.value ?? "")}
                       onChange={(e) => f.handleChange(e.target.value)}
                       aria-invalid={!!errors[fd.name]}
-                      className="min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive"
+                      className="min-h-24"
                     />
                   ) : fd.kind === "select" ? (
                     <Select value={String(f.state.value)} onValueChange={f.handleChange}>

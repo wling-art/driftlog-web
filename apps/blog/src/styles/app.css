@@ -1,20 +1,16 @@
 @import "./boring.css";
 @import "katex/dist/katex.min.css";
 
-/*
- * 博客自己的样式：正文（.prose）+ Markdown 扩展语法 + 路由切换的 View Transitions。
- * 只用 tokens 里的变量；阅读场景的字号、行高、行宽都来自 [data-scene="read"]。
- */
+/* 博客样式：正文（.prose）、Markdown 扩展语法、列表、评论、首页和各栏目 */
 
 /* ── 正文 ── */
-/* 行宽由窗口决定：阅读窗口默认正好是 --measure 宽（desktop.css），拖大窗口正文就跟着变宽 */
 .prose {
   overflow-wrap: anywhere;
 }
 .prose > * + * {
   margin-top: 1em;
 }
-/* 像素字只有 12 / 24 / 36 / 48：h2 用 24px 像素字；h3、h4 用无衬线加粗（12px 像素字会比正文还小，层级就倒了） */
+/* h2 用 24px 像素字；h3、h4 用无衬线加粗 */
 .prose :is(h2, h3, h4) {
   margin-top: 2em;
   line-height: 1.35;
@@ -43,7 +39,7 @@
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 3px;
-} /* 正文链接一直带下划线 */
+}
 .prose a[target="_blank"]:not(.md-link-card)::after {
   content: " ↗";
   font-size: 0.8em;
@@ -65,7 +61,7 @@
   border-left: 3px solid var(--border-soft);
   padding-left: 1em;
   color: var(--text-muted);
-} /* 灰线，不用青色：它不能点 */
+}
 .prose hr {
   border: 0;
   border-top: var(--line) solid var(--border-soft);
@@ -119,7 +115,7 @@
   overflow-y: hidden;
 }
 
-/* Shiki 双主题：跟着 data-theme 走 */
+/* Shiki 双主题 */
 .shiki,
 .shiki span {
   color: var(--shiki-light);
@@ -134,12 +130,12 @@
   color: var(--shiki-dark);
 }
 
-/* Mermaid 画好之前先当代码显示 */
+/* Mermaid 渲染前显示为代码 */
 .prose pre.mermaid:not([data-processed]) {
   white-space: pre;
   color: var(--text-muted);
 }
-/* Excalidraw：画出来之前是一段 JSON，别让它撑出一大片 */
+/* Excalidraw 渲染前限制 JSON 高度 */
 .prose pre.excalidraw {
   max-height: 6em;
   overflow: hidden;
@@ -322,7 +318,7 @@
   padding: var(--space-2) var(--space-3);
 }
 
-/* ── 列表：文章条目 ── */
+/* ── 文章列表 ── */
 .entry-list {
   display: grid;
 }
@@ -362,7 +358,7 @@
   color: var(--text-muted);
 }
 
-/* ── 评论：一个话题一张卡片，回复收在卡片里 ── */
+/* ── 评论：一个话题一张卡片 ── */
 .c-count {
   display: flex;
   align-items: center;
@@ -387,7 +383,7 @@
 .c-item.is-small {
   --av: 22px;
 }
-/* 头像 · 名字 · 回复谁 · 时间 · 回复按钮：窄了就折行，名字不被截成「w…」 */
+/* 评论头：头像、名字、回复对象、时间、回复按钮，可折行 */
 .c-head {
   display: flex;
   flex-wrap: wrap;
@@ -430,7 +426,7 @@
   color: var(--text-muted);
   white-space: nowrap;
 }
-/* 「回复」：一行里最右边的小文字按钮；青色 + 下划线 = 能点 */
+/* 「回复」文字按钮 */
 .c-reply {
   margin-left: auto;
   flex: none;
@@ -451,7 +447,7 @@
 }
 /* 正文和名字左对齐 */
 .c-item .comment-body {
-  overflow-wrap: anywhere; /* 长链接折行，别把卡片撑出窗口 */
+  overflow-wrap: anywhere;
   margin-top: 6px;
   padding-left: calc(var(--av) + var(--space-2));
 }
@@ -461,7 +457,7 @@
   margin-top: var(--space-4);
   padding-top: var(--space-3);
   border-top: var(--line) solid var(--border-soft);
-  /* 回复整体往里收一个头像的宽度：看得出是这条话题里的 */
+  /* 回复缩进一个头像宽度 */
   padding-left: calc(28px + var(--space-2));
 }
 .comment-body {
@@ -491,7 +487,7 @@
   background: color-mix(in oklch, var(--warning) 22%, transparent);
   color: inherit;
 }
-/* 窄（右栏、手机）：回复不再往里收，正文顶格，省出宽度 */
+/* 窄窗口：回复和正文不缩进 */
 @container (max-width: 420px) {
   .c-replies {
     padding-left: 0;
@@ -549,7 +545,7 @@
   accent-color: var(--accent);
 }
 
-/* ── 首页头部（hero）：左字右图；窗口窄了图在上、整体居中 ── */
+/* ── 首页头部：左字右图，窄窗口图在上、居中 ── */
 .hero {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -599,7 +595,7 @@
   gap: var(--space-2);
   margin-top: var(--space-5);
 }
-/* 头像：方形相框（窗口一样的细线 + 小圆角 + 一点投影），不用圆形 */
+/* 头像：方形相框 */
 .hero-avatar {
   padding: 6px;
   background: var(--surface);
@@ -808,9 +804,9 @@
   gap: var(--space-6);
 }
 
-/* ── 评论窗口：从任务栏升起来，浮在桌面右下角，自己滚 ── */
+/* ── 评论浮窗：固定在右下角，内容自己滚 ── */
 .comments-float {
-  --win-pad-x: var(--space-5); /* 窄的浮动窗口：内边距用小号 */
+  --win-pad-x: var(--space-5);
   --win-pad-y: var(--space-5);
   position: fixed;
   z-index: 20;
@@ -841,7 +837,7 @@
   }
 }
 
-/* 任务栏上的「评论 N」：数字是一个小徽标；新评论来时跳一下（和「叫到前面」同一条回弹） */
+/* 任务栏上的「评论 N」，有新评论时数字跳一下 */
 .comments-task[aria-expanded="true"] {
   background: var(--text);
   color: var(--bg);
@@ -871,15 +867,9 @@
   }
 }
 
-/* 按输入方式给提示：有键盘的给「⌘ + 回车」，触屏不给 */
-.only-touch {
-  display: none;
-}
+/* 只在有悬停能力的设备上显示（快捷键提示） */
 @media (hover: none) {
   .only-fine {
     display: none;
-  }
-  .only-touch {
-    display: inline;
   }
 }

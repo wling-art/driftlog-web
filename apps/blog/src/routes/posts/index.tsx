@@ -35,7 +35,6 @@ function Posts() {
           : [{ label: "文章" }]
       }
       folders={
-        // 分类就是文件夹
         <>
           <Link to="/posts" search={{}} className="folder" activeOptions={{ includeSearch: true }}>
             <span>全部</span>

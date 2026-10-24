@@ -12,17 +12,9 @@ import { auth } from "@/lib/auth"
 import { api, commentsQuery, type Comment } from "@/lib/api"
 import { fullTime, timeAgo } from "@/lib/site"
 
-/*
- * 评论（comments.log，平时最小化在任务栏，见 comments-dock.tsx）
- * - 一个话题一张卡片（第 3 层：底色 + 细线 + 一点投影，和别的卡片同一个样子）
- *   卡片头一行：头像 · 名字 · 时间 ……… 回复；正文和名字左对齐
- * - 回复收在原话题的卡片里，淡线隔开、头像小一号；回复的不是楼主时写明「回复 某某」
- * - 写评论：标准的输入框 + 主按钮；名字和邮箱只在第一次开始写的时候才出现，之后记住
- * - ⌘ / Ctrl + 回车发送；Esc 取消回复
- * 没有 Gravatar：不往第三方发评论者的邮箱哈希，头像用名字的第一个字
- */
+// 评论列表（按话题分组）和写评论表单，显示在 comments-dock 的浮窗里
 
-// 和 tokens.css 同一套曲线：出现 240ms、离开 160ms
+// 曲线同 tokens.css：出现 240ms、离开 160ms
 const easeEnter = [0.37, 0.42, 0.12, 0.85] as const
 const easeExit = [0.88, 0.15, 0.63, 0.58] as const
 const reveal = {
@@ -35,7 +27,7 @@ type Identity = { author: string; email: string }
 type Reply = Comment & { to: string | null }
 type Thread = { root: Comment; replies: Reply[] }
 
-/** 按话题分组：每个顶层评论一组，它下面所有层的回复按时间排进同一组 */
+/** 按顶层评论分组，各层回复按原顺序归入所在话题 */
 function toThreads(list: Comment[]): Thread[] {
   const byId = new Map(list.map((c) => [c.id, c]))
   const rootOf = (c: Comment): Comment => {
@@ -50,7 +42,6 @@ function toThreads(list: Comment[]): Thread[] {
     threads.set(root.id, t)
     if (c.id !== root.id) {
       const parent = byId.get(c.parentId!)!
-      // 每条回复都写明回的是谁（回楼主也写：缩进不一定看得出来）
       t.replies.push({ ...c, to: parent.author })
     }
   }
@@ -59,7 +50,7 @@ function toThreads(list: Comment[]): Thread[] {
 
 const initial = (name: string) => [...name.trim()][0]?.toUpperCase() ?? "?"
 
-/** 头像：有图（账号头像 / Gravatar）用图，加载失败（没设 Gravatar 会 404）退回首字母 */
+/** 头像：有图用图，没有或加载失败显示首字 */
 function Avatar({ name, src }: { name: string; src: string | null }) {
   const [broken, setBroken] = useState(false)
   return (
@@ -73,7 +64,7 @@ function Avatar({ name, src }: { name: string; src: string | null }) {
   )
 }
 
-// 记住的身份：localStorage 当外部存储订阅，SSR 时是 null（不会水合不一致）
+// 记住的评论身份：存在 localStorage，服务器快照为 null
 const REMEMBER = "driftlog-commenter"
 const identityListeners = new Set<() => void>()
 const readIdentityRaw = () => {
@@ -106,7 +97,7 @@ function useIdentity(): Identity | null {
   }, [raw])
 }
 
-/** 评论内容本身（列表 + 写评论）。外面的窗口由 CommentsDock 提供 */
+/** 评论列表 + 写评论 */
 export function Comments({ entryId }: { entryId: number }) {
   const { data, isPending, isError, refetch } = useQuery(commentsQuery(entryId))
   const threads = useMemo(() => toThreads(data ?? []), [data])
@@ -194,7 +185,7 @@ function CommentItem({
           <span className="c-name">{c.author}</span>
         )}
         {to && <span className="c-meta">回复 {to}</span>}
-        <time className="c-meta" dateTime={String(c.createdAt)} title={fullTime(c.createdAt)}>
+        <time className="c-meta" dateTime={new Date(c.createdAt).toISOString()} title={fullTime(c.createdAt)}>
           {timeAgo(c.createdAt)}
         </time>
         <button type="button" className="c-reply" onClick={() => onReply(c)} aria-label={`回复 ${c.author}`}>
@@ -220,16 +211,16 @@ function Composer({
   empty: boolean
 }) {
   const qc = useQueryClient()
-  // 登录了就用账号的名字和邮箱（服务端也按会话认人）；没登录用上次记住的
+  // 身份：登录账号优先，其次是记住的
   const account = auth.useSession().data?.user
   const remembered = useIdentity()
   const identity = account ? { author: account.name, email: account.email } : remembered
-  // 名字、邮箱：没记住身份、而且开始写了才出现（渐进展开，不一上来就摆一张表）
+  // 没有身份时，开始写才显示名字和邮箱
   const [engaged, setEngaged] = useState(false)
 
   const form = useForm({
     defaultValues: { author: "", email: "", body: "", private: false },
-    // 先不打扰；提交过一次之后边输边校验，改对就消失
+    // 提交后改为输入时校验
     validationLogic: revalidateLogic({ mode: "submit", modeAfterSubmission: "change" }),
     onSubmit: async ({ value, formApi }) => {
       const who = identity ?? { author: value.author.trim(), email: value.email.trim() }

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test"
 
-// 默认是本机的开发服务。开发环境连着正式库时，别对它跑：起一套连本地空库的环境，用 E2E_BLOG / E2E_ADMIN 指过去
+// 默认指向本机开发服务；开发服务连着正式库时，用 E2E_BLOG / E2E_ADMIN 指向连空库的环境
 const BLOG = process.env.E2E_BLOG ?? "http://localhost:5173"
 const ADMIN = process.env.E2E_ADMIN ?? "http://localhost:5174"
 const email = process.env.E2E_EMAIL
@@ -33,13 +33,13 @@ test("后台：登录、写一篇、实时预览、发布", async ({ page }) => 
 test("博客：首页、文章、目录、评论", async ({ page }) => {
   await page.goto(BLOG)
   await expect(page.locator(".win").first()).toBeVisible()
-  // 开始菜单：点「开始」弹出，栏目能点进去，Esc 收起（时钟只在浏览器里渲染：它出来了说明已经水合）
+  // 时钟出现 = 已水合；开始菜单能打开，Esc 收起
   await expect(page.locator("time.clock")).toBeVisible()
   await page.getByRole("button", { name: "开始菜单" }).click()
   await expect(page.locator(".start-menu").getByRole("link", { name: /手记/ })).toBeVisible()
   await page.keyboard.press("Escape")
   await expect(page.locator(".start-menu")).toHaveCount(0)
-  // 首页的桌面图标是快捷方式：点「文章」进文章栏目
+  // 桌面图标「文章」进文章栏目
   await page.getByRole("navigation", { name: "本页目录" }).getByRole("link", { name: "文章" }).click()
   await expect(page).toHaveURL(/\/posts$/)
 
@@ -47,14 +47,14 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   await page.goto(BLOG + target)
   if (!email) return
   await expect(page.getByRole("heading", { level: 2, name: "端到端测试" })).toBeVisible()
-  // 目录：宽屏左边一张文字清单
+  // 文章目录
   await expect(
     page.getByRole("navigation", { name: "文章目录" }).getByRole("link", { name: "小标题" }),
   ).toBeVisible()
-  // 任务栏上的路径：盘符 / 文章 / …… / 这一篇
+  // 任务栏路径
   await expect(page.getByRole("navigation", { name: "你在这里" })).toContainText("端到端测试")
 
-  // 评论平时最小化在任务栏：页面上没有评论，点任务栏的「评论」才升起来
+  // 评论默认最小化，点任务栏的「评论」打开浮窗
   await expect(page.getByRole("textbox", { name: "写评论" })).toHaveCount(0)
   await expect(page.locator("time.clock")).toBeVisible()
   const task = page.locator("#comments-task")
@@ -62,7 +62,7 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   const float = page.getByRole("dialog", { name: /^评论：/ })
   await expect(float).toBeVisible()
 
-  // 写评论：开始写才出现名字和邮箱；⌘ / Ctrl + 回车或按钮发送
+  // 开始写才出现名字和邮箱；⌘ / Ctrl + 回车发送
   const box = float.getByRole("textbox", { name: "写评论" })
   await expect(page.getByRole("textbox", { name: "名字" })).toHaveCount(0)
   await box.fill("好")
@@ -72,15 +72,15 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
   await page.getByRole("button", { name: "发表评论" }).click()
   await expect(page.getByText("✕ 邮箱格式不对")).toBeVisible()
   await emailBox.fill("tester@example.com")
-  await expect(page.getByText("✕ 邮箱格式不对")).toBeHidden() // 改对就消失
+  await expect(page.getByText("✕ 邮箱格式不对")).toBeHidden()
   await box.press("ControlOrMeta+Enter")
   await expect(page.getByText(/评论发出去了|审核完就会出现/)).toBeVisible()
-  // 记住了身份：下次不再问
+  // 记住身份，下次不再问
   await expect(page.getByText("以 测试员 的身份")).toBeVisible()
   await box.fill("再来一条")
   await expect(page.getByRole("textbox", { name: "名字" })).toHaveCount(0)
 
-  // Esc 收回任务栏，焦点回到任务栏标签
+  // Esc 收起，焦点回到任务栏标签
   await box.press("Escape")
   await expect(float).toBeHidden()
   await expect(task).toBeFocused()
@@ -88,11 +88,11 @@ test("博客：首页、文章、目录、评论", async ({ page }) => {
 
 test("博客：⌘K 搜索", async ({ page }) => {
   await page.goto(BLOG)
-  await expect(page.locator("time.clock")).toBeVisible() // 时钟挂载后才出现 = 已水合
+  await expect(page.locator("time.clock")).toBeVisible()
   await page.keyboard.press("ControlOrMeta+k")
   const dialog = page.getByRole("dialog")
   await expect(dialog).toBeVisible()
-  // 不依赖库里有什么：搜出结果或者「没搜到」都说明面板在工作
+  // 有结果或「没搜到」都算通过
   await dialog.getByRole("combobox").fill("的")
   await expect(
     dialog
@@ -112,7 +112,7 @@ test("博客：归档不分页；文章标题栏 ‹ › 和方向键翻篇", as
   const rows = page.locator(".archive-row")
   test.skip((await rows.count()) < 3, "文章太少")
 
-  // 打开中间一篇：标题栏上有 ‹ ›，→ 键去下一篇（归档新的在前，下一篇 = 列表里上面那一行）
+  // 打开第二篇：标题栏有 ‹ ›，→ 去下一篇（归档里上面那一行）
   const newer = await rows.nth(0).getAttribute("href")
   await rows.nth(1).click()
   await expect(page.locator("time.clock")).toBeVisible()

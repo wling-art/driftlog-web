@@ -1,32 +1,25 @@
 import { useEffect, useLayoutEffect, useRef } from "react"
 import { useNavigate } from "@tanstack/react-router"
 
-/*
- * 换页方向：给窗口列的入场动画用（下一页从右边进来、上一页从左边）。
- * 不用浏览器的 View Transitions：自己在新窗口挂载时播一段 CSS 动画，桌面和任务栏完全不参与。
- * 点「下一篇」之类的链接前先 markDirection，新页面的窗口列挂载时 takeDirection 读出来。
- */
+// 换页方向：导航前 markDirection，新页面挂载时 takeDirection 读出，用于入场动画
 export type Direction = "forward" | "back"
 let pending: { dir: Direction; at: number } | null = null
 
 export function markDirection(dir: Direction) {
   pending = { dir, at: performance.now() }
 }
-/** 刚标过的方向（1 秒内有效，过期就当普通换页：从下面升上来）。不清空：开发模式下初始化会跑两遍 */
+/** 1 秒内标过的方向，否则 null */
 export function takeDirection(): Direction | null {
   return pending && performance.now() - pending.at < 1000 ? pending.dir : null
 }
 
-// 地址是运行时拼出来的（/posts/xxx），所以这里用宽松的形状，交给 navigate 时再收窄
 type Target = { to: string; search?: unknown } | null
 
-/** ← → 键翻页，Esc 回到上一级（列表）。输入框、弹窗里不管；带修饰键不管 */
+/** ← → 翻页，Esc 回上一级；忽略输入框、弹窗和带修饰键的按键 */
 export function useArrowNav(prev: Target, next: Target, up: Target = null) {
   const navigate = useNavigate()
-  // 目标放 ref 里，监听器只挂一次、每次按键读最新的。
-  // （不能拿目标当依赖比较：search 常常是函数，JSON 序列化会把它丢掉，第 1 页和第 2 页就「一样」了）
+  // 监听器只挂一次，按键时读 ref 里的最新目标
   const targets = useRef({ prev, next, up })
-  // 绘制前就换成新目标：新页面一出现，方向键立刻指向新的上一页 / 下一页
   useLayoutEffect(() => {
     targets.current = { prev, next, up }
   })

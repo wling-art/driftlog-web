@@ -46,13 +46,7 @@ function EditorPage() {
   return <Editor key={id} id={isNew ? null : Number(id)} initial={data ?? null} />
 }
 
-function Editor({
-  id,
-  initial,
-}: {
-  id: number | null
-  initial: (EntryInput & { id: number; slug: string; type: EntryInput["type"] }) | null
-}) {
+function Editor({ id, initial }: { id: number | null; initial: (EntryInput & { id: number }) | null }) {
   const { type: newType } = Route.useSearch()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -113,8 +107,7 @@ function Editor({
   const type = useStore(form.store, (s) => s.values.type)
   const errors = useStore(form.store, (s) => s.errors)
 
-  // 有没保存的内容时，离开前拦一下
-  // 读调用时的表单状态，不用上次渲染的 dirty：保存完立刻跳转时它还没更新
+  // 有未保存的改动时拦住离开；读实时的 form.state，不用渲染时的 dirty
   useBlocker({
     shouldBlockFn: () => form.state.isDirty && !confirm("有没保存的内容，确定离开？"),
     enableBeforeUnload: () => form.state.isDirty,
@@ -145,7 +138,6 @@ function Editor({
       }}
       className="-mx-4 -my-6 flex min-h-[calc(100dvh-3rem)] flex-col md:-mx-8"
     >
-      {/* 顶栏：标题 + 保存 */}
       <div className="flex flex-wrap items-center gap-3 border-b px-4 py-3 md:px-8">
         <form.Field name="title" validators={{ onSubmit: entryInput.shape.title }}>
           {(f) => (
@@ -178,7 +170,7 @@ function Editor({
         </form.Subscribe>
       </div>
 
-      {/* 宽屏三栏：编辑 | 预览 | 属性；中屏编辑 / 预览切换 + 属性；窄屏全部叠起来 */}
+      {/* 宽屏：编辑 | 预览 | 属性；中屏：编辑 / 预览切换 + 属性；窄屏：上下叠 */}
       <div className="grid flex-1 lg:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_320px]">
         <div className="flex min-w-0 flex-col border-b lg:border-r lg:border-b-0">
           <div className="border-b px-4 py-2 2xl:hidden">
@@ -318,7 +310,7 @@ function Editor({
               <Field label="标签" hint="用逗号分开">
                 <Input
                   defaultValue={f.state.value.join(", ")}
-                  onBlur={(e) =>
+                  onChange={(e) =>
                     f.handleChange([
                       ...new Set(
                         e.target.value
