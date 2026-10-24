@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router"
 import { Mail } from "lucide-react"
 import { BrandIcon } from "@/components/brand-icons"
+import { unwrap } from "@driftlog/client"
 import { Window } from "@/components/boring"
-import type { SiteSettings } from "@/lib/api"
+import { LikeButton } from "@/components/like-button"
+import { api, type SiteSettings } from "@/lib/api"
 
 /*
  * 首页头部（参考 Shiro 的 Hero，换成低饱桌面的样子）：
@@ -68,27 +70,28 @@ export function Hero({ info, say }: { info: SiteSettings; say: Say }) {
               ))}
             </ul>
           )}
-          {links.length > 0 && (
-            <ul className="hero-links" aria-label="在别处找到我">
-              {links.map(([k, v]) => {
-                const s = socials[k]!
-                return (
-                  <li key={k}>
-                    <a
-                      href={s.href(v)}
-                      target={k === "email" ? undefined : "_blank"}
-                      rel="noopener me"
-                      className="icon-link"
-                      aria-label={s.label}
-                      title={k === "email" ? v : s.label}
-                    >
-                      <s.Icon />
-                    </a>
-                  </li>
-                )
-              })}
-            </ul>
-          )}
+          <ul className="hero-links" aria-label="在别处找到我">
+            {links.map(([k, v]) => {
+              const s = socials[k]!
+              return (
+                <li key={k}>
+                  <a
+                    href={s.href(v)}
+                    target={k === "email" ? undefined : "_blank"}
+                    rel="noopener me"
+                    className="icon-link"
+                    aria-label={s.label}
+                    title={k === "email" ? v : s.label}
+                  >
+                    <s.Icon />
+                  </a>
+                </li>
+              )
+            })}
+            <li>
+              <LikeButton likes={info.likes} like={() => unwrap(api.site.like.post())} />
+            </li>
+          </ul>
         </div>
         {info.owner.avatar && (
           <div className="hero-avatar">

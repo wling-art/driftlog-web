@@ -1,0 +1,27 @@
+import { useState } from "react"
+import { Heart } from "lucide-react"
+import { Button } from "@/components/ui/button"
+
+/** 喜欢按钮：点一次发请求，之后显示「已喜欢」 */
+export function LikeButton({ likes, like }: { likes: number; like: () => Promise<{ likes: number }> }) {
+  const [state, setState] = useState({ n: likes, liked: false })
+  const onClick = async () => {
+    try {
+      setState({ n: (await like()).likes, liked: true })
+    } catch {
+      setState((s) => ({ ...s, liked: true }))
+    }
+  }
+  // 点过不禁用，再点不发请求
+  return (
+    <Button
+      aria-pressed={state.liked}
+      data-on={state.liked || undefined}
+      onClick={() => !state.liked && void onClick()}
+    >
+      <Heart aria-hidden="true" />
+      {state.liked ? "已喜欢" : "喜欢"}
+      {state.n > 0 && ` ${state.n}`}
+    </Button>
+  )
+}

@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { Link, notFound, redirect } from "@tanstack/react-router"
 import { toast } from "sonner"
 import type { QueryClient } from "@tanstack/react-query"
 import { unwrap } from "@driftlog/client"
 import { useQuery } from "@tanstack/react-query"
-import { ChevronLeft, ChevronRight, Heart, MessageSquare } from "lucide-react"
+import { ChevronLeft, ChevronRight, MessageSquare } from "lucide-react"
 import { Window } from "@/components/boring"
 import { Article } from "@/components/article"
+import { LikeButton } from "@/components/like-button"
 import { BackLink, SiteShell } from "@/components/site"
 import { TocButton, TocPanel } from "@/components/toc"
 import { Button } from "@/components/ui/button"
@@ -176,7 +177,7 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
         {/* 正文末尾：先是两个按钮（喜欢 / 评论），再一行去哪：接着读下一篇，或者回列表 */}
         <footer id="article-end" className="article-end">
           <div className="article-end-actions">
-            <LikeButton id={e.id} likes={e.likes} />
+            <LikeButton likes={e.likes} like={() => unwrap(api.entries({ id: e.id }).like.post())} />
             <Button onClick={() => setCommentsOpen(true)}>
               <MessageSquare aria-hidden="true" />
               {comments?.length ? `评论 ${comments.length}` : "写评论"}
@@ -237,31 +238,6 @@ function BarNav({
         {dir === "next" ? " →" : ""}
       </TooltipContent>
     </Tooltip>
-  )
-}
-
-/** 喜欢：同一个人（IP）只算一次；点过就变成「已喜欢」 */
-function LikeButton({ id, likes }: { id: number; likes: number }) {
-  const [state, setState] = useState<{ n: number; liked: boolean }>({ n: likes, liked: false })
-  const like = async () => {
-    try {
-      const r = await unwrap(api.entries({ id }).like.post())
-      setState({ n: r.likes, liked: true })
-    } catch {
-      setState((s) => ({ ...s, liked: true }))
-    }
-  }
-  // 点过不禁用（禁用会变淡，像坏了），只是再点不发请求
-  return (
-    <Button
-      aria-pressed={state.liked}
-      data-on={state.liked || undefined}
-      onClick={() => !state.liked && void like()}
-    >
-      <Heart aria-hidden="true" />
-      {state.liked ? "已喜欢" : "喜欢"}
-      {state.n > 0 && ` ${state.n}`}
-    </Button>
   )
 }
 
