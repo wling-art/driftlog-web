@@ -51,12 +51,10 @@ E2E_EMAIL=… E2E_PASSWORD=… bun run test   # Playwright；不给站长账号�
 - 登录：Better Auth（邮箱密码、Passkey、GitHub / Google）。
 - 部署：Vercel 静态托管，`vercel.json` 把所有路径改写到 `index.html`。
 
-## 部署到 GitHub 之后
-
-submodule 现在指向本地的 `../core`。推到远端后改成仓库地址：
+## 克隆
 
 ```bash
-git submodule set-url core https://github.com/<你>/driftlog-core.git
+git clone --recurse-submodules https://github.com/wling-art/driftlog-web.git
 ```
 
 ## 许可证
