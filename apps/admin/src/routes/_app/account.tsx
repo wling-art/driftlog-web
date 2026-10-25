@@ -18,7 +18,7 @@ function Account() {
   return (
     <>
       <PageHeader title="账号" />
-      <div className="grid items-start gap-6 xl:grid-cols-2">
+      <div className="masonry">
         <ProfileCard />
         <PasswordCard />
         <LinkedCard />

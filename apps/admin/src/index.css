@@ -286,3 +286,15 @@
   border: 1px dashed var(--border);
   padding: 0.4rem 0.7rem;
 }
+
+/* 瀑布流：卡片按内容高度自然排列，不强制等高 */
+@utility masonry {
+  column-gap: 1.5rem;
+  & > * {
+    margin-bottom: 1.5rem;
+    break-inside: avoid;
+  }
+  @media (min-width: 1280px) {
+    columns: 2;
+  }
+}
