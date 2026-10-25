@@ -17,6 +17,7 @@ import { useUI, type Crumb } from "@/lib/store"
 import { CommentsFloat, CommentsTaskItem } from "@/components/comments-dock"
 import { AccountDialog } from "@/components/account"
 import { StartMenu } from "@/components/start-menu"
+import { OnlineCount } from "@/components/online"
 import { ChevronLeft } from "lucide-react"
 import { markDirection, takeDirection, useArrowNav } from "@/lib/keys"
 import { entryPath, formatDate, useHydrated } from "@/lib/site"
@@ -83,7 +84,6 @@ function PathBar() {
 /** 站点外壳：桌面、评论浮窗、账号弹窗、任务栏。在根布局里渲染一次，页面内容是 children */
 export function AppShell({ children }: { children: ReactNode }) {
   useScrollKeys()
-  const online = useUI((s) => s.online)
   const setSearchOpen = useUI((s) => s.setSearchOpen)
   return (
     <div data-slot="desktop" className="screen">
@@ -103,11 +103,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {/* 本页关掉的窗口，由 ClosedTasks 传送进来 */}
         <span id="tb-closed" className="tb-closed" />
         <CommentsTaskItem />
-        {online > 0 && (
-          <span className="clock" title="现在在看这个站的人">
-            {online} 人在看
-          </span>
-        )}
+        <OnlineCount />
         <TaskbarButton onClick={() => setSearchOpen(true)} aria-keyshortcuts="Meta+K Control+K">
           搜索 <kbd className="only-fine font-mono">⌘K</kbd>
         </TaskbarButton>

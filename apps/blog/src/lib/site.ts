@@ -4,6 +4,14 @@ import { useSyncExternalStore } from "react"
 export const site = {
   url: (import.meta.env.VITE_SITE_URL ?? "http://localhost:5173").replace(/\/$/, ""),
   api: (import.meta.env.VITE_API_URL ?? "http://localhost:3900").replace(/\/$/, ""),
+  /** Umami 统计：两项都设了才加载 */
+  umami:
+    import.meta.env.VITE_UMAMI_URL && import.meta.env.VITE_UMAMI_ID
+      ? {
+          src: `${import.meta.env.VITE_UMAMI_URL.replace(/\/$/, "")}/script.js`,
+          id: import.meta.env.VITE_UMAMI_ID as string,
+        }
+      : null,
 }
 
 type SiteInfo = { title: string; description: string; owner: { name: string } }

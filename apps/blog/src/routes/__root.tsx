@@ -8,6 +8,7 @@ import { AppShell, ErrorWindow, NotFound } from "@/components/site"
 import { MotionConfig } from "motion/react"
 import { useRealtime } from "@/lib/realtime"
 import { siteQuery } from "@/lib/api"
+import { site } from "@/lib/site"
 import css from "@/styles/app.css?url"
 
 // 首帧前套用记住的主题（key 同 use-theme）
@@ -32,7 +33,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "alternate", type: "application/rss+xml", title: loaderData?.title, href: "/feed.xml" },
       { rel: "alternate", type: "application/atom+xml", title: loaderData?.title, href: "/atom.xml" },
     ],
-    scripts: [{ children: themeScript }],
+    scripts: [
+      { children: themeScript },
+      ...(site.umami ? [{ src: site.umami.src, defer: true, "data-website-id": site.umami.id }] : []),
+    ],
   }),
   component: () => (
     <Document>

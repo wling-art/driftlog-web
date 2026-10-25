@@ -11,7 +11,9 @@ type UI = {
   searchOpen: boolean
   setSearchOpen: (open: boolean) => void
   online: number
-  setOnline: (n: number) => void
+  /** 在线的人所在的页面：路径 → 人数 */
+  onlinePages: Record<string, number>
+  setOnline: (n: number, pages: Record<string, number>) => void
   /** 当前页的评论对象；非 null 时任务栏显示「评论」 */
   comments: { entryId: number; title: string } | null
   setComments: (c: UI["comments"]) => void
@@ -27,7 +29,8 @@ export const useUI = create<UI>((set) => ({
   searchOpen: false,
   setSearchOpen: (searchOpen) => set({ searchOpen }),
   online: 0,
-  setOnline: (online) => set({ online }),
+  onlinePages: {},
+  setOnline: (online, onlinePages) => set({ online, onlinePages }),
   comments: null,
   setComments: (comments) => set(comments ? { comments } : { comments: null, commentsOpen: false }),
   commentsOpen: false,

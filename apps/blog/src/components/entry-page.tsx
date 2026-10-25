@@ -166,7 +166,12 @@ export function EntryPage({ entry: e }: { entry: Entry }) {
         {/* 正文末尾：喜欢、评论，以及下一篇或回列表 */}
         <footer id="article-end" className="article-end">
           <div className="article-end-actions">
-            <LikeButton likes={e.likes} like={() => unwrap(api.entries({ id: e.id }).like.post())} />
+            <LikeButton
+              key={e.id}
+              likes={e.likes}
+              like={() => unwrap(api.entries({ id: e.id }).like.post())}
+              liked={() => unwrap(api.entries({ id: e.id }).like.get())}
+            />
             <Button onClick={() => setCommentsOpen(true)}>
               <MessageSquare aria-hidden="true" />
               {comments?.length ? `评论 ${comments.length}` : "写评论"}

@@ -1,14 +1,18 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
+import { useRouterState } from "@tanstack/react-router"
 import { toast } from "sonner"
 import { wsEvent } from "@driftlog/client"
 import { site, entryPath } from "./site"
 import { useUI } from "./store"
 
-/** 订阅服务端 WebSocket：在线人数、新评论、新文章；断线后指数退避重连 */
+/** 订阅服务端 WebSocket：在线人数和所在页面、新评论、新文章；断线后指数退避重连 */
 export function useRealtime() {
   const qc = useQueryClient()
   const setOnline = useUI((s) => s.setOnline)
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const socket = useRef<WebSocket | null>(null)
+  const path = useRef(pathname)
 
   useEffect(() => {
     let ws: WebSocket | null = null
@@ -18,12 +22,16 @@ export function useRealtime() {
 
     const connect = () => {
       ws = new WebSocket(`${site.api.replace(/^http/, "ws")}/ws`)
-      ws.onopen = () => (retry = 0)
+      socket.current = ws
+      ws.onopen = () => {
+        retry = 0
+        ws?.send(JSON.stringify({ type: "page", path: path.current }))
+      }
       ws.onmessage = (m) => {
         const parsed = wsEvent.safeParse(JSON.parse(String(m.data)))
         if (!parsed.success) return
         const e = parsed.data
-        if (e.type === "online") setOnline(e.count)
+        if (e.type === "online") setOnline(e.count, e.pages)
         else if (e.type === "comment.created") qc.invalidateQueries({ queryKey: ["comments", e.entryId] })
         else if (e.type === "entry.published") {
           qc.invalidateQueries({ queryKey: ["entries"] })
@@ -44,4 +52,11 @@ export function useRealtime() {
       ws?.close()
     }
   }, [qc, setOnline])
+
+  // 换页时告诉服务端
+  useEffect(() => {
+    path.current = pathname
+    if (socket.current?.readyState === WebSocket.OPEN)
+      socket.current.send(JSON.stringify({ type: "page", path: pathname }))
+  }, [pathname])
 }

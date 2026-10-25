@@ -77,6 +77,7 @@ export function Hero({ info, say }: { info: SiteSettings; say: Say }) {
               <LikeButton
                 likes={info.likes}
                 like={() => unwrap(api.site.like.post())}
+                liked={() => unwrap(api.site.like.get())}
                 className="hero-like"
               />
             </li>

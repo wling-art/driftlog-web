@@ -32,4 +32,6 @@ jobs:
           VITE_API_URL: https://ling-api.crashvibe.cn
           VITE_SITE_URL: https://ling.crashvibe.cn
           VITE_BLOG_URL: https://ling.crashvibe.cn
+          VITE_UMAMI_URL: ${{ vars.VITE_UMAMI_URL }}
+          VITE_UMAMI_ID: ${{ vars.VITE_UMAMI_ID }}
         run: bun run deploy
