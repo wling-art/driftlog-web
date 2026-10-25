@@ -11,6 +11,7 @@ import { Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { API_URL, api, formatBytes, unwrap } from "@/lib/api"
+import { AiCard } from "@/components/ai-settings"
 import { PageHeader } from "../_app"
 
 export const Route = createFileRoute("/_app/settings")({ component: Settings })
@@ -30,6 +31,7 @@ function Settings() {
       <PageHeader title="设置" />
       <div className="masonry">
         <SiteCard />
+        <AiCard />
         <Card>
           <CardHeader>
             <CardTitle>备份</CardTitle>

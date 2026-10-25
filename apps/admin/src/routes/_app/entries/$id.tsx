@@ -387,7 +387,7 @@ function Editor({ id, initial }: { id: number | null; initial: (EntryInput & { i
             </form.Field>
           </div>
           {id && (
-            <Field label="AI 翻译" hint="需要服务端配置 AI_MODEL">
+            <Field label="AI 翻译" hint="在「设置」里配置 AI；发布后会自动翻译">
               <div className="flex gap-2">
                 <Select value={lang} onValueChange={setLang}>
                   <SelectTrigger className="flex-1">

@@ -22,6 +22,7 @@ import { Route as AppSaysRouteImport } from './routes/_app/says'
 import { Route as AppSettingsRouteImport } from './routes/_app/settings'
 import { Route as AppThoughtsRouteImport } from './routes/_app/thoughts'
 import { Route as AppTopicsRouteImport } from './routes/_app/topics'
+import { Route as AppTranslationsRouteImport } from './routes/_app/translations'
 import { Route as AppEntriesIndexRouteImport } from './routes/_app/entries/index'
 import { Route as AppEntriesIdRouteImport } from './routes/_app/entries/$id'
 
@@ -89,6 +90,11 @@ const AppTopicsRoute = AppTopicsRouteImport.update({
   path: '/topics',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTranslationsRoute = AppTranslationsRouteImport.update({
+  id: '/translations',
+  path: '/translations',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppEntriesIndexRoute = AppEntriesIndexRouteImport.update({
   id: '/entries/',
   path: '/entries/',
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/thoughts': typeof AppThoughtsRoute
   '/topics': typeof AppTopicsRoute
+  '/translations': typeof AppTranslationsRoute
   '/entries/$id': typeof AppEntriesIdRoute
   '/entries/': typeof AppEntriesIndexRoute
 }
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/thoughts': typeof AppThoughtsRoute
   '/topics': typeof AppTopicsRoute
+  '/translations': typeof AppTranslationsRoute
   '/': typeof AppIndexRoute
   '/entries/$id': typeof AppEntriesIdRoute
   '/entries': typeof AppEntriesIndexRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/thoughts': typeof AppThoughtsRoute
   '/_app/topics': typeof AppTopicsRoute
+  '/_app/translations': typeof AppTranslationsRoute
   '/_app/': typeof AppIndexRoute
   '/_app/entries/$id': typeof AppEntriesIdRoute
   '/_app/entries/': typeof AppEntriesIndexRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/thoughts'
     | '/topics'
+    | '/translations'
     | '/entries/$id'
     | '/entries/'
   fileRoutesByTo: FileRoutesByTo
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/thoughts'
     | '/topics'
+    | '/translations'
     | '/'
     | '/entries/$id'
     | '/entries'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/thoughts'
     | '/_app/topics'
+    | '/_app/translations'
     | '/_app/'
     | '/_app/entries/$id'
     | '/_app/entries/'
@@ -300,6 +312,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTopicsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/translations': {
+      id: '/_app/translations'
+      path: '/translations'
+      fullPath: '/translations'
+      preLoaderRoute: typeof AppTranslationsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/entries/': {
       id: '/_app/entries/'
       path: '/entries'
@@ -328,6 +347,7 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppThoughtsRoute: typeof AppThoughtsRoute
   AppTopicsRoute: typeof AppTopicsRoute
+  AppTranslationsRoute: typeof AppTranslationsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppEntriesIdRoute: typeof AppEntriesIdRoute
   AppEntriesIndexRoute: typeof AppEntriesIndexRoute
@@ -344,6 +364,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppThoughtsRoute: AppThoughtsRoute,
   AppTopicsRoute: AppTopicsRoute,
+  AppTranslationsRoute: AppTranslationsRoute,
   AppIndexRoute: AppIndexRoute,
   AppEntriesIdRoute: AppEntriesIdRoute,
   AppEntriesIndexRoute: AppEntriesIndexRoute,
