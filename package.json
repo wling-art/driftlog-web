@@ -1,6 +1,7 @@
 {
   "name": "driftlog-web",
   "private": true,
+  "license": "AGPL-3.0-only",
   "type": "module",
   "workspaces": {
     "packages": [
@@ -51,6 +52,5 @@
     "@playwright/test": "^1.63.0",
     "oxlint": "^1.85.0",
     "oxfmt": "^0.70.0"
-  },
-  "license": "AGPL-3.0-only"
+  }
 }
