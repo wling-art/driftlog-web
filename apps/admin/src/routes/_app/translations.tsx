@@ -23,6 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { AiQueue } from "@/components/ai-queue"
 import { api, formatTime, unwrap } from "@/lib/api"
 import { PageHeader } from "../_app"
 
@@ -48,7 +49,10 @@ function Translations() {
     refetchInterval: (q) =>
       q.state.data?.items.some((i) => Object.values(i.jobs).some((j) => j.state !== "failed")) ? 3000 : false,
   })
-  const refresh = () => qc.invalidateQueries({ queryKey: ["translations"] })
+  const refresh = () => {
+    void qc.invalidateQueries({ queryKey: ["translations"] })
+    void qc.invalidateQueries({ queryKey: ["ai-queue"] })
+  }
   const runOne = useMutation({
     mutationFn: ({ id, lang }: { id: number; lang: string }) => run(id, lang),
     onSuccess: () => {
@@ -109,6 +113,7 @@ function Translations() {
           </Button>
         </CardContent>
       </Card>
+      <AiQueue />
 
       <Tabs value={type} onValueChange={(v) => setType(v as typeof type)} className="mb-4">
         <TabsList>
