@@ -19,6 +19,7 @@ import {
   Quote,
   Zap,
   type LucideIcon,
+  UserRound,
 } from "lucide-react"
 import {
   Sidebar,
@@ -84,6 +85,7 @@ const nav = [
       { to: "/comments", label: "评论", icon: MessageSquare, badge: "comments" },
       { to: "/files", label: "文件", icon: Image },
       { to: "/settings", label: "设置", icon: Settings },
+      { to: "/account", label: "账号", icon: UserRound },
     ],
   },
 ] as const satisfies {

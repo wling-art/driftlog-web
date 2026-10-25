@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppCategoriesRouteImport } from './routes/_app/categories'
 import { Route as AppCommentsRouteImport } from './routes/_app/comments'
 import { Route as AppFilesRouteImport } from './routes/_app/files'
@@ -36,6 +37,11 @@ const LoginRoute = LoginRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAccountRoute = AppAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCategoriesRoute = AppCategoriesRouteImport.update({
@@ -97,6 +103,7 @@ const AppEntriesIdRoute = AppEntriesIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
+  '/account': typeof AppAccountRoute
   '/categories': typeof AppCategoriesRoute
   '/comments': typeof AppCommentsRoute
   '/files': typeof AppFilesRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/account': typeof AppAccountRoute
   '/categories': typeof AppCategoriesRoute
   '/comments': typeof AppCommentsRoute
   '/files': typeof AppFilesRoute
@@ -128,6 +136,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/_app/account': typeof AppAccountRoute
   '/_app/categories': typeof AppCategoriesRoute
   '/_app/comments': typeof AppCommentsRoute
   '/_app/files': typeof AppFilesRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/account'
     | '/categories'
     | '/comments'
     | '/files'
@@ -160,6 +170,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/account'
     | '/categories'
     | '/comments'
     | '/files'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_app'
     | '/login'
+    | '/_app/account'
     | '/_app/categories'
     | '/_app/comments'
     | '/_app/files'
@@ -216,6 +228,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/account': {
+      id: '/_app/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AppAccountRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/categories': {
@@ -299,6 +318,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppAccountRoute: typeof AppAccountRoute
   AppCategoriesRoute: typeof AppCategoriesRoute
   AppCommentsRoute: typeof AppCommentsRoute
   AppFilesRoute: typeof AppFilesRoute
@@ -314,6 +334,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAccountRoute: AppAccountRoute,
   AppCategoriesRoute: AppCategoriesRoute,
   AppCommentsRoute: AppCommentsRoute,
   AppFilesRoute: AppFilesRoute,
