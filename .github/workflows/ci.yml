@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bunx oxfmt --check apps
+      - name: 构建（前台和后台）
+        env:
+          VITE_API_URL: https://ling-api.crashvibe.cn
+          VITE_SITE_URL: https://ling.crashvibe.cn
+          VITE_BLOG_URL: https://ling.crashvibe.cn
+        run: bun run build
