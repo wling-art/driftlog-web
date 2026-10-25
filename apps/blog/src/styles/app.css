@@ -595,6 +595,16 @@
   gap: var(--space-2);
   margin-top: var(--space-5);
 }
+/* 喜欢按钮：和社交图标同高、同边框 */
+.hero-like {
+  height: max(36px, var(--hit-min));
+  padding: 0 var(--space-3);
+  border: var(--line) solid var(--border-soft);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-sm);
+}
 /* 头像：方形相框 */
 .hero-avatar {
   padding: 6px;
