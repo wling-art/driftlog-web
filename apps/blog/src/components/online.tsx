@@ -30,6 +30,7 @@ export function OnlineCount() {
     for (const e of q.data ?? []) label[entryPath(i === 0 ? "post" : "note", e.slug)] = e.title
   })
   const rows = Object.entries(pages).sort((a, b) => b[1] - a[1])
+  const unknown = online - rows.reduce((n, [, c]) => n + c, 0)
 
   return (
     <Tooltip open={open} onOpenChange={setOpen}>
@@ -39,15 +40,17 @@ export function OnlineCount() {
         </span>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-sm flex-col items-start gap-1">
-        {rows.length ? (
-          rows.map(([path, n]) => (
-            <span key={path} className="flex w-full justify-between gap-4">
-              <span className="truncate">{label[decodeURIComponent(path)] ?? path}</span>
-              <span>{n}</span>
-            </span>
-          ))
-        ) : (
-          <span>暂时没有页面信息</span>
+        {rows.map(([path, n]) => (
+          <span key={path} className="flex w-full justify-between gap-4">
+            <span className="truncate">{label[decodeURIComponent(path)] ?? path}</span>
+            <span>{n}</span>
+          </span>
+        ))}
+        {unknown > 0 && (
+          <span className="flex w-full justify-between gap-4 opacity-70">
+            <span>页面未知</span>
+            <span>{unknown}</span>
+          </span>
         )}
       </TooltipContent>
     </Tooltip>
