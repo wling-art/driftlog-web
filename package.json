@@ -44,7 +44,7 @@
     "fmt": "oxfmt apps",
     "test": "playwright test",
     "dev:api": "bun --filter @driftlog/server dev",
-    "deploy": "bun --filter './apps/*' deploy"
+    "deploy": "bun --filter @driftlog/blog --filter @driftlog/admin deploy"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
