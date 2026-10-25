@@ -1,0 +1,12 @@
+{
+  "name": "@driftlog/api-proxy",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "typecheck": "tsgo --noEmit"
+  },
+  "devDependencies": {
+    "wrangler": "^4.152.0"
+  }
+}

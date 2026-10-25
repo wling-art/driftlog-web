@@ -48,3 +48,13 @@ E2E_EMAIL=… E2E_PASSWORD=… bun run test   # Playwright; admin cases skip wit
 
 - Blog: the boring-ui skill (`~/.claude/skills/boring-ui`); `src/styles/{tokens,desktop,patterns}.css` and `src/components/boring` are vendored copies (the content widgets `.icon-link`, `.archive`, `.folder-intro`, `.lang-switch`, `.copyright`, `.article-end` live in `patterns.css`, not `app.css`). `boring/desktop.tsx` differs from the skill only in using the router's `Link` in `Taskbar` and rendering closed windows through its own portal; `toc.tsx` and `start-menu.tsx` are the blog's versions of the skill's `Toc*`/`StartMenu`. Keep them in sync with the skill, and record design changes in the skill's `CHANGELOG.md`.
 - Admin: its own theme in `apps/admin/src/index.css` (Geist, neutral grays, blue only for links and focus). Content area is full width, with multiple columns on wide screens.
+
+## Deploy (Cloudflare)
+
+`bun run deploy` runs `wrangler deploy` in `apps/*`, all in account MrlingXD (`account_id` in each `wrangler.json`):
+
+- `apps/blog` → Worker on `ling.crashvibe.cn` (see the Workers build trap above).
+- `apps/admin` → static assets Worker (SPA fallback) on `ling-admin.crashvibe.cn`.
+- `apps/api-proxy` → Worker on `ling-api.crashvibe.cn`; forwards to the API through a Workers VPC service bound to a Cloudflare Tunnel (`cloudflared --protocol http2` on the home server, `/opt/driftlog/compose.yaml`: api, valkey, meilisearch, cloudflared). The wrangler OAuth token has no DNS scope, so this avoids needing a CNAME for the API.
+- Build-time URLs go in `apps/{blog,admin}/.env.production.local` (git-ignored): `VITE_API_URL`, `VITE_SITE_URL` (blog) / `VITE_BLOG_URL` (admin).
+- A Worker custom domain can't be created over an existing DNS record: delete the old CNAME first.

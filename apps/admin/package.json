@@ -6,7 +6,8 @@
     "dev": "bun --bun vite --port 5174",
     "build": "bun --bun vite build",
     "preview": "bun --bun vite preview --port 5174",
-    "typecheck": "tsgo --noEmit"
+    "typecheck": "tsgo --noEmit",
+    "deploy": "bun run build && wrangler deploy"
   },
   "dependencies": {
     "@better-auth/passkey": "^1.7.6",
@@ -47,6 +48,7 @@
   },
   "devDependencies": {
     "@types/react": "catalog:",
-    "@types/react-dom": "catalog:"
+    "@types/react-dom": "catalog:",
+    "wrangler": "^4.152.0"
   }
 }

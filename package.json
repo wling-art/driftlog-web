@@ -42,7 +42,8 @@
     "lint": "oxlint apps",
     "fmt": "oxfmt apps",
     "test": "playwright test",
-    "dev:api": "bun --filter @driftlog/server dev"
+    "dev:api": "bun --filter @driftlog/server dev",
+    "deploy": "bun --filter './apps/*' deploy"
   },
   "devDependencies": {
     "@types/bun": "catalog:",

@@ -1,0 +1,8 @@
+{
+  "account_id": "29c73b915bc611c17738fcc87bda05b4",
+  "name": "driftlog-admin",
+  "compatibility_date": "2026-10-01",
+  "routes": [{ "pattern": "ling-admin.crashvibe.cn", "custom_domain": true }],
+  "assets": { "directory": "./dist", "not_found_handling": "single-page-application" },
+  "observability": { "enabled": true }
+}

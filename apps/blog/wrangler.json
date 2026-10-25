@@ -1,4 +1,5 @@
 {
+  "account_id": "29c73b915bc611c17738fcc87bda05b4",
   "name": "driftlog-blog",
   "compatibility_date": "2026-10-01",
   "routes": [{ "pattern": "ling.crashvibe.cn", "custom_domain": true }],
