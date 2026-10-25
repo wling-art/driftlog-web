@@ -55,6 +55,6 @@ E2E_EMAIL=… E2E_PASSWORD=… bun run test   # Playwright; admin cases skip wit
 
 - `apps/blog` → Worker on `ling.crashvibe.cn` (see the Workers build trap above).
 - `apps/admin` → static assets Worker (SPA fallback) on `ling-admin.crashvibe.cn`.
-- `apps/api-proxy` → Worker on `ling-api.crashvibe.cn` (deployed by hand with `bunx wrangler deploy` in `apps/api-proxy`, since its VPC binding needs a user login, not an API token); forwards to the API through a Workers VPC service bound to a Cloudflare Tunnel (`cloudflared --protocol http2`, a standalone container `cloudflared-driftlog` on the home server; api, valkey and meilisearch are in `/opt/driftlog/compose.yaml`). The wrangler OAuth token has no DNS scope, so this avoids needing a CNAME for the API.
+- The API is `https://ling-api.crashvibe.cn`, served by a Cloudflare Tunnel (`cloudflared-driftlog` on the home server). No Worker in front of it.
 - Build-time URLs go in `apps/{blog,admin}/.env.production.local` (git-ignored): `VITE_API_URL`, `VITE_SITE_URL` (blog) / `VITE_BLOG_URL` (admin).
 - A Worker custom domain can't be created over an existing DNS record: delete the old CNAME first.

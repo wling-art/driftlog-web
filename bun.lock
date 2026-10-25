@@ -57,12 +57,6 @@
         "wrangler": "^4.152.0",
       },
     },
-    "apps/api-proxy": {
-      "name": "@driftlog/api-proxy",
-      "devDependencies": {
-        "wrangler": "^4.152.0",
-      },
-    },
     "apps/blog": {
       "name": "@driftlog/blog",
       "dependencies": {
@@ -414,8 +408,6 @@
     "@dotenvx/primitives": ["@dotenvx/primitives@0.8.0", "", {}, "sha512-VYJy0uhFm9zTJ1TxBaW/pA8bjbOM/OttaNMwZ1RHG4JKyRG7DhSdiqD1ipQoAyoD22olUtxbP78W9xY3Wd11bg=="],
 
     "@driftlog/admin": ["@driftlog/admin@workspace:apps/admin"],
-
-    "@driftlog/api-proxy": ["@driftlog/api-proxy@workspace:apps/api-proxy"],
 
     "@driftlog/blog": ["@driftlog/blog@workspace:apps/blog"],
 
