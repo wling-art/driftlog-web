@@ -86,6 +86,8 @@ function Editor({ id, initial }: { id: number | null; initial: (EntryInput & { i
           ? await unwrap(api.admin.entries({ id }).patch(body))
           : await unwrap(api.admin.entries.post(body))
         formApi.reset(body)
+        qc.setQueryData(["admin-entry", saved.id], saved)
+        qc.invalidateQueries({ queryKey: ["admin-entry", saved.id] })
         qc.invalidateQueries({ queryKey: ["admin-entries"] })
         qc.invalidateQueries({ queryKey: ["stats"] })
         toast.success(value.published ? "已保存并发布" : "草稿已保存")
