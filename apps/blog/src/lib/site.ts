@@ -1,16 +1,16 @@
 import { useSyncExternalStore } from "react"
 
 // 站点地址和 API 地址；站名等内容用 useSite()
+const umamiBase = import.meta.env.VITE_UMAMI_URL?.replace(/\/$/, "")
+const umamiId = import.meta.env.VITE_UMAMI_ID
+
 export const site = {
   url: (import.meta.env.VITE_SITE_URL ?? "http://localhost:5173").replace(/\/$/, ""),
   api: (import.meta.env.VITE_API_URL ?? "http://localhost:3900").replace(/\/$/, ""),
-  /** Umami 统计：两项都设了才加载 */
+  /** Umami：两项都设了才加载。recorder.js 录屏，script.js 统计页面 */
   umami:
-    import.meta.env.VITE_UMAMI_URL && import.meta.env.VITE_UMAMI_ID
-      ? {
-          src: `${import.meta.env.VITE_UMAMI_URL.replace(/\/$/, "")}/script.js`,
-          id: import.meta.env.VITE_UMAMI_ID as string,
-        }
+    umamiBase && umamiId
+      ? { scripts: ["recorder.js", "script.js"].map((f) => `${umamiBase}/${f}`), id: umamiId }
       : null,
 }
 

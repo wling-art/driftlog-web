@@ -14,6 +14,8 @@ import css from "@/styles/app.css?url"
 // 首帧前套用记住的主题（key 同 use-theme）
 const themeScript = `try{var t=localStorage.getItem("boring-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`
 
+const umami = site.umami
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   loader: ({ context }) => context.queryClient.ensureQueryData(siteQuery()),
   head: ({ loaderData }) => ({
@@ -35,7 +37,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     scripts: [
       { children: themeScript },
-      ...(site.umami ? [{ src: site.umami.src, defer: true, "data-website-id": site.umami.id }] : []),
+      ...(umami ? umami.scripts.map((src) => ({ src, defer: true, "data-website-id": umami.id })) : []),
     ],
   }),
   component: () => (
